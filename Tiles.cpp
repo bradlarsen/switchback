@@ -5,11 +5,7 @@ TilesInstance15::TilesInstance15 (const TilesState15 &start,
                                   const TilesState15 &goal)
   : start(start)
   , goal(goal)
-{
-}
-
-
-TilesInstance15::~TilesInstance15 ()
+  , md_heur(ManhattanDist15(goal))
 {
 }
 
@@ -21,6 +17,10 @@ void TilesInstance15::print(std::ostream &o) const
 
   o << std::endl << "Goal state:" << std::endl
     << goal << std::endl;
+
+  o << std::endl << "Initial heuristic estimate: "
+    << static_cast<unsigned>(md_heur.compute_full(start))
+    << std::endl;
 }
 
 
