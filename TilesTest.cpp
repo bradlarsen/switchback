@@ -24,6 +24,7 @@ int main()
     for (unsigned i = 0; i < succs->size(); i += 1) {
       cout << "######## Successor " << i+1 << " ########" << endl;
       cout << *(*succs)[i] << endl;
+      delete (*succs)[i];
     }
 
     return 0;
