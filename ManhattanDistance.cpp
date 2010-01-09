@@ -14,11 +14,11 @@ void ManhattanDist15::init(const TilesState15 &goal)
 
   for (Tile tile = 1; tile < 16; tile += 1) {
     for (goal_pos = 0; goal_pos < 16; goal_pos += 1) {
-      if (goal.tiles[goal_pos] == tile)
+      if (goal.get_tiles()[goal_pos] == tile)
         break;
     }
 
-    assert(goal.tiles[goal_pos] == tile);
+    assert(goal.get_tiles()[goal_pos] == tile);
     int goal_col = goal_pos % 4;
     int goal_row = goal_pos / 4;
     for (unsigned pos = 0; pos < 16; pos += 1) {
@@ -35,10 +35,23 @@ Cost ManhattanDist15::compute_full(const TilesState15 &s) const
   Cost dist = 0;
 
   for (unsigned i = 0; i < 16; i += 1)
-    if (s.tiles[i] != 0)
-      dist += lookup_dist(s.tiles[i], i);
+    if (s.get_tiles()[i] != 0)
+      dist += lookup_dist(s.get_tiles()[i], i);
 
   return dist;
+}
+
+Cost ManhattanDist15::compute_incr(const TilesState15 &s, const TilesNode15 &parent) const
+{
+  const TilesState15 &p = parent.get_state();
+  unsigned new_b = s.get_blank();
+  unsigned par_b = p.get_blank();
+  Tile tile = p.get_tiles()[new_b];
+  Cost ret = 0;
+
+  ret = parent.get_h() + (lookup_dist(tile, par_b) - lookup_dist(tile, new_b));
+  assert(ret >= 0);
+  return ret;
 }
 
 Cost ManhattanDist15::lookup_dist(Tile tile, TileIndex pos) const

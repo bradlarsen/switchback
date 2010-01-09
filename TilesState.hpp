@@ -2,6 +2,7 @@
 #define _TILES_STATE_HPP_
 
 
+#include <cassert>
 #include <iostream>
 #include <boost/functional/hash.hpp>
 #include "TilesTypes.hpp"
@@ -9,30 +10,27 @@
 
 class TilesState15 {
 public:
-  const TileIndex blank_index;
-  const TileArray tiles;
-  const std::size_t hash_value;
-
   TilesState15(const TileArray &tiles,
                TileIndex blank_index)
     : blank_index(blank_index)
     , tiles(tiles)
-    , hash_value(boost::hash_range(tiles.begin(), tiles.end()))
+    , hash_value(compute_hash())
   {
+    assert(tiles[blank_index] == 0);
   }
 
   ~TilesState15()
   {
   }
 
-  Tile operator ()(unsigned i, unsigned j) const
+  inline Tile operator ()(unsigned i, unsigned j) const
   {
     assert(i < 4);
     assert(j < 4);
     return tiles[i * 4 + j];
   }
 
-  bool operator ==(const TilesState15 &other) const
+  inline bool operator ==(const TilesState15 &other) const
   {
     return
       hash_value == other.hash_value &&
@@ -40,40 +38,88 @@ public:
       tiles == other.tiles;
   }
 
-  bool valid() const
+  inline TileIndex get_blank() const
   {
-    bool hasBlank = false;
-
-    for (unsigned i = 0; i < 4; ++i) {
-      for (unsigned j = 0; j < 4; ++j) {
-        if ((*this)(i, j) == 0)
-          hasBlank = true;
-        if ((*this)(i, j) < -1 || (*this)(i, j) > 15)
-          return false;
-      }
-    }
-
-    for (Tile t = 1; t < 16; ++t) {
-      unsigned t_count = 0;
-      for (unsigned i = 0; i < 4; ++i) {
-        for (unsigned j = 0; j < 4; ++j) {
-          if ((*this)(i, j) == t)
-            ++t_count;
-        }
-      }
-
-      if (t_count > 1) return false;
-    }
-
-    return hasBlank;
+    return blank_index;
   }
 
+  inline const TileArray & get_tiles() const
+  {
+    return tiles;
+  }
+
+  inline size_t get_hash_value() const
+  {
+    return hash_value;
+  }
+
+  bool valid() const;
+
+  inline TilesState15 move_blank_up() const
+  {
+    TilesState15 new_state(*this);
+    TileIndex new_blank_index = blank_index - 4;
+    new_state.blank_index = new_blank_index;
+    std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
+    new_state.hash_value = new_state.compute_hash();
+
+    return new_state;
+  }
+
+  inline TilesState15 move_blank_down() const
+  {
+    TilesState15 new_state(*this);
+    TileIndex new_blank_index = blank_index + 4;
+    new_state.blank_index = new_blank_index;
+    std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
+    new_state.hash_value = new_state.compute_hash();
+
+    return new_state;
+  }
+
+  inline TilesState15 move_blank_left() const
+  {
+    TilesState15 new_state(*this);
+    TileIndex new_blank_index = blank_index - 1;
+    new_state.blank_index = new_blank_index;
+    std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
+    new_state.hash_value = new_state.compute_hash();
+
+    return new_state;
+  }
+
+  inline TilesState15 move_blank_right() const
+  {
+    TilesState15 new_state(*this);
+    TileIndex new_blank_index = blank_index + 1;
+    new_state.blank_index = new_blank_index;
+    std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
+    new_state.hash_value = new_state.compute_hash();
+
+    return new_state;
+  }
+
+
 private:
+  inline size_t compute_hash() const
+  {
+    return boost::hash_range(tiles.begin(), tiles.end());
+  }
+
   TilesState15 & operator =(const TilesState15 &other);
+
+  TileIndex blank_index;
+  TileArray tiles;
+  std::size_t hash_value;
 };
 
 
-std::size_t hash_value(TilesState15 const &tiles);
+inline std::size_t hash_value(TilesState15 const &tiles)
+{
+  return tiles.get_hash_value();
+}
+
+
 std::ostream & operator <<(std::ostream &o, const TilesState15 &tiles);
 
 

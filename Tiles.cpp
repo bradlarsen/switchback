@@ -30,6 +30,71 @@ bool TilesInstance15::isGoal(const TilesState15 &s) const
 }
 
 
+std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n) const
+{
+  const TilesNode15 *parent = n.get_parent();
+  std::vector<TilesNode15 *> *children = new std::vector<TilesNode15 *>;
+
+  const unsigned blank = n.get_state().get_blank();
+  const unsigned col = blank % 4;
+  const unsigned row = blank / 4;
+
+  const Cost g = n.get_g();
+
+  if (col > 0 && (parent == NULL || parent->get_state().get_blank() != blank - 1)) {
+    TilesState15 new_state = n.get_state().move_blank_left();
+    Cost new_h = md_heur.compute_incr(new_state, n);
+    TilesNode15 *child = new TilesNode15(new_state,
+                                         g + 1,
+                                         new_h,
+                                         &n);
+    children->push_back(child);
+  }
+  if (col < 3 && (parent == NULL || parent->get_state().get_blank() != blank + 1)) {
+    TilesState15 new_state = n.get_state().move_blank_right();
+    Cost new_h = md_heur.compute_incr(new_state, n);
+    TilesNode15 *child = new TilesNode15(new_state,
+                                         g + 1,
+                                         new_h,
+                                         &n);
+    children->push_back(child);
+  }
+  if (row > 0 && (parent == NULL || parent->get_state().get_blank() != blank - 4)) {
+    TilesState15 new_state = n.get_state().move_blank_up();
+    Cost new_h = md_heur.compute_incr(new_state, n);
+    TilesNode15 *child = new TilesNode15(new_state,
+                                         g + 1,
+                                         new_h,
+                                         &n);
+    children->push_back(child);
+  }
+  if (row < 3 && (parent == NULL || parent->get_state().get_blank() != blank + 4)) {
+    TilesState15 new_state = n.get_state().move_blank_down();
+    Cost new_h = md_heur.compute_incr(new_state, n);
+    TilesNode15 *child = new TilesNode15(new_state,
+                                         g + 1,
+                                         new_h,
+                                         &n);
+    children->push_back(child);
+  }
+
+  return children;
+}
+
+
+const TilesState15 & TilesInstance15::get_initial_state() const
+{
+  return start;
+}
+
+
+TilesNode15 * TilesInstance15::create_start_node() const
+{
+  Cost h = md_heur.compute_full(start);
+  return new TilesNode15(start, 0, h, NULL);
+}
+
+
 std::ostream & operator << (std::ostream &o, const TilesInstance15 &t)
 {
   t.print(o);
@@ -40,7 +105,7 @@ std::ostream & operator << (std::ostream &o, const TilesInstance15 &t)
 
 namespace
 {
-  bool readTiles (std::istream &in, TileArray &tiles)
+  bool readTiles (std::istream &in, TileIndex &blank, TileArray &tiles)
   {
     unsigned pos;
     unsigned i;
@@ -50,8 +115,11 @@ namespace
       if (pos < 0 || pos > 15) {
         return true;
       }
-      else
-        tiles[pos] = i;
+
+      if (i == 0)
+        blank = pos;
+
+      tiles[pos] = i;
     }
 
     return i != 16;
@@ -114,8 +182,7 @@ TilesInstance15 * readTilesInstance15 (std::istream &in)
   }
 
   if (!err) {
-    err = readTiles(in, startTiles);
-    startBlankIndex = startTiles[0];
+    err = readTiles(in, startBlankIndex, startTiles);
   }
 
   if (!err) {
@@ -129,8 +196,7 @@ TilesInstance15 * readTilesInstance15 (std::istream &in)
   }
 
   if (!err) {
-    err = readTiles(in, goalTiles);
-    goalBlankIndex = goalTiles[0];
+    err = readTiles(in, goalBlankIndex, goalTiles);
   }
 
   if (!err) {

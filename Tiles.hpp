@@ -6,6 +6,7 @@
 
 #include "ManhattanDistance.hpp"
 #include "TilesState.hpp"
+#include "TilesNode.hpp"
 
 
 class TilesInstance15 {
@@ -16,6 +17,16 @@ public:
   void print(std::ostream &o) const;
 
   bool isGoal(const TilesState15 &s) const;
+
+  std::vector<TilesNode15 *> * expand(const TilesNode15 &n) const;
+
+  const TilesState15 & get_initial_state() const;
+
+  /**
+   * Creates the start node, for the start state.  It is the caller's
+   * responsibility to dispose of the returned result.
+   */
+  TilesNode15 * create_start_node() const;
 
 private:
   const TilesState15 start;

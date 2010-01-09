@@ -4,11 +4,10 @@
 
 #include <boost/array.hpp>
 
+#include "TilesNode.hpp"
 #include "TilesState.hpp"
 #include "TilesTypes.hpp"
 
-
-// TODO: need to implement incremental heuristic calculation
 
 class ManhattanDist15 {
 public:
@@ -16,6 +15,7 @@ public:
 
   Cost compute(const TilesState15 &s) const;
   Cost compute_full(const TilesState15 &s) const;
+  Cost compute_incr(const TilesState15 &s, const TilesNode15 &p) const;
   Cost lookup_dist(Tile tile, TileIndex pos) const;
 
 private:
