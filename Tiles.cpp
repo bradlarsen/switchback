@@ -77,79 +77,66 @@ TilesInstance15 * readTilesInstance15 (std::istream &in)
   TileArray goalTiles;
   TileIndex goalBlankIndex;
 
-  std::cerr << err << " " << 0 << std::endl;
   if (!err) {
     in >> inputWord;
     if (inputWord != "4") err = true;
   }
 
-  std::cerr << err << " " << 1 << std::endl;
   if (!err) {
     in >> inputWord;
     if (inputWord != "4") err = true;
   }
 
-  std::cerr << err << " " << 2 << std::endl;
   if (!err) {
     in >> inputWord;
     if (inputWord != "starting") err = true;
   }
 
-  std::cerr << err << " " << 3 << std::endl;
   if (!err) {
     in >> inputWord;
     if (inputWord != "positions") err = true;
 
   }
 
-  std::cerr << err << " " << 4 << std::endl;
   if (!err) {
     in >> inputWord;
     if (inputWord != "for") err = true;
   }
 
-  std::cerr << err << " " << 5 << std::endl;
   if (!err) {
     in >> inputWord;
     if (inputWord != "each") err = true;
   }
 
-  std::cerr << err << " " << 6 << std::endl;
   if (!err) {
     in >> inputWord;
     if (inputWord != "tile:") err = true;
   }
 
-  std::cerr << err << " " << 7 << std::endl;
   if (!err) {
     err = readTiles(in, startTiles);
     startBlankIndex = startTiles[0];
   }
 
-  std::cerr << err << " " << 8 << std::endl;
   if (!err) {
     in >> inputWord;
     if (inputWord != "goal") err = true;
   }
 
-  std::cerr << err << " " << 9 << std::endl;
   if (!err) {
     in >> inputWord;
     if (inputWord != "positions:") err = true;
   }
 
-  std::cerr << err << " " << 10 << std::endl;
   if (!err) {
     err = readTiles(in, goalTiles);
     goalBlankIndex = goalTiles[0];
   }
 
-  std::cerr << err << " " << 11 << std::endl;
   if (!err) {
     TilesState15 start(startTiles, startBlankIndex);
     TilesState15 goal(goalTiles, goalBlankIndex);
 
-    std::cerr << err << " " << 12 << std::endl;    
     if (start.valid() && goal.valid())
       return new TilesInstance15(start, goal);
   }
