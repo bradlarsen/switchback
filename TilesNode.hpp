@@ -82,6 +82,18 @@ inline std::size_t hash_value(TilesNode15 const &node)
 }
 
 
+/**
+ * This procedure is needed for the bucket-based priority queue, which
+ * has constant time operations.
+ *
+ * The bucket for a TilesNode15 is its f-value.
+ */
+inline unsigned get_bucket(const TilesNode15 &n)
+{
+  return n.get_f();
+}
+
+
 std::ostream & operator <<(std::ostream &o, const TilesNode15 &n);
 
 #endif /* !_TILES_NODE_HPP_ */
