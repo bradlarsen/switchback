@@ -11,8 +11,16 @@
 
 class TilesInstance15 {
 public:
-  TilesInstance15(const TilesState15 &start,
-                  const TilesState15 &goal);
+  TilesInstance15 (const TilesState15 &start,
+                   const TilesState15 &goal)
+    : start(start)
+    , goal(goal)
+    , md_heur(ManhattanDist15(goal))
+  {
+    assert(is_goal(goal));
+  }
+
+
 
   void print(std::ostream &o) const;
 
