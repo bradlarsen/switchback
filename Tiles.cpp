@@ -16,6 +16,15 @@ void TilesInstance15::print(std::ostream &o) const
 }
 
 
+namespace
+{
+  inline Cost max(Cost a, Cost b)
+  {
+    return a > b ? a : b;
+  }
+}
+
+
 std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n) const
 {
   const TilesNode15 *gp = n.get_parent();
@@ -34,7 +43,7 @@ std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n) const
     Cost new_h = md_heur.compute_incr(new_state, n);
     TilesNode15 *child = new TilesNode15(new_state,
                                          new_g,
-                                         new_h,
+                                         is_goal(new_state) ? new_h : max(1, new_h),
                                          &n);
     assert(n.get_f() <= child->get_f());
     assert(child->get_f() <= 80);
@@ -46,7 +55,7 @@ std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n) const
     Cost new_h = md_heur.compute_incr(new_state, n);
     TilesNode15 *child = new TilesNode15(new_state,
                                          new_g,
-                                         new_h,
+                                         is_goal(new_state) ? new_h : max(1, new_h),
                                          &n);
     assert(n.get_f() <= child->get_f());
     assert(child->get_f() <= 80);
@@ -58,7 +67,7 @@ std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n) const
     Cost new_h = md_heur.compute_incr(new_state, n);
     TilesNode15 *child = new TilesNode15(new_state,
                                          new_g,
-                                         new_h,
+                                         is_goal(new_state) ? new_h : max(1, new_h),
                                          &n);
     assert(n.get_f() <= child->get_f());
     assert(child->get_f() <= 80);
@@ -70,7 +79,7 @@ std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n) const
     Cost new_h = md_heur.compute_incr(new_state, n);
     TilesNode15 *child = new TilesNode15(new_state,
                                          new_g,
-                                         new_h,
+                                         is_goal(new_state) ? new_h : max(1, new_h),
                                          &n);
     assert(n.get_f() <= child->get_f());
     assert(child->get_f() <= 80);
