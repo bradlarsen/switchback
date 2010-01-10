@@ -2,11 +2,15 @@
 #define _BUCKET_PRIORITY_QUEUE_HPP_
 
 
+#include <algorithm>
 #include <cassert>
 #include <functional>
-#include <vector>
 #include <list>
+#include <vector>
 #include <boost/integer_traits.hpp>
+
+
+// TODO: BucketPriorityQueue needs an iterator or some such.
 
 
 template <class T>
@@ -34,13 +38,14 @@ template <
 class BucketPriorityQueue
 {
 public:
-  typedef std::list<T> BucketType;
+  typedef std::vector<T> BucketType;
 
   BucketPriorityQueue(unsigned num_buckets)
     : store(std::vector<BucketType>(num_buckets, BucketType()))
     , first_bucket(initial_first_bucket_value)
     , num_elems(0)
     , bucket(BucketFun())
+    , comparator(Comparator())
   {
     assert(empty());
     assert(size() == debug_slow_size());
@@ -48,22 +53,20 @@ public:
 
   ~BucketPriorityQueue()
   {
+    assert(size() == debug_slow_size());
   }
 
   inline void push(const T &e)
   {
     assert(size() == debug_slow_size());
     num_elems += 1;
+
     unsigned bucket_num = bucket(e);
     assert(bucket_num < store.size());
+
     if (bucket_num < first_bucket)
       first_bucket = bucket_num;
-    BucketType &b = store[bucket_num];
-    typename BucketType::iterator it = b.begin();
-    while (it != b.end() && *it < e) {
-      ++it;
-    }
-    b.insert(it, e);
+    insert_bucket(store[bucket_num], e);
     assert(size() == debug_slow_size());
   }
 
@@ -74,12 +77,13 @@ public:
 
     num_elems -= 1;
     BucketType &b = store[first_bucket];
-    b.pop_front();
+    std::pop_heap(b.begin(), b.end(), comparator);
+    b.pop_back();
 
     if (empty()) {
       first_bucket = initial_first_bucket_value;
     }
-    else if (b.empty() && num_elems != 0) {
+    else if (b.empty()) {
       for (unsigned i = first_bucket + 1; i < store.size(); i += 1) {
         if (!store[i].empty()) {
           first_bucket = i;
@@ -94,20 +98,19 @@ public:
 
   const T & top() const
   {
-    assert(size() == debug_slow_size());
     assert(!empty());
 
     return store[first_bucket].front();
   }
 
-  inline void reset()
-  {
-    store.clear();
-    first_bucket = 0;
-    num_elems = 0;
+  // inline void reset()
+  // {
+  //   store.clear();
+  //   first_bucket = 0;
+  //   num_elems = 0;
 
-    assert(empty());
-  }
+  //   assert(empty());
+  // }
   
   inline bool empty() const
   {
@@ -120,16 +123,25 @@ public:
     return num_elems;
   }
 
+#ifndef NDEBUG
   unsigned debug_slow_size() const
   {
     unsigned slow_size = 0;
     for (unsigned i = 0; i < store.size(); i += 1) {
+      if (store[i].size() > 0)
       slow_size += store[i].size();
     }
     return slow_size;
   }
+#endif
 
 private:
+  inline void insert_bucket(BucketType &b, const T &e)
+  {
+    b.push_back(e);
+    std::push_heap(b.begin(), b.end(), comparator);
+  }
+
   const static unsigned initial_first_bucket_value =
     boost::integer_traits<unsigned>::const_max;
 
@@ -139,6 +151,7 @@ private:
 
   unsigned num_elems;
   BucketFun bucket;
+  Comparator comparator;
 };
 
 

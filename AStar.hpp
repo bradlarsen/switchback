@@ -11,6 +11,16 @@
 
 
 template <class T>
+struct PointerLt
+{
+  inline bool operator ()(const T *t1, const T *t2)
+  {
+    return *t1 < *t2;
+  }
+};
+
+
+template <class T>
 struct PointerGeq
 {
   inline bool operator ()(const T *t1, const T *t2)
@@ -37,14 +47,14 @@ template <
 class AStar
 {
 private:
-  //  typedef BucketPriorityQueue<Node *> Open;
-  typedef std::priority_queue<Node *, std::vector<Node *>, PointerGeq<Node> > Open;
+  typedef BucketPriorityQueue<Node *, bucket<Node *>, PointerGeq<Node> > Open;
+  //typedef std::priority_queue<Node *, std::vector<Node *>, PointerGeq<Node> > Open;
   typedef boost::unordered_set<Node *, PointerHash<Node>, PointerEq<Node> > Closed;
 
 public:
   AStar(const Domain &domain)
     : closed(Closed())
-      //    , open(Open(domain.get_num_buckets()))
+    , open(Open(domain.get_num_buckets()))
     , goal(NULL)
     , domain(domain)
     , num_expanded(0)
@@ -54,6 +64,20 @@ public:
 
   ~AStar()
   {
+    // for (typename Open::iterator open_it = open.begin();
+    //      open_it != open.end();
+    //      ++open_it)
+    //   {
+    //     if (closed.find(*open_it) == closed.end())
+    //       delete *open_it;
+    //   }
+
+    for (typename Closed::iterator closed_it = closed.begin();
+         closed_it != closed.end();
+         ++closed_it)
+      {
+        delete *closed_it;
+      }
   }
 
   void search()
@@ -85,7 +109,9 @@ public:
            succs_it != succs->end();
            ++succs_it)
       {
+        assert(open.size() == open.debug_slow_size());
         open.push(*succs_it);
+        assert(open.size() == open.debug_slow_size());
       }
       delete succs;
     }
