@@ -16,16 +16,7 @@ void TilesInstance15::print(std::ostream &o) const
 }
 
 
-namespace
-{
-  inline Cost max(Cost a, Cost b)
-  {
-    return a > b ? a : b;
-  }
-}
-
-
-std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n) const
+std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n)
 {
   const TilesNode15 *gp = n.get_parent();
   std::vector<TilesNode15 *> *children = new std::vector<TilesNode15 *>;
@@ -38,52 +29,24 @@ std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n) const
   const Cost new_g = g + 1;
 
   if (col > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 1)) {
-    TilesState15 new_state = n.get_state().move_blank_left();
-    assert(new_state != n.get_state());
-    Cost new_h = md_heur.compute_incr(new_state, n);
-    TilesNode15 *child = new TilesNode15(new_state,
-                                         new_g,
-                                         is_goal(new_state) ? new_h : max(1, new_h),
-                                         &n);
-    assert(n.get_f() <= child->get_f());
-    assert(child->get_f() <= 80);
-    children->push_back(child);
+    const TilesState15 new_state = n.get_state().move_blank_left();
+    TilesNode15 *child_node = child(new_state, new_g, n);
+    children->push_back(child_node);
   }
   if (col < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 1)) {
-    TilesState15 new_state = n.get_state().move_blank_right();
-    assert(new_state != n.get_state());
-    Cost new_h = md_heur.compute_incr(new_state, n);
-    TilesNode15 *child = new TilesNode15(new_state,
-                                         new_g,
-                                         is_goal(new_state) ? new_h : max(1, new_h),
-                                         &n);
-    assert(n.get_f() <= child->get_f());
-    assert(child->get_f() <= 80);
-    children->push_back(child);
+    const TilesState15 new_state = n.get_state().move_blank_right();
+    TilesNode15 *child_node = child(new_state, new_g, n);
+    children->push_back(child_node);
   }
   if (row > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 4)) {
-    TilesState15 new_state = n.get_state().move_blank_up();
-    assert(new_state != n.get_state());
-    Cost new_h = md_heur.compute_incr(new_state, n);
-    TilesNode15 *child = new TilesNode15(new_state,
-                                         new_g,
-                                         is_goal(new_state) ? new_h : max(1, new_h),
-                                         &n);
-    assert(n.get_f() <= child->get_f());
-    assert(child->get_f() <= 80);
-    children->push_back(child);
+    const TilesState15 new_state = n.get_state().move_blank_up();
+    TilesNode15 *child_node = child(new_state, new_g, n);
+    children->push_back(child_node);
   }
   if (row < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 4)) {
-    TilesState15 new_state = n.get_state().move_blank_down();
-    assert(new_state != n.get_state());
-    Cost new_h = md_heur.compute_incr(new_state, n);
-    TilesNode15 *child = new TilesNode15(new_state,
-                                         new_g,
-                                         is_goal(new_state) ? new_h : max(1, new_h),
-                                         &n);
-    assert(n.get_f() <= child->get_f());
-    assert(child->get_f() <= 80);
-    children->push_back(child);
+    const TilesState15 new_state = n.get_state().move_blank_down();
+    TilesNode15 *child_node = child(new_state, new_g, n);
+    children->push_back(child_node);
   }
 
   return children;
@@ -102,10 +65,10 @@ const TilesState15 & TilesInstance15::get_goal_state() const
 }
 
 
-TilesNode15 * TilesInstance15::create_start_node() const
+TilesNode15 * TilesInstance15::create_start_node()
 {
   Cost h = md_heur.compute_full(start);
-  return new TilesNode15(start, 0, h, NULL);
+  return new (node_pool.malloc()) TilesNode15(start, 0, h, static_cast<const TilesNode15 *>(NULL));
 }
 
 

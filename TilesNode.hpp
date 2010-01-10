@@ -70,9 +70,9 @@ public:
   }
 
 private:
-  const Cost g;
-  const Cost h;
-  const TilesState15 state;
+  Cost g;
+  Cost h;
+  TilesState15 state;
   const TilesNode15 *parent;
 };
 

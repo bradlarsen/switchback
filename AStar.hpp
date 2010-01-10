@@ -52,7 +52,7 @@ private:
   typedef boost::unordered_set<Node *, PointerHash<Node>, PointerEq<Node> > Closed;
 
 public:
-  AStar(const Domain &domain)
+  AStar(Domain &domain)
     : closed(Closed())
     , open(Open(domain.get_num_buckets()))
     , goal(NULL)
@@ -64,20 +64,6 @@ public:
 
   ~AStar()
   {
-    // for (typename Open::iterator open_it = open.begin();
-    //      open_it != open.end();
-    //      ++open_it)
-    //   {
-    //     if (closed.find(*open_it) == closed.end())
-    //       delete *open_it;
-    //   }
-
-    for (typename Closed::iterator closed_it = closed.begin();
-         closed_it != closed.end();
-         ++closed_it)
-      {
-        delete *closed_it;
-      }
   }
 
   void search()
@@ -142,7 +128,7 @@ private:
   Open open;
 
   const Node * goal;
-  const Domain &domain;
+  Domain &domain;
 
   unsigned num_expanded;
   unsigned num_generated;
