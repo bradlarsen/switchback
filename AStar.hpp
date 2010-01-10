@@ -22,11 +22,13 @@ private:
 public:
   AStar(Domain &domain)
     : open(Open(domain.get_num_buckets()))
+    , closed(50000000)  // requested number of buckets
     , goal(NULL)
     , domain(domain)
     , num_expanded(0)
     , num_generated(0)
   {
+    closed.max_load_factor(0.70);
   }
 
   ~AStar()
@@ -95,8 +97,8 @@ public:
   }
 
 private:
-  Closed closed;
   Open open;
+  Closed closed;
 
   const Node * goal;
   Domain &domain;
