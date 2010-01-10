@@ -36,14 +36,18 @@ public:
     return s == goal;
   }
 
-  std::vector<TilesNode15 *> * expand(const TilesNode15 &n);
+  /**
+   * Expands the given node into the given vector for successors.  The
+   * caller need not worry about disposing of the successors.
+   */
+  void expand(const TilesNode15 &n, std::vector<TilesNode15 *> &succs);
 
   const TilesState15 & get_start_state() const;
   const TilesState15 & get_goal_state() const;
 
   /**
-   * Creates the start node, for the start state.  It is the caller's
-   * responsibility to dispose of the returned result.
+   * Creates the start node, for the start state.  The caller need not
+   * worry about disposing of the returned node.
    */
   TilesNode15 * create_start_node();
 

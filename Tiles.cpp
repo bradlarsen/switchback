@@ -16,10 +16,11 @@ void TilesInstance15::print(std::ostream &o) const
 }
 
 
-std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n)
+void TilesInstance15::expand(const TilesNode15 &n,
+                             std::vector<TilesNode15 *> &succs)
 {
+  succs.clear();
   const TilesNode15 *gp = n.get_parent();
-  std::vector<TilesNode15 *> *children = new std::vector<TilesNode15 *>;
 
   const unsigned blank = n.get_state().get_blank();
   const unsigned col = blank % 4;
@@ -31,25 +32,23 @@ std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n)
   if (col > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 1)) {
     const TilesState15 new_state = n.get_state().move_blank_left();
     TilesNode15 *child_node = child(new_state, new_g, n);
-    children->push_back(child_node);
+    succs.push_back(child_node);
   }
   if (col < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 1)) {
     const TilesState15 new_state = n.get_state().move_blank_right();
     TilesNode15 *child_node = child(new_state, new_g, n);
-    children->push_back(child_node);
+    succs.push_back(child_node);
   }
   if (row > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 4)) {
     const TilesState15 new_state = n.get_state().move_blank_up();
     TilesNode15 *child_node = child(new_state, new_g, n);
-    children->push_back(child_node);
+    succs.push_back(child_node);
   }
   if (row < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 4)) {
     const TilesState15 new_state = n.get_state().move_blank_down();
     TilesNode15 *child_node = child(new_state, new_g, n);
-    children->push_back(child_node);
+    succs.push_back(child_node);
   }
-
-  return children;
 }
 
 

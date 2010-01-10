@@ -24,11 +24,12 @@ int main()
   BucketPriorityQueue<TilesNode15 *> pqueue(100);
 
   cout << "######## The Successors of Start ########" << endl;
-  scoped_ptr< vector<TilesNode15 *> > succs(instance->expand(*start_node));
-  for (unsigned i = 0; i < succs->size(); i += 1) {
+  vector<TilesNode15 *> succs;
+  instance->expand(*start_node, succs);
+  for (unsigned i = 0; i < succs.size(); i += 1) {
     cout << "######## Successor " << i+1 << " ########" << endl;
-    cout << *(*succs)[i] << endl;
-    pqueue.push((*succs)[i]);
+    cout << *succs[i] << endl;
+    pqueue.push(succs[i]);
   }
 
   cout << "######## The nodes, in order of ascending f-value ########" << endl;

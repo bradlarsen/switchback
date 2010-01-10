@@ -40,6 +40,12 @@ public:
     if (goal != NULL)
       return;
 
+    typename std::vector<Node *> succs;    // re-use a stack-allocated
+                                           // vector for successor
+                                           // nodes, thus avoiding
+                                           // repeated heap
+                                           // allocation.
+
     open.push(domain.create_start_node());
 
     while (!open.empty()) {
@@ -57,11 +63,11 @@ public:
       }
 
       closed.insert(n);
-      typename std::vector<Node *> *succs = domain.expand(*n);
+      domain.expand(*n, succs);
       num_expanded += 1;
-      num_generated += succs->size();
-      for (typename std::vector<Node *>::const_iterator succs_it = succs->begin();
-           succs_it != succs->end();
+      num_generated += succs.size();
+      for (typename std::vector<Node *>::const_iterator succs_it = succs.begin();
+           succs_it != succs.end();
            ++succs_it)
       {
         // TODO: should only insert nodes that are not present in
@@ -79,7 +85,6 @@ public:
         open.push(*succs_it);
         assert(open.size() == open.debug_slow_size());
       }
-      delete succs;
     }
   }
 
