@@ -56,10 +56,15 @@ public:
     return my_f < other_f || (my_f == other_f && get_g() > other.get_g());
   }
 
+  inline bool operator >=(const TilesNode15 &other) const
+  {
+    return !(*this < other);
+  }
+
   /**
    * Equality is determined by the enclosed tile puzzle states.
    */
-  inline bool operator == (const TilesNode15 &other) const
+  inline bool operator ==(const TilesNode15 &other) const
   {
     return state == other.state;
   }

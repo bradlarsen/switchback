@@ -28,7 +28,7 @@ int main()
   for (unsigned i = 0; i < succs->size(); i += 1) {
     cout << "######## Successor " << i+1 << " ########" << endl;
     cout << *(*succs)[i] << endl;
-    pqueue.insert((*succs)[i]);
+    pqueue.push((*succs)[i]);
   }
 
   cout << "######## The nodes, in order of ascending f-value ########" << endl;

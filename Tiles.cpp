@@ -2,16 +2,6 @@
 #include "Tiles.hpp"
 
 
-TilesInstance15::TilesInstance15 (const TilesState15 &start,
-                                  const TilesState15 &goal)
-  : start(start)
-  , goal(goal)
-  , md_heur(ManhattanDist15(goal))
-{
-  assert(is_goal(goal));
-}
-
-
 void TilesInstance15::print(std::ostream &o) const
 {
   o << "Initial state:" << std::endl
@@ -28,7 +18,7 @@ void TilesInstance15::print(std::ostream &o) const
 
 std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n) const
 {
-  const TilesNode15 *parent = n.get_parent();
+  const TilesNode15 *gp = n.get_parent();
   std::vector<TilesNode15 *> *children = new std::vector<TilesNode15 *>;
 
   const unsigned blank = n.get_state().get_blank();
@@ -38,52 +28,52 @@ std::vector<TilesNode15 *> * TilesInstance15::expand(const TilesNode15 &n) const
   const Cost g = n.get_g();
   const Cost new_g = g + 1;
 
-  if (col > 0 && (parent == NULL || parent->get_state().get_blank() != blank - 1)) {
+  if (col > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 1)) {
     TilesState15 new_state = n.get_state().move_blank_left();
     assert(new_state != n.get_state());
-    //Cost new_h = md_heur.compute_incr(new_state, n);
-    Cost new_h = md_heur.compute_full(new_state);
+    Cost new_h = md_heur.compute_incr(new_state, n);
     TilesNode15 *child = new TilesNode15(new_state,
                                          new_g,
                                          new_h,
                                          &n);
     assert(n.get_f() <= child->get_f());
+    assert(child->get_f() <= 80);
     children->push_back(child);
   }
-  if (col < 3 && (parent == NULL || parent->get_state().get_blank() != blank + 1)) {
+  if (col < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 1)) {
     TilesState15 new_state = n.get_state().move_blank_right();
     assert(new_state != n.get_state());
-    //Cost new_h = md_heur.compute_incr(new_state, n);
-    Cost new_h = md_heur.compute_full(new_state);
+    Cost new_h = md_heur.compute_incr(new_state, n);
     TilesNode15 *child = new TilesNode15(new_state,
                                          new_g,
                                          new_h,
                                          &n);
     assert(n.get_f() <= child->get_f());
+    assert(child->get_f() <= 80);
     children->push_back(child);
   }
-  if (row > 0 && (parent == NULL || parent->get_state().get_blank() != blank - 4)) {
+  if (row > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 4)) {
     TilesState15 new_state = n.get_state().move_blank_up();
     assert(new_state != n.get_state());
-    //Cost new_h = md_heur.compute_incr(new_state, n);
-    Cost new_h = md_heur.compute_full(new_state);
+    Cost new_h = md_heur.compute_incr(new_state, n);
     TilesNode15 *child = new TilesNode15(new_state,
                                          new_g,
                                          new_h,
                                          &n);
     assert(n.get_f() <= child->get_f());
+    assert(child->get_f() <= 80);
     children->push_back(child);
   }
-  if (row < 3 && (parent == NULL || parent->get_state().get_blank() != blank + 4)) {
+  if (row < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 4)) {
     TilesState15 new_state = n.get_state().move_blank_down();
     assert(new_state != n.get_state());
-    //Cost new_h = md_heur.compute_incr(new_state, n);
-    Cost new_h = md_heur.compute_full(new_state);
+    Cost new_h = md_heur.compute_incr(new_state, n);
     TilesNode15 *child = new TilesNode15(new_state,
                                          new_g,
                                          new_h,
                                          &n);
     assert(n.get_f() <= child->get_f());
+    assert(child->get_f() <= 80);
     children->push_back(child);
   }
 
@@ -116,7 +106,7 @@ unsigned TilesInstance15::get_num_buckets() const
 }
 
 
-std::ostream & operator << (std::ostream &o, const TilesInstance15 &t)
+std::ostream & operator <<(std::ostream &o, const TilesInstance15 &t)
 {
   t.print(o);
   return o;

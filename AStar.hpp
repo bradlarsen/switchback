@@ -2,17 +2,30 @@
 #define _A_STAR_HPP_
 
 
+#include <queue>
+#include <vector>
+
 #include <boost/unordered_set.hpp>
 #include "BucketPriorityQueue.hpp"
 #include "PointerHash.hpp"
 
 
 template <class T>
-struct PointerLessThan
+struct PointerGeq
 {
   inline bool operator ()(const T *t1, const T *t2)
   {
-    return *t1 < *t2;
+    return *t1 >= *t2;
+  }
+};
+
+
+template <class T>
+struct PointerEq
+{
+  inline bool operator ()(const T *t1, const T *t2) const
+  {
+    return *t1 == *t2;
   }
 };
 
@@ -24,13 +37,14 @@ template <
 class AStar
 {
 private:
-  typedef BucketPriorityQueue<Node *> Open;
-  typedef boost::unordered_set<Node *, PointerHash<Node> > Closed;
+  //  typedef BucketPriorityQueue<Node *> Open;
+  typedef std::priority_queue<Node *, std::vector<Node *>, PointerGeq<Node> > Open;
+  typedef boost::unordered_set<Node *, PointerHash<Node>, PointerEq<Node> > Closed;
 
 public:
   AStar(const Domain &domain)
     : closed(Closed())
-    , open(Open(domain.get_num_buckets()))
+      //    , open(Open(domain.get_num_buckets()))
     , goal(NULL)
     , domain(domain)
     , num_expanded(0)
@@ -47,7 +61,7 @@ public:
     if (goal != NULL)
       return;
 
-    open.insert(domain.create_start_node());
+    open.push(domain.create_start_node());
 
     while (!open.empty()) {
       Node *n = open.top();
@@ -71,7 +85,7 @@ public:
            succs_it != succs->end();
            ++succs_it)
       {
-        open.insert(*succs_it);
+        open.push(*succs_it);
       }
       delete succs;
     }

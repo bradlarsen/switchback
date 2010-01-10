@@ -48,6 +48,16 @@ public:
     return blank_index;
   }
 
+  inline TileIndex get_blank_row() const
+  {
+    return blank_index / 4;
+  }
+
+  inline TileIndex get_blank_col() const
+  {
+    return blank_index % 4;
+  }
+
   inline const TileArray & get_tiles() const
   {
     return tiles;
@@ -62,46 +72,26 @@ public:
 
   inline TilesState15 move_blank_up() const
   {
-    TilesState15 new_state(*this);
-    TileIndex new_blank_index = blank_index - 4;
-    new_state.blank_index = new_blank_index;
-    std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
-    new_state.hash_value = new_state.compute_hash();
-
-    return new_state;
+    assert(get_blank_row() > 0);
+    return move_blank(-4);
   }
 
   inline TilesState15 move_blank_down() const
   {
-    TilesState15 new_state(*this);
-    TileIndex new_blank_index = blank_index + 4;
-    new_state.blank_index = new_blank_index;
-    std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
-    new_state.hash_value = new_state.compute_hash();
-
-    return new_state;
+    assert(get_blank_row() < 3);
+    return move_blank(4);
   }
 
   inline TilesState15 move_blank_left() const
   {
-    TilesState15 new_state(*this);
-    TileIndex new_blank_index = blank_index - 1;
-    new_state.blank_index = new_blank_index;
-    std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
-    new_state.hash_value = new_state.compute_hash();
-
-    return new_state;
+    assert(get_blank_col() > 0);
+    return move_blank(-1);
   }
 
   inline TilesState15 move_blank_right() const
   {
-    TilesState15 new_state(*this);
-    TileIndex new_blank_index = blank_index + 1;
-    new_state.blank_index = new_blank_index;
-    std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
-    new_state.hash_value = new_state.compute_hash();
-
-    return new_state;
+    assert(get_blank_col() < 3);
+    return move_blank(1);
   }
 
 
@@ -109,6 +99,17 @@ private:
   inline size_t compute_hash() const
   {
     return boost::hash_range(tiles.begin(), tiles.end());
+  }
+
+  inline TilesState15 move_blank(TileIndex new_blank_offset) const
+  {
+    TileIndex new_blank_index = blank_index + new_blank_offset;
+    TilesState15 new_state(*this);
+    new_state.blank_index = new_blank_index;
+    std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
+    new_state.hash_value = new_state.compute_hash();
+
+    return new_state;
   }
 
   TilesState15 & operator =(const TilesState15 &other);

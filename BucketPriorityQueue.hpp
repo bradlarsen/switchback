@@ -43,14 +43,16 @@ public:
     , bucket(BucketFun())
   {
     assert(empty());
+    assert(size() == debug_slow_size());
   }
 
   ~BucketPriorityQueue()
   {
   }
 
-  inline void insert(const T &e)
+  inline void push(const T &e)
   {
+    assert(size() == debug_slow_size());
     num_elems += 1;
     unsigned bucket_num = bucket(e);
     assert(bucket_num < store.size());
@@ -62,10 +64,12 @@ public:
       ++it;
     }
     b.insert(it, e);
+    assert(size() == debug_slow_size());
   }
 
   void pop()
   {
+    assert(size() == debug_slow_size());
     assert(!empty());
 
     num_elems -= 1;
@@ -85,10 +89,12 @@ public:
     }
 
     assert( !empty() || first_bucket == initial_first_bucket_value );
+    assert(size() == debug_slow_size());
   }
 
   const T & top() const
   {
+    assert(size() == debug_slow_size());
     assert(!empty());
 
     return store[first_bucket].front();
@@ -105,6 +111,7 @@ public:
   
   inline bool empty() const
   {
+    assert(size() == debug_slow_size());
     return num_elems == 0;
   }
 
@@ -113,6 +120,14 @@ public:
     return num_elems;
   }
 
+  unsigned debug_slow_size() const
+  {
+    unsigned slow_size = 0;
+    for (unsigned i = 0; i < store.size(); i += 1) {
+      slow_size += store[i].size();
+    }
+    return slow_size;
+  }
 
 private:
   const static unsigned initial_first_bucket_value =

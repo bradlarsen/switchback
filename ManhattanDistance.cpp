@@ -28,36 +28,8 @@ void ManhattanDist15::init(const TilesState15 &goal)
       table[tile * 16 + pos] = abs(goal_col - col) + abs(goal_row - row);
     }
   }
+
+  for (unsigned i = 0; i < table.size(); ++i) {
+    assert(table[i] <= 6);
+  }
 }
-
-Cost ManhattanDist15::compute_full(const TilesState15 &s) const
-{
-  Cost dist = 0;
-
-  for (unsigned i = 0; i < 16; i += 1)
-    if (s.get_tiles()[i] != 0)
-      dist += lookup_dist(s.get_tiles()[i], i);
-
-  return dist;
-}
-
-Cost ManhattanDist15::compute_incr(const TilesState15 &s, const TilesNode15 &parent) const
-{
-  const TilesState15 &p = parent.get_state();
-  unsigned new_b = s.get_blank();
-  unsigned par_b = p.get_blank();
-  Tile tile = p.get_tiles()[new_b];
-  Cost ret = 0;
-
-  ret = parent.get_h() + (lookup_dist(tile, par_b) - lookup_dist(tile, new_b));
-  assert(ret >= 0);
-  return ret;
-}
-
-Cost ManhattanDist15::lookup_dist(Tile tile, TileIndex pos) const
-{
-  return table[tile * 16 + pos];
-}
-
-
-
