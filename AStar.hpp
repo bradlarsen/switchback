@@ -2,42 +2,11 @@
 #define _A_STAR_HPP_
 
 
-#include <queue>
 #include <vector>
 
 #include <boost/unordered_set.hpp>
 #include "BucketPriorityQueue.hpp"
-#include "PointerHash.hpp"
-
-
-template <class T>
-struct PointerLt
-{
-  inline bool operator ()(const T *t1, const T *t2)
-  {
-    return *t1 < *t2;
-  }
-};
-
-
-template <class T>
-struct PointerGeq
-{
-  inline bool operator ()(const T *t1, const T *t2)
-  {
-    return *t1 >= *t2;
-  }
-};
-
-
-template <class T>
-struct PointerEq
-{
-  inline bool operator ()(const T *t1, const T *t2) const
-  {
-    return *t1 == *t2;
-  }
-};
+#include "PointerOps.hpp"
 
 
 template <
