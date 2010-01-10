@@ -70,25 +70,25 @@ public:
 
   bool valid() const;
 
-  inline TilesState15 move_blank_up() const
+  TilesState15 move_blank_up() const
   {
     assert(get_blank_row() > 0);
     return move_blank(-4);
   }
 
-  inline TilesState15 move_blank_down() const
+  TilesState15 move_blank_down() const
   {
     assert(get_blank_row() < 3);
     return move_blank(4);
   }
 
-  inline TilesState15 move_blank_left() const
+  TilesState15 move_blank_left() const
   {
     assert(get_blank_col() > 0);
     return move_blank(-1);
   }
 
-  inline TilesState15 move_blank_right() const
+  TilesState15 move_blank_right() const
   {
     assert(get_blank_col() < 3);
     return move_blank(1);
@@ -96,7 +96,7 @@ public:
 
 
 private:
-  inline size_t compute_hash() const
+  std::size_t compute_hash() const
   {
     return boost::hash_range(tiles.begin(), tiles.end());
   }

@@ -57,9 +57,9 @@ public:
   unsigned get_num_buckets() const;
 
 private:
-  inline TilesNode15 * child(const TilesState15 &new_state,
-                             Cost new_g,
-                             const TilesNode15 &parent)
+  TilesNode15 * child(const TilesState15 &new_state,
+                      Cost new_g,
+                      const TilesNode15 &parent)
   {
     assert(new_state != parent.get_state());
     assert(parent.get_parent() == NULL ||
