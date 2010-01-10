@@ -2,7 +2,6 @@ exe tiles-search
     :
       ManhattanDistance.cpp
       Tiles.cpp
-      TilesNode.cpp
       TilesSearch.cpp
       TilesState.cpp
     : <include>boost_1_41_0
@@ -12,7 +11,6 @@ exe tiles-test
     :
       ManhattanDistance.cpp
       Tiles.cpp
-      TilesNode.cpp
       TilesTest.cpp
       TilesState.cpp
     : <include>boost_1_41_0
