@@ -68,6 +68,13 @@ public:
         // open, or that are better than their existing copies in
         // open.  In the latter case, the worse copies should be
         // deleted.
+        //
+        // Wheeler says I should keep a ``closed'' set that actually
+        // contains everything in open and everything in closed.  I
+        // should check this closed set at node generation time, not
+        // node expansion time.  If a node is known to be in the open
+        // list, and the generated copy is better, the old version in
+        // the open list should be deleted, and the new one inserted.
         assert(open.size() == open.debug_slow_size());
         open.push(*succs_it);
         assert(open.size() == open.debug_slow_size());
