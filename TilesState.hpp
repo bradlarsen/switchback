@@ -38,6 +38,11 @@ public:
       tiles == other.tiles;
   }
 
+  inline bool operator !=(const TilesState15 &other) const
+  {
+    return !(*this == other);
+  }
+
   inline TileIndex get_blank() const
   {
     return blank_index;

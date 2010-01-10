@@ -6,6 +6,7 @@
 #include <functional>
 #include <vector>
 #include <list>
+#include <boost/integer_traits.hpp>
 
 
 template <class T>
@@ -52,7 +53,6 @@ public:
   {
     num_elems += 1;
     unsigned bucket_num = bucket(e);
-    std::cerr << "the bucket number is " << bucket_num << std::endl;
     assert(bucket_num < store.size());
     if (bucket_num < first_bucket)
       first_bucket = bucket_num;
@@ -107,6 +107,12 @@ public:
   {
     return num_elems == 0;
   }
+
+  inline unsigned size() const
+  {
+    return num_elems;
+  }
+
 
 private:
   const static unsigned initial_first_bucket_value =
