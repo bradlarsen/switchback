@@ -95,6 +95,10 @@ public:
            succs_it != succs->end();
            ++succs_it)
       {
+        // TODO: should only insert nodes that are not present in
+        // open, or that are better than their existing copies in
+        // open.  In the latter case, the worse copies should be
+        // deleted.
         assert(open.size() == open.debug_slow_size());
         open.push(*succs_it);
         assert(open.size() == open.debug_slow_size());
