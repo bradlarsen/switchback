@@ -72,7 +72,7 @@ public:
 private:
   Cost g;
   Cost h;
-  State state;
+  const State state;
   const Node<State, Cost> *parent;
 };
 
