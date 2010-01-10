@@ -17,13 +17,11 @@ class AStar
 {
 private:
   typedef BucketPriorityQueue<Node *, bucket<Node *>, PointerGeq<Node> > Open;
-  //typedef std::priority_queue<Node *, std::vector<Node *>, PointerGeq<Node> > Open;
   typedef boost::unordered_set<Node *, PointerHash<Node>, PointerEq<Node> > Closed;
 
 public:
   AStar(Domain &domain)
-    : closed(Closed())
-    , open(Open(domain.get_num_buckets()))
+    : open(Open(domain.get_num_buckets()))
     , goal(NULL)
     , domain(domain)
     , num_expanded(0)
