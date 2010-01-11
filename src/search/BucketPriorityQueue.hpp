@@ -15,9 +15,27 @@ namespace
   class Bucket
   {
   public:
+    struct ItemPointer
+    {
+      ItemPointer(unsigned bin_idx, typename std::list<Node *>::iterator it)
+        : bin_idx(bin_idx)
+        , it(it)
+      {
+      }
+
+      Node * get_item() const
+      {
+        return *it;
+      }
+
+      const unsigned bin_idx;
+      typename std::list<Node *>::iterator it;
+    };
+
+  public:
     Bucket()
       : last_bin(0)
-      , num_elems(0)
+      , store(1000)
     {
       assert(empty());
       assert(invariants_hold());
@@ -28,11 +46,11 @@ namespace
       assert(invariants_hold());
     }
 
-    void push(Node *n)
+    ItemPointer push(Node *n)
     {
+      assert(((empty() && size() == 0) || (!empty() && size() > 0)));
+      assert((empty() || last_bin < store.size()));
       assert(invariants_hold());
-
-      num_elems += 1;
 
       const unsigned bucket_num = n->get_g();
       if (bucket_num >= store.size()) {
@@ -45,20 +63,40 @@ namespace
       store[bucket_num].push_front(n);
 
       assert(invariants_hold());
+
+      assert(bucket_num < store.size());
+      assert(!store[bucket_num].empty());
+      return ItemPointer(bucket_num, store[bucket_num].begin());
     }
 
-    void pop()
+    void erase(const ItemPointer &ptr)
     {
       assert(invariants_hold());
       assert(!empty());
 
-      num_elems -= 1;
-      store[last_bin].pop_front();
+      assert(ptr.bin_idx < store.size());
+      unsigned old_size = store[ptr.bin_idx].size();
+      assert(!store[ptr.bin_idx].empty());
 
+      bool it_found = false;
+      for (typename std::list<Node *>::const_iterator cit = store[ptr.bin_idx].begin();
+           cit != store[ptr.bin_idx].end();
+           ++cit)
+        {
+          if (cit == ptr.it) {
+            it_found = true;
+            break;
+          }
+        }
+      assert(it_found);
+
+      store[ptr.bin_idx].erase(ptr.it);
+      assert(store[ptr.bin_idx].size() == old_size - 1);
+      
       if (empty()) {
         last_bin = 0;
       }
-      else if (store[last_bin].empty() && last_bin > 0) {
+      else if (ptr.bin_idx == last_bin && store[last_bin].empty() && last_bin > 0) {
         for (unsigned i = last_bin - 1; i >= 0; i -= 1) {
           if (!store[i].empty()) {
             last_bin = i;
@@ -66,8 +104,32 @@ namespace
           }
         }
       }
+    }
 
+    void pop()
+    {
       assert(invariants_hold());
+      assert(!empty());
+
+      assert(last_bin < store.size());
+      store[last_bin].pop_front();
+
+      if (store[last_bin].empty() && last_bin > 0) {
+        assert(last_bin > 0);
+        while (last_bin > 0) {
+          if (!store[last_bin].empty())
+            break;
+          last_bin -= 1;
+        }
+      }
+
+#ifndef NDEBUG
+      if (empty()) {
+        for (unsigned i = 0; i < store.size(); i += 1)
+          assert(store[i].empty());
+      }
+      assert(invariants_hold());
+#endif
     }
 
     Node * top() const
@@ -79,29 +141,21 @@ namespace
 
     bool empty() const
     {
-      return num_elems == 0;
+      return size() == 0;
+      //      return store.empty() || (last_bin == 0 && store[last_bin].empty());
     }
 
     unsigned size() const
     {
-      return num_elems;
+      unsigned size_sum = 0;
+      for (unsigned i = 0; i < store.size(); i += 1)
+        size_sum += store[i].size();
+      return size_sum;
     }
 
-#ifndef NDEBUG
-    unsigned debug_slow_size() const
-    {
-      unsigned slow_size = 0;
-      for (unsigned i = 0; i < store.size(); i += 1) {
-        if (store[i].size() > 0)
-          slow_size += store[i].size();
-      }
-      return slow_size;
-    }
-#endif
-
-  private:
+    //  private:
+  public:
     unsigned last_bin;
-    unsigned num_elems;
     std::vector< std::list<Node *> > store;
 
 
@@ -109,7 +163,6 @@ namespace
     bool invariants_hold() const
     {
       return
-        size() == debug_slow_size() &&
         ((empty() && size() == 0) || (!empty() && size() > 0)) &&
         (empty() || last_bin < store.size());
     }
@@ -118,13 +171,35 @@ namespace
 }
 
 
+
+
+
+
 template <class Node>
 class BucketPriorityQueue
 {
 public:
+    struct ItemPointer
+    {
+      ItemPointer(unsigned bin_idx, const typename Bucket<Node>::ItemPointer &ptr)
+        : bin_idx(bin_idx)
+        , ptr(ptr)
+      {
+      }
+
+      Node * get_item() const
+      {
+        return ptr.get_item();
+      }
+
+      unsigned bin_idx;
+      typename Bucket<Node>::ItemPointer ptr;
+    };
+
+
+public:
   BucketPriorityQueue()
     : first_bucket(boost::integer_traits<unsigned>::const_max)
-    , num_elems(0)
   {
     assert(empty());
     assert(invariants_hold());
@@ -135,37 +210,46 @@ public:
     assert(invariants_hold());
   }
 
-  void push(Node *n)
+  ItemPointer * push(Node *n)
   {
     assert(invariants_hold());
 
-    num_elems += 1;
-
     const unsigned bucket_num = n->get_f();
     if (bucket_num >= store.size()) {
+      std::cerr << "resizing!" << std::endl;
       store.resize(bucket_num+1);
     }
     assert(bucket_num < store.size());
 
     if (bucket_num < first_bucket)
       first_bucket = bucket_num;
-    store[bucket_num].push(n);
+    unsigned old_size = store[bucket_num].size();
+    typename Bucket<Node>::ItemPointer ptr = store[bucket_num].push(n);
+    assert(list_found(ptr.it));
+    assert(old_size + 1 == store[bucket_num].size());
+    assert(list_found(ptr.it));
 
     assert(invariants_hold());
+    ItemPointer *item_ptr = new ItemPointer(bucket_num, ptr);
+    assert(list_found(item_ptr->ptr.it));
+    return item_ptr;
   }
 
-  void pop()
+  void erase(const ItemPointer &ptr)
   {
     assert(invariants_hold());
-    assert(!empty());
 
-    num_elems -= 1;
-    store[first_bucket].pop();
+    assert(ptr.bin_idx < store.size());
+    assert(!store[ptr.bin_idx].empty());
+
+    assert(list_found(ptr.ptr.it));
+    store[ptr.bin_idx].erase(ptr.ptr);
+    assert(store[ptr.bin_idx].size() <= size());
 
     if (empty()) {
       first_bucket = boost::integer_traits<unsigned>::const_max;
     }
-    else if (store[first_bucket].empty()) {
+    else if (ptr.bin_idx == first_bucket && store[first_bucket].empty()) {
       for (unsigned i = first_bucket + 1; i < store.size(); i += 1) {
         if (!store[i].empty()) {
           first_bucket = i;
@@ -174,50 +258,103 @@ public:
       }
     }
 
+    assert((empty() && size() == 0) || (!empty() && size() > 0));
+    assert(empty() || first_bucket < store.size());
+    assert(invariants_hold());
+  }
+
+
+  bool list_found(const typename std::list<Node *>::const_iterator &clit) const
+  {
+    for (typename std::vector< Bucket<Node> >::const_iterator cit = store.begin();
+         cit != store.end();
+         ++cit)
+      {
+        for (typename std::vector< std::list<Node *> >::const_iterator cit2 = cit->store.begin();
+             cit2 != cit->store.end();
+             ++cit2)
+          {
+            for (typename std::list<Node *>::const_iterator list_it = cit2->begin();
+                 list_it != cit2->end();
+                 ++list_it)
+              {
+                if (list_it == clit) {
+                  return true;
+                }
+              }
+          }
+      }
+
+    return false;
+  }
+
+
+  void pop()
+  {
+    assert(invariants_hold());
+    assert(!empty());
+    assert(first_bucket < store.size());
+
+    assert(!store[first_bucket].empty());
+    store[first_bucket].pop();
+
+    if (store[first_bucket].empty()) {
+      bool empty = true;
+      for (unsigned i = first_bucket + 1; i < store.size(); i += 1) {
+        if (!store[i].empty()) {
+          empty = false;
+          first_bucket = i;
+          break;
+        }
+      }
+
+      if (empty) {
+        first_bucket = boost::integer_traits<unsigned>::const_max;
+#ifndef NDEBUG
+        for (unsigned i = 0; i < store.size(); i += 1)
+          assert(store[i].empty());
+#endif
+      }
+    }
+
+    assert(((empty() && size() == 0) || (!empty() && size() > 0)));
+    assert((empty() || first_bucket < store.size()));
     assert(invariants_hold());
   }
 
   Node * top() const
   {
     assert(!empty());
+    assert(first_bucket < store.size());
     return store[first_bucket].top();
   }
 
   bool empty() const
   {
-    return num_elems == 0;
+    return size() == 0;
+    //    return store.empty() || first_bucket == boost::integer_traits<unsigned>::const_max;
   }
 
   unsigned size() const
   {
-    return num_elems;
+    unsigned size_sum = 0;
+    for (unsigned i = 0; i < store.size(); i += 1)
+      size_sum += store[i].size();
+    return size_sum;
   }
-
-#ifndef NDEBUG
-  unsigned debug_slow_size() const
-  {
-    unsigned slow_size = 0;
-    for (unsigned i = 0; i < store.size(); i += 1) {
-      if (store[i].size() > 0)
-      slow_size += store[i].debug_slow_size();
-    }
-    return slow_size;
-  }
-#endif
 
 private:
   std::vector< Bucket<Node> > store;
 
   unsigned first_bucket;
-  unsigned num_elems;
 
 #ifndef NDEBUG
   bool invariants_hold() const
   {
     return
-      size() == debug_slow_size() &&
       ((empty() && size() == 0) || (!empty() && size() > 0)) &&
-      (empty() || first_bucket < store.size());
+      (empty() || first_bucket < store.size()) &&
+      (!empty() || first_bucket == boost::integer_traits<unsigned>::const_max);
   }
 #endif
 };

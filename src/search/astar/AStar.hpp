@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 
 #include "search/BucketPriorityQueue.hpp"
 #include "util/PointerOps.hpp"
@@ -18,7 +18,12 @@ class AStar
 {
 private:
   typedef BucketPriorityQueue<Node> Open;
-  typedef boost::unordered_set<Node *, PointerHash<Node>, PointerEq<Node> > Closed;
+  typedef boost::unordered_map<
+    Node *,
+    typename BucketPriorityQueue<Node>::ItemPointer *,
+    PointerHash<Node>,
+    PointerEq<Node>
+    > Closed;
 
 public:
   AStar(Domain &domain)
@@ -29,6 +34,7 @@ public:
     , num_generated(0)
   {
     closed.max_load_factor(0.70);
+    check_all_closed_found();
   }
 
   ~AStar()
@@ -46,46 +52,105 @@ public:
                                            // repeated heap
                                            // allocation.
 
-    open.push(domain.create_start_node());
+    {
+      typename Open::ItemPointer *open_ptr = open.push(domain.create_start_node());
+      assert(open_ptr != NULL);
+      assert(open.list_found(open_ptr->ptr.it));
+      closed.insert(std::make_pair(open_ptr->get_item(), open_ptr));
+      assert(closed.find(open_ptr->get_item()) != closed.end());
+      assert(open.size() == 1);
+      assert(closed.size() == 1);
+      check_all_closed_found();
+    }
+
+    unsigned closed_size = closed.size();
 
     while (!open.empty()) {
+      check_all_closed_found();
+
       Node *n = open.top();
+      check_all_closed_found();
       open.pop();
+      delete closed[n];
+      closed[n] = NULL;
+      check_all_closed_found();
 
       if (domain.is_goal(n->get_state())) {
         goal = n;
         break;
       }
 
-      // drop duplicates
-      if (closed.find(n) != closed.end()) {
-        continue;
-      }
-
-      closed.insert(n);
+      check_all_closed_found();
       domain.expand(*n, succs);
       num_expanded += 1;
       num_generated += succs.size();
+      check_all_closed_found();
+
       for (typename std::vector<Node *>::const_iterator succs_it = succs.begin();
            succs_it != succs.end();
            ++succs_it)
       {
-        // TODO: should only insert nodes that are not present in
-        // open, or that are better than their existing copies in
-        // open.  In the latter case, the worse copies should be
-        // deleted.
-        //
-        // Wheeler says I should keep a ``closed'' set that actually
-        // contains everything in open and everything in closed.  I
-        // should check this closed set at node generation time, not
-        // node expansion time.  If a node is known to be in the open
-        // list, and the generated copy is better, the old version in
-        // the open list should be deleted, and the new one inserted.
-        assert(open.size() == open.debug_slow_size());
-        open.push(*succs_it);
-        assert(open.size() == open.debug_slow_size());
+        assert(open.size() <= closed.size());
+        check_all_closed_found();
+        typename Closed::iterator closed_it = closed.find(*succs_it);
+        check_all_closed_found();
+        if (closed_it != closed.end()) {
+          typename Open::ItemPointer *open_ptr = closed_it->second;
+          check_all_closed_found();
+          if (open_ptr != NULL)
+            assert(open.list_found(open_ptr->ptr.it));
+
+          if (open_ptr == NULL) {
+            check_all_closed_found();
+            // node is not in the open list, but is closed.  Drop it!
+          }
+          else if ((*succs_it)->get_f() < open_ptr->get_item()->get_f()) {
+            // node is in the open list, but we found a better path
+            // to its state.
+            assert(open_ptr->get_item()->get_state() == (*succs_it)->get_state());
+            assert(*open_ptr->get_item() == (**succs_it));
+            check_all_closed_found();
+            open.erase(*open_ptr);
+            check_all_closed_found();
+            open_ptr = open.push(*succs_it);
+            check_all_closed_found();
+            assert(open.list_found(open_ptr->ptr.it));
+            assert(open_ptr != NULL);
+            check_all_closed_found();
+            closed_it->second = open_ptr;
+            check_all_closed_found();
+            assert(closed.size() == closed_size);
+          }
+        }
+        else {
+          std::cerr << "fawk!" << std::endl;
+          check_all_closed_found();
+          typename Open::ItemPointer *open_ptr = open.push(*succs_it);
+          assert(open_ptr != NULL);
+          assert(open.list_found(open_ptr->ptr.it));
+          closed[*succs_it] = open_ptr;
+          check_all_closed_found();
+          assert(closed_size + 1 == closed.size());
+          closed_size += 1;
+          assert(closed.find(open_ptr->get_item()) != closed.end());
+        }
       }
     }
+  }
+
+  void check_all_closed_found() const
+  {
+    unsigned trip_count = 0;
+    for (typename Closed::const_iterator it = closed.begin();
+         it != closed.end();
+         ++it)
+      {
+        trip_count += 1;
+        if (it->second != NULL)
+          assert(open.list_found(it->second->ptr.it));
+      }
+
+    assert(trip_count == closed.size());
   }
 
   const Node * get_goal() const
