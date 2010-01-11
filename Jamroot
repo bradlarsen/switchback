@@ -1,18 +1,31 @@
+project switchback
+    : requirements
+        <include>boost_1_41_0
+        <include>src
+    : source-location src
+    : build-dir build
+    : default-build
+        <variant>release
+        <threading>single
+        <link>static
+        <runtime-link>static
+        <address-model>64
+        <toolset>gcc
+        <warnings>on
+    ;
+
 exe tiles-search
     :
-      ManhattanDistance.cpp
-      Tiles.cpp
+      tiles/ManhattanDistance.cpp
+      tiles/Tiles.cpp
+      tiles/TilesState.cpp
       TilesSearch.cpp
-      TilesState.cpp
-    : <include>boost_1_41_0
     ;
 
 exe tiles-test
     :
-      ManhattanDistance.cpp
-      Tiles.cpp
-      TilesTest.cpp
-      TilesState.cpp
-    : <include>boost_1_41_0
+      tiles/ManhattanDistance.cpp
+      tiles/Tiles.cpp
+      tiles/TilesState.cpp
+      tiles/TilesTest.cpp
     ;
-

@@ -2,9 +2,9 @@
 #define _TILES_NODE_HPP_
 
 
-#include "Node.hpp"
-#include "TilesTypes.hpp"
-#include "TilesState.hpp"
+#include "search/Node.hpp"
+#include "tiles/TilesTypes.hpp"
+#include "tiles/TilesState.hpp"
 
 
 template class Node<TilesState15, Cost>;

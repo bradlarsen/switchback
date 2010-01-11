@@ -5,8 +5,9 @@
 #include <vector>
 
 #include <boost/unordered_set.hpp>
-#include "BucketPriorityQueue.hpp"
-#include "PointerOps.hpp"
+
+#include "util/BucketPriorityQueue.hpp"
+#include "util/PointerOps.hpp"
 
 
 template <

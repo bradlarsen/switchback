@@ -5,9 +5,9 @@
 #include <iostream>
 #include <vector>
 
-#include "ManhattanDistance.hpp"
-#include "TilesState.hpp"
-#include "TilesNode.hpp"
+#include "tiles/ManhattanDistance.hpp"
+#include "tiles/TilesState.hpp"
+#include "tiles/TilesNode.hpp"
 
 
 class TilesInstance15 {

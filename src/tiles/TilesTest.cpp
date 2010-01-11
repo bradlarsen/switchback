@@ -1,9 +1,8 @@
 #include <iostream>
 #include <boost/scoped_ptr.hpp>
 
-#include "AStar.hpp"
-#include "Tiles.hpp"
-#include "BucketPriorityQueue.hpp"
+#include "tiles/Tiles.hpp"
+#include "util/BucketPriorityQueue.hpp"
 
 using namespace std;
 using namespace boost;

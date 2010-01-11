@@ -4,9 +4,9 @@
 
 #include <boost/array.hpp>
 
-#include "TilesNode.hpp"
-#include "TilesState.hpp"
-#include "TilesTypes.hpp"
+#include "tiles/TilesNode.hpp"
+#include "tiles/TilesState.hpp"
+#include "tiles/TilesTypes.hpp"
 
 
 class ManhattanDist15 {
