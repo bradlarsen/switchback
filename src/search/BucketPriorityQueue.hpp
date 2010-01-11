@@ -47,8 +47,6 @@ namespace
 
     ItemPointer * push(Node *n)
     {
-      assert(((empty() && size() == 0) || (!empty() && size() > 0)));
-      assert((empty() || last_bin < store.size()));
       assert(invariants_hold());
 
       const unsigned bucket_num = n->get_g();
@@ -74,11 +72,9 @@ namespace
       assert(!empty());
 
       assert(ptr->bin_idx < store.size());
-      unsigned old_size = store[ptr->bin_idx]->size();
       assert(!store[ptr->bin_idx]->empty());
 
       store[ptr->bin_idx]->erase(ptr->it);
-      assert(store[ptr->bin_idx]->size() == old_size - 1);
       
       if (empty()) {
         last_bin = 0;
@@ -109,14 +105,6 @@ namespace
           last_bin -= 1;
         }
       }
-
-#ifndef NDEBUG
-      if (empty()) {
-        for (unsigned i = 0; i < store.size(); i += 1)
-          assert(store[i]->empty());
-      }
-      assert(invariants_hold());
-#endif
     }
 
     Node * top() const
@@ -128,8 +116,7 @@ namespace
 
     bool empty() const
     {
-      return size() == 0;
-      //      return store.empty() || (last_bin == 0 && store[last_bin].empty());
+      return store.empty() || (last_bin == 0 && store[last_bin]->empty());
     }
 
     unsigned size() const
@@ -211,10 +198,7 @@ public:
 
     if (bucket_num < first_bucket)
       first_bucket = bucket_num;
-    unsigned old_size = store[bucket_num]->size();
     typename Bucket<Node>::ItemPointer *ptr = store[bucket_num]->push(n);
-    assert(list_found(ptr->it));
-    assert(old_size + 1 == store[bucket_num]->size());
     assert(list_found(ptr->it));
 
     assert(invariants_hold());
@@ -246,8 +230,6 @@ public:
       }
     }
 
-    assert((empty() && size() == 0) || (!empty() && size() > 0));
-    assert(empty() || first_bucket < store.size());
     assert(invariants_hold());
   }
 
@@ -299,10 +281,6 @@ public:
 
       if (empty) {
         first_bucket = boost::integer_traits<unsigned>::const_max;
-#ifndef NDEBUG
-        for (unsigned i = 0; i < store.size(); i += 1)
-          assert(store[i]->empty());
-#endif
       }
     }
 
@@ -320,8 +298,7 @@ public:
 
   bool empty() const
   {
-    return size() == 0;
-    //    return store.empty() || first_bucket == boost::integer_traits<unsigned>::const_max;
+    return store.empty() || first_bucket == boost::integer_traits<unsigned>::const_max;
   }
 
   unsigned size() const

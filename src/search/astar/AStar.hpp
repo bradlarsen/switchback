@@ -43,6 +43,8 @@ public:
 
   void search()
   {
+    // TODO: the following check is buggy.  What if there is no goal,
+    // and the search has been completed?
     if (goal != NULL)
       return;
 
@@ -65,7 +67,11 @@ public:
 
     unsigned closed_size = closed.size();
 
-    while (!open.empty()) {
+    while (!open.empty())
+    {
+      std::cerr << "open size is " << open.size() << std::endl
+                << "closed size is " << closed.size() << std::endl;
+
       assert(all_closed_found());
 
       Node *n = open.top();
@@ -77,7 +83,7 @@ public:
 
       if (domain.is_goal(n->get_state())) {
         goal = n;
-        break;
+        return;
       }
 
       assert(all_closed_found());
