@@ -22,8 +22,7 @@ private:
 
 public:
   AStar(Domain &domain)
-    : open(Open(domain.get_num_buckets()))
-    , closed(50000000)  // requested number of buckets
+    : closed(50000000)  // requested number of hash buckets
     , goal(NULL)
     , domain(domain)
     , num_expanded(0)

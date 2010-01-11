@@ -40,12 +40,9 @@ class BucketPriorityQueue
 public:
   typedef std::vector<T> BucketType;
 
-  BucketPriorityQueue(unsigned num_buckets)
-    : store(std::vector<BucketType>(num_buckets, BucketType()))
-    , first_bucket(initial_first_bucket_value)
+  BucketPriorityQueue()
+    : first_bucket(initial_first_bucket_value)
     , num_elems(0)
-    , bucket(BucketFun())
-    , comparator(Comparator())
   {
     assert(empty());
     assert(size() == debug_slow_size());
@@ -61,7 +58,10 @@ public:
     assert(size() == debug_slow_size());
     num_elems += 1;
 
-    unsigned bucket_num = bucket(e);
+    const unsigned bucket_num = bucket(e);
+    if (bucket_num >= store.size()) {
+      store.resize(bucket_num+1);
+    }
     assert(bucket_num < store.size());
 
     if (bucket_num < first_bucket)

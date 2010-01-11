@@ -20,7 +20,7 @@ int main()
   cout << *instance << endl;
   scoped_ptr<TilesNode15> start_node(instance->create_start_node());
 
-  BucketPriorityQueue<TilesNode15 *> pqueue(100);
+  BucketPriorityQueue<TilesNode15 *> pqueue;
 
   cout << "######## The Successors of Start ########" << endl;
   vector<TilesNode15 *> succs;
