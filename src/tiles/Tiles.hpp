@@ -10,6 +10,18 @@
 #include "tiles/TilesNode.hpp"
 
 
+// TODO: If the definitions are tweaked herememory pool is changed so
+// that its destructor is not called, it saves significant time at the
+// end.  In Revision 27, on Korf 1, it is the difference between ~24
+// seconds and ~14 seconds.
+//
+// Cleanup could be further quickened by ensuring A*'s closed set and
+// open set are not destructed.
+//
+// Drop everything on the floor when the program terminates!
+
+
+
 class TilesInstance15 {
 public:
   TilesInstance15 (const TilesState15 &start,
