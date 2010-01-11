@@ -3,13 +3,15 @@
 
 #include "search/astar/AStar.hpp"
 #include "tiles/Tiles.hpp"
-#include "util/BucketPriorityQueue.hpp"
 
 using namespace std;
 using namespace boost;
 
 int main()
 {
+  cout << "the size of a TilesNode15 is " << sizeof(TilesNode15) << endl;
+  cout << "the size of a TilesState15 is " << sizeof(TilesState15) << endl;
+
   scoped_ptr<TilesInstance15> instance(readTilesInstance15(cin));
 
   if (instance == NULL) {

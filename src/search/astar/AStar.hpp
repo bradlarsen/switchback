@@ -6,7 +6,7 @@
 
 #include <boost/unordered_set.hpp>
 
-#include "util/BucketPriorityQueue.hpp"
+#include "search/BucketPriorityQueue.hpp"
 #include "util/PointerOps.hpp"
 
 
@@ -17,7 +17,7 @@ template <
 class AStar
 {
 private:
-  typedef BucketPriorityQueue<Node *, bucket<Node *>, PointerGeq<Node> > Open;
+  typedef BucketPriorityQueue<Node> Open;
   typedef boost::unordered_set<Node *, PointerHash<Node>, PointerEq<Node> > Closed;
 
 public:

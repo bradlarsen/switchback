@@ -2,7 +2,7 @@
 #include <boost/scoped_ptr.hpp>
 
 #include "tiles/Tiles.hpp"
-#include "util/BucketPriorityQueue.hpp"
+#include "search/BucketPriorityQueue.hpp"
 
 using namespace std;
 using namespace boost;
@@ -20,7 +20,7 @@ int main()
   cout << *instance << endl;
   scoped_ptr<TilesNode15> start_node(instance->create_start_node());
 
-  BucketPriorityQueue<TilesNode15 *> pqueue;
+  BucketPriorityQueue<TilesNode15> pqueue;
 
   cout << "######## The Successors of Start ########" << endl;
   vector<TilesNode15 *> succs;
