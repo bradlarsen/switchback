@@ -9,6 +9,37 @@
 #include <boost/integer_traits.hpp>
 
 
+// TODO: the performance of this code from revision 28 onward has been
+// /significantly/ decreased from revision 27.  My thoughts now are
+// that it is nearly entirely due to heap allocation & data layout,
+// within this class.
+//
+// In revision 27, a BucketPriorityQueue was implemented as a vector
+// of buckets.  Each bucket had, as a field, a vector of lists of node
+// pointers.  There was little indirection that way, and no heap
+// allocation had to be done by any of my code written here.  (vector
+// & list have some heap allocation, but at least for the vector, it
+// is done rarely.)
+//
+// Now, a BucketPriorityQueue has a vector of pointers to buckets.
+// Each buck has a vector of pointers to lists of pointers to nodes.
+// There are at least two more indirections this way, and many heap
+// allocations that must be done.
+//
+// I should try using a memory pool for the lists of pointers, and
+// another for the buckets.  Perhaps this would help.
+//
+// Barring the strategy above, I could re-implement this using a
+// vector of vectors of vectors of node pointers, and rewrite the
+// ItemPointer classes so that they do not contain true
+// iterators---instead, Bucket<Node>::ItemPointer would contain a
+// ``symbolic'' pointer, i.e., a vector index.  But then doing
+// deletions efficiently gets a bit tricky.  Maybe use a vector of
+// vectors of something-else of node pointers, where the
+// something-else doesn't have the crappy heap behavior of a list, but
+// has efficient deletion?
+
+
 namespace
 {
   template <class Node>
