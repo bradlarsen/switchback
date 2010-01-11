@@ -6,6 +6,7 @@ project switchback
     : build-dir build
     : default-build
         <variant>release
+        <variant>debug
         <threading>single
         <link>static
         <runtime-link>static
