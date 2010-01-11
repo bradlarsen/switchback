@@ -7,7 +7,7 @@
 #include <vector>
 
 #include <boost/integer_traits.hpp>
-
+#include <boost/pool/pool.hpp>
 
 // TODO: the performance of this code from revision 28 onward has been
 // /significantly/ decreased from revision 27.  My thoughts now are
@@ -223,13 +223,13 @@ public:
 
     const unsigned bucket_num = n->get_f();
     while (bucket_num >= store.size()) {
-      store.push_back(new Bucket<Node>());
+      store.push_back(Bucket<Node>());
     }
     assert(bucket_num < store.size());
 
     if (bucket_num < first_bucket)
       first_bucket = bucket_num;
-    typename Bucket<Node>::ItemPointer *ptr = store[bucket_num]->push(n);
+    typename Bucket<Node>::ItemPointer *ptr = store[bucket_num].push(n);
     assert(list_found(ptr->it));
 
     assert(invariants_hold());
@@ -243,18 +243,18 @@ public:
     assert(invariants_hold());
 
     assert(ptr->bin_idx < store.size());
-    assert(!store[ptr->bin_idx]->empty());
+    assert(!store[ptr->bin_idx].empty());
 
     assert(list_found(ptr->ptr->it));
-    store[ptr->bin_idx]->erase(ptr->ptr);
-    assert(store[ptr->bin_idx]->size() <= size());
+    store[ptr->bin_idx].erase(ptr->ptr);
+    assert(store[ptr->bin_idx].size() <= size());
 
     if (empty()) {
       first_bucket = boost::integer_traits<unsigned>::const_max;
     }
-    else if (ptr->bin_idx == first_bucket && store[first_bucket]->empty()) {
+    else if (ptr->bin_idx == first_bucket && store[first_bucket].empty()) {
       for (unsigned i = first_bucket + 1; i < store.size(); i += 1) {
-        if (!store[i]->empty()) {
+        if (!store[i].empty()) {
           first_bucket = i;
           break;
         }
@@ -268,12 +268,12 @@ public:
 #ifndef NDEBUG
   bool list_found(const typename std::list<Node *>::const_iterator &clit) const
   {
-    for (typename std::vector< Bucket<Node> * >::const_iterator cit = store.begin();
+    for (typename std::vector< Bucket<Node> >::const_iterator cit = store.begin();
          cit != store.end();
          ++cit)
       {
-        for (typename std::vector< std::list<Node *> * >::const_iterator cit2 = (*cit)->store.begin();
-             cit2 != (*cit)->store.end();
+        for (typename std::vector< std::list<Node *> * >::const_iterator cit2 = (*cit).store.begin();
+             cit2 != (*cit).store.end();
              ++cit2)
           {
             for (typename std::list<Node *>::const_iterator list_it = (*cit2)->begin();
@@ -297,13 +297,13 @@ public:
     assert(!empty());
     assert(first_bucket < store.size());
 
-    assert(!store[first_bucket]->empty());
-    store[first_bucket]->pop();
+    assert(!store[first_bucket].empty());
+    store[first_bucket].pop();
 
-    if (store[first_bucket]->empty()) {
+    if (store[first_bucket].empty()) {
       bool empty = true;
       for (unsigned i = first_bucket + 1; i < store.size(); i += 1) {
-        if (!store[i]->empty()) {
+        if (!store[i].empty()) {
           empty = false;
           first_bucket = i;
           break;
@@ -324,7 +324,7 @@ public:
   {
     assert(!empty());
     assert(first_bucket < store.size());
-    return store[first_bucket]->top();
+    return store[first_bucket].top();
   }
 
   bool empty() const
@@ -336,14 +336,14 @@ public:
   {
     unsigned size_sum = 0;
     for (unsigned i = 0; i < store.size(); i += 1)
-      size_sum += store[i]->size();
+      size_sum += store[i].size();
     return size_sum;
   }
 
 private:
-  std::vector< Bucket<Node> * > store;
-
+  std::vector< Bucket<Node> > store;
   unsigned first_bucket;
+
 
 #ifndef NDEBUG
   bool invariants_hold() const

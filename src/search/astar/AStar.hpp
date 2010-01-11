@@ -69,8 +69,10 @@ public:
 
     while (!open.empty())
     {
+#ifndef NDEBUG
       std::cerr << "open size is " << open.size() << std::endl
                 << "closed size is " << closed.size() << std::endl;
+#endif
 
       assert(all_closed_found());
 
