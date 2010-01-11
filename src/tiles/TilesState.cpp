@@ -7,10 +7,10 @@ std::ostream & operator <<(std::ostream &o, const TilesState15 &tiles)
   for (unsigned y = 0; y < 4; y += 1) {
       unsigned x = 0;
       do {
-        o << static_cast<int>(tiles(y, x)) << '\t';
+        o << tiles(y, x) << '\t';
         x += 1;
       } while (x < 3);
-      o << static_cast<int>(tiles(y, 3)) << '\n';
+      o << tiles(y, 3) << '\n';
   }
 
   return o;

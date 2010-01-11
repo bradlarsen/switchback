@@ -11,7 +11,7 @@ void TilesInstance15::print(std::ostream &o) const
     << goal << std::endl;
 
   o << std::endl << "Initial heuristic estimate: "
-    << static_cast<unsigned>(md_heur.compute_full(start))
+    << md_heur.compute_full(start)
     << std::endl;
 }
 
@@ -67,7 +67,8 @@ const TilesState15 & TilesInstance15::get_goal_state() const
 TilesNode15 * TilesInstance15::create_start_node()
 {
   Cost h = md_heur.compute_full(start);
-  return new (node_pool.malloc()) TilesNode15(start, 0, h, static_cast<const TilesNode15 *>(NULL));
+  return new (node_pool.malloc())
+    TilesNode15(start, 0, h, static_cast<const TilesNode15 *>(NULL));
 }
 
 
