@@ -88,35 +88,34 @@ public:
       num_expanded += 1;
       num_generated += succs.size();
 
-      for (typename std::vector<Node *>::const_iterator succs_it = succs.begin();
-           succs_it != succs.end();
-           ++succs_it)
+      for (unsigned succ_i = 0; succ_i < succs.size(); succ_i += 1)
       {
+        Node *succ = succs[succ_i];
         assert(open.size() <= closed.size());
         assert(all_closed_item_ptrs_valid());
-        typename Closed::iterator closed_it = closed.find(*succs_it);
+        typename Closed::iterator closed_it = closed.find(succ);
         if (closed_it != closed.end()) {
           boost::optional<typename Open::ItemPointer> &open_ptr = closed_it->second;
 
-          if ( !open_ptr) {
+          if ( !open_ptr ) {
             // node is not in the open list, but is closed.  Drop it!
           }
-          else if ((*succs_it)->get_f() < open.lookup(*open_ptr)->get_f()) {
+          else if (succ->get_f() < open.lookup(*open_ptr)->get_f()) {
             // node is in the open list, but we found a better path
             // to its state.
-            assert(open.lookup(*open_ptr)->get_state() == (*succs_it)->get_state());
-            assert(*open.lookup(*open_ptr) == (**succs_it));
+            assert(open.lookup(*open_ptr)->get_state() == succ->get_state());
+            assert(*open.lookup(*open_ptr) == *succ);
             open.erase(*open_ptr);
-            open_ptr = open.push(*succs_it);
+            open_ptr = open.push(succ);
             assert(open_ptr);
             closed_it->second = open_ptr;
             assert(all_closed_item_ptrs_valid());
           }
         }
         else {
-          boost::optional<typename Open::ItemPointer> open_ptr = open.push(*succs_it);
+          boost::optional<typename Open::ItemPointer> open_ptr = open.push(succ);
           assert(open_ptr);
-          closed[*succs_it] = open_ptr;
+          closed[succ] = open_ptr;
           assert(closed.find(open.lookup(*open_ptr)) != closed.end());
           assert(all_closed_item_ptrs_valid());
         }
@@ -148,6 +147,7 @@ public:
 private:
   bool all_closed_item_ptrs_valid() const
   {
+    return true;
     std::cerr << "checking if item pointers are valid" << std::endl
               << "  " << closed.size() << " pointers to check" << std::endl;
     for (typename Closed::const_iterator closed_it = closed.begin();
