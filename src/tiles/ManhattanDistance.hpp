@@ -18,8 +18,7 @@ public:
     Cost dist = 0;
 
     for (unsigned i = 0; i < 16; i += 1)
-      if (s.get_tiles()[i] != 0)
-        dist += lookup_dist(s.get_tiles()[i], i);
+      dist += lookup_dist(s.get_tiles()[i], i);
 
     return dist;
   }
@@ -39,14 +38,17 @@ public:
   
   inline Cost lookup_dist(Tile tile, TileIndex pos) const
   {
-    return table[tile * 16 + pos];
+    assert(0 <= tile && tile <= 15);
+    assert(0 <= pos && pos <= 15);
+
+    return table[tile][pos];
   }
 
 
 private:
   void init(const TilesState15 &goal);
 
-  boost::array<Cost, 4 * 4 * 4 * 4> table;
+  boost::array<boost::array<Cost, 16>, 16> table;
 };
 
 

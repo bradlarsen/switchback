@@ -25,11 +25,15 @@ void ManhattanDist15::init(const TilesState15 &goal)
       int col = pos % 4;
       int row = pos / 4;
 
-      table[tile * 16 + pos] = abs(goal_col - col) + abs(goal_row - row);
+      table[tile][pos] = abs(goal_col - col) + abs(goal_row - row);
     }
   }
 
   for (unsigned i = 0; i < table.size(); ++i) {
-    assert(table[i] <= 6);
+    for (unsigned j = 0; j < table[i].size(); j += 1)
+      if (i == 0)
+        assert(table[i][j] == 0);
+      else
+        assert(table[i][j] <= 6);
   }
 }
