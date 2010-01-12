@@ -58,7 +58,7 @@ public:
 
   void free_node(TilesNode15 *n) const;
   
-  TilesState15 abstract(const TilesState15 &s) const;
+  TilesState15 abstract(const TilesState15 &s, unsigned level) const;
   
 private:
   TilesNode15 * child(const TilesState15 &new_state,
@@ -87,6 +87,8 @@ private:
                                                       const ManhattanDist15 &md) const;
 
   void dump_abstraction_order(std::ostream &o) const;
+
+  bool should_abstract(Tile t, unsigned level) const;
 
 
   const TilesState15 start;

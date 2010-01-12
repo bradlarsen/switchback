@@ -2,9 +2,11 @@
 #define _TILES_STATE_HPP_
 
 
+#include <boost/functional/hash.hpp>
+
 #include <cassert>
 #include <iostream>
-#include <boost/functional/hash.hpp>
+
 #include "TilesTypes.hpp"
 
 

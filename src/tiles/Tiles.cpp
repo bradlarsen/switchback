@@ -81,6 +81,23 @@ void TilesInstance15::free_node(TilesNode15 *n) const
 }
 
 
+TilesState15 TilesInstance15::abstract(const TilesState15 &s, unsigned level) const
+{
+  assert(level < 8);
+
+  TileArray new_tiles(s.get_tiles());
+
+  for (TileIndex i = 0; i < 4; i += 1)
+    for (TileIndex j = 0; j < 4; j += 1) {
+      if ( should_abstract(s(i, j), level) )
+        new_tiles[i * 4 + j] = -1;
+    }
+
+  return TilesState15(new_tiles, s.get_blank());
+}
+
+
+
 std::ostream & operator <<(std::ostream &o, const TilesInstance15 &t)
 {
   t.print(o);
@@ -244,6 +261,34 @@ void TilesInstance15::dump_abstraction_order(std::ostream &o) const
   o << "The abstraction order:" << std::endl;
   for (unsigned i = 0; i < abstraction_order.size(); i += 1) {
     const TilesInstance15::TileCostPair &p = abstraction_order[i];
-    o << "tile " << p.first << " has cost " << p.second << std::endl;
+    o << "  tile " << p.first << " has cost " << p.second << std::endl;
   }
+
+  o << "The following abstraction schedule will be used:" << std::endl;
+  for (unsigned level = 0; level < 8; level += 1) {
+    o << "  " << level << ": ";
+    for (Tile t = 1; t <= 15; t += 1)
+      if (should_abstract(t, level))
+        o << t << " ";
+    o << std::endl;
+  }
+}
+
+
+bool TilesInstance15::should_abstract(Tile t, unsigned level) const
+{
+  assert(-1 <= t && t <= 15);
+  assert(level < 8);
+
+  if (t == -1)
+    return false;
+
+  unsigned t_idx = 0;
+  for (unsigned i = 0; i < abstraction_order.size(); i += 1)
+    if (abstraction_order[i].first == t) {
+      t_idx = i;
+      break;
+    }
+
+  return t_idx < level + 7;
 }
