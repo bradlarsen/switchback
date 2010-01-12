@@ -4,6 +4,8 @@
 
 #include <vector>
 
+#include <boost/none.hpp>
+#include <boost/optional.hpp>
 #include <boost/unordered_map.hpp>
 
 #include "search/BucketPriorityQueue.hpp"
@@ -20,7 +22,7 @@ private:
   typedef BucketPriorityQueue<Node> Open;
   typedef boost::unordered_map<
     Node *,
-    typename BucketPriorityQueue<Node>::ItemPointer *,
+    boost::optional<typename Open::ItemPointer>,
     PointerHash<Node>,
     PointerEq<Node>
     > Closed;
@@ -34,7 +36,6 @@ public:
     , num_generated(0)
   {
     closed.max_load_factor(0.70);
-    assert(all_closed_found());
   }
 
   ~AStar()
@@ -55,17 +56,14 @@ public:
                                            // allocation.
 
     {
-      typename Open::ItemPointer *open_ptr = open.push(domain.create_start_node());
-      assert(open_ptr != NULL);
-      assert(open.list_found(open_ptr->ptr->it));
-      closed.insert(std::make_pair(open_ptr->get_item(), open_ptr));
-      assert(closed.find(open_ptr->get_item()) != closed.end());
+      Node *start_node = domain.create_start_node();
+      boost::optional<typename Open::ItemPointer> open_ptr = open.push(start_node);
+      assert(open_ptr);
+      closed[start_node] = open_ptr;
+      assert(closed.find(start_node) != closed.end());
       assert(open.size() == 1);
       assert(closed.size() == 1);
-      assert(all_closed_found());
     }
-
-    unsigned closed_size = closed.size();
 
     while (!open.empty())
     {
@@ -74,94 +72,52 @@ public:
                 << "closed size is " << closed.size() << std::endl;
 #endif
 
-      assert(all_closed_found());
-
       Node *n = open.top();
-      assert(all_closed_found());
       open.pop();
-      delete closed[n];
-      closed[n] = NULL;
-      assert(all_closed_found());
+      closed[n] = boost::none;
 
       if (domain.is_goal(n->get_state())) {
         goal = n;
         return;
       }
 
-      assert(all_closed_found());
       domain.expand(*n, succs);
       num_expanded += 1;
       num_generated += succs.size();
-      assert(all_closed_found());
 
       for (typename std::vector<Node *>::const_iterator succs_it = succs.begin();
            succs_it != succs.end();
            ++succs_it)
       {
         assert(open.size() <= closed.size());
-        assert(all_closed_found());
         typename Closed::iterator closed_it = closed.find(*succs_it);
-        assert(all_closed_found());
         if (closed_it != closed.end()) {
-          typename Open::ItemPointer *open_ptr = closed_it->second;
-          assert(all_closed_found());
-          if (open_ptr != NULL)
-            assert(open.list_found(open_ptr->ptr->it));
+          boost::optional<typename Open::ItemPointer> &open_ptr = closed_it->second;
 
-          if (open_ptr == NULL) {
-            assert(all_closed_found());
+          if ( !open_ptr) {
             // node is not in the open list, but is closed.  Drop it!
           }
-          else if ((*succs_it)->get_f() < open_ptr->get_item()->get_f()) {
+          else if ((*succs_it)->get_f() < open.lookup(*open_ptr)->get_f()) {
             // node is in the open list, but we found a better path
             // to its state.
-            assert(open_ptr->get_item()->get_state() == (*succs_it)->get_state());
-            assert(*open_ptr->get_item() == (**succs_it));
-            assert(all_closed_found());
-            open.erase(open_ptr);
-            assert(all_closed_found());
+            assert(open.lookup(*open_ptr)->get_state() == (*succs_it)->get_state());
+            assert(*open.lookup(*open_ptr) == (**succs_it));
+            open.erase(*open_ptr);
             open_ptr = open.push(*succs_it);
-            assert(all_closed_found());
-            assert(open.list_found(open_ptr->ptr->it));
-            assert(open_ptr != NULL);
-            assert(all_closed_found());
+            assert(open_ptr);
             closed_it->second = open_ptr;
-            assert(all_closed_found());
-            assert(closed.size() == closed_size);
           }
         }
         else {
-          assert(all_closed_found());
-          typename Open::ItemPointer *open_ptr = open.push(*succs_it);
-          assert(open_ptr != NULL);
-          assert(open.list_found(open_ptr->ptr->it));
+          boost::optional<typename Open::ItemPointer> open_ptr = open.push(*succs_it);
+          assert(open_ptr);
           closed[*succs_it] = open_ptr;
-          assert(all_closed_found());
-          assert(closed_size + 1 == closed.size());
-          closed_size += 1;
-          assert(closed.find(open_ptr->get_item()) != closed.end());
+          assert(closed.find(open.lookup(*open_ptr)) != closed.end());
         }
       }
     }
   }
 
-#ifndef NDEBUG
-  bool all_closed_found() const
-  {
-    unsigned trip_count = 0;
-    for (typename Closed::const_iterator it = closed.begin();
-         it != closed.end();
-         ++it)
-      {
-        trip_count += 1;
-        if (it->second != NULL && !open.list_found(it->second->ptr->it))
-          return false;
-      }
-
-    assert(trip_count == closed.size());
-    return true;
-  }
-#endif
 
   const Node * get_goal() const
   {
