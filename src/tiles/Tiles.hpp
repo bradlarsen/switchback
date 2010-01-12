@@ -1,6 +1,7 @@
 #ifndef _TILES_HPP_
 #define _TILES_HPP_
 
+#include <boost/array.hpp>
 #include <boost/pool/singleton_pool.hpp>
 
 #include <iostream>
@@ -20,6 +21,7 @@ class TilesInstance15 {
 
 private:
   typedef std::pair<Tile, Cost> TileCostPair;
+  typedef boost::array< boost::array<bool, 17>, 8 > AbstractionOrder;
 
 public:
   TilesInstance15 (const TilesState15 &start,
@@ -83,8 +85,11 @@ private:
   }
 
 
-  std::vector<TileCostPair> compute_abstraction_order(const TilesState15 &s,
-                                                      const ManhattanDist15 &md) const;
+  unsigned find_tile_index(const std::vector<TileCostPair> &pairs,
+                           Tile t) const;
+
+  AbstractionOrder compute_abstraction_order(const TilesState15 &s,
+                                             const ManhattanDist15 &md) const;
 
   void dump_abstraction_order(std::ostream &o) const;
 
@@ -96,7 +101,7 @@ private:
 
   const ManhattanDist15 md_heur;
 
-  const std::vector<TileCostPair> abstraction_order;
+  const AbstractionOrder abstraction_order;
 
 private:
   TilesInstance15(const TilesInstance15 &other);

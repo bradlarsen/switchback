@@ -227,7 +227,20 @@ namespace
 }
 
 
-std::vector<TilesInstance15::TileCostPair>
+unsigned
+TilesInstance15::find_tile_index(const std::vector<TileCostPair> &pairs,
+                                 Tile t) const
+{
+  for (unsigned i = 0; i < pairs.size(); i += 1)
+    if (pairs[i].first == t)
+      return i;
+
+  assert(false);
+  return 0;
+}
+
+
+TilesInstance15::AbstractionOrder
 TilesInstance15::compute_abstraction_order(const TilesState15 &s,
                                            const ManhattanDist15 &md) const
 {
@@ -236,38 +249,32 @@ TilesInstance15::compute_abstraction_order(const TilesState15 &s,
   for (TileIndex i = 0; i < 4; i += 1)
     for (TileIndex j = 0; j < 4; j += 1) {
       Tile tile = s(i, j);
+      if (tile == 0)
+        continue;
       Cost cost = md.lookup_dist(tile, i * 4 + j);
       pairs.push_back(std::make_pair(tile, cost));
     }
 
-  sort(pairs.begin(), pairs.end(), lt_snd<TileCostPair>());
-
-  for(std::vector<TileCostPair>::iterator it = pairs.begin();
-      it != pairs.end();
-      ++it) {
-    if (it->first == 0) {
-      pairs.erase(it);
-      break;
-    }
-  }
-
+  std::sort(pairs.begin(), pairs.end(), lt_snd<TileCostPair>());
   assert(pairs.size() == 15);
-  return pairs;
+
+  AbstractionOrder order;
+  for (unsigned level = 0; level < 8; level += 1) {
+    order[level][-1 + 1] = false;
+    order[level][0 + 1] = false;
+    for (Tile t = 1; t < 16; t += 1)
+      order[level][t + 1] = find_tile_index(pairs, t) < level + 7;
+  }
+  return order;
 }
 
 
 void TilesInstance15::dump_abstraction_order(std::ostream &o) const
 {
-  o << "The abstraction order:" << std::endl;
-  for (unsigned i = 0; i < abstraction_order.size(); i += 1) {
-    const TilesInstance15::TileCostPair &p = abstraction_order[i];
-    o << "  tile " << p.first << " has cost " << p.second << std::endl;
-  }
-
   o << "The following abstraction schedule will be used:" << std::endl;
   for (unsigned level = 0; level < 8; level += 1) {
     o << "  " << level << ": ";
-    for (Tile t = 1; t <= 15; t += 1)
+    for (Tile t = -1; t <= 15; t += 1)
       if (should_abstract(t, level))
         o << t << " ";
     o << std::endl;
@@ -280,15 +287,5 @@ bool TilesInstance15::should_abstract(Tile t, unsigned level) const
   assert(-1 <= t && t <= 15);
   assert(level < 8);
 
-  if (t == -1)
-    return false;
-
-  unsigned t_idx = 0;
-  for (unsigned i = 0; i < abstraction_order.size(); i += 1)
-    if (abstraction_order[i].first == t) {
-      t_idx = i;
-      break;
-    }
-
-  return t_idx < level + 7;
+  return abstraction_order[level][t+1];
 }
