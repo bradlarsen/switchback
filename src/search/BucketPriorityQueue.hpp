@@ -79,6 +79,7 @@ public:
 
   void pop()
   {
+    assert(no_all_null_bins());
     assert(!empty());
 
     num_elems -= 1;
@@ -89,19 +90,45 @@ public:
       return;
     }
 
+    assert(no_all_null_bins());
     assert(!store[first_bucket].empty());
     assert(!store[first_bucket].back().empty());
-    store[first_bucket].back().pop_back();
 
-    while (!store[first_bucket].empty() && store[first_bucket].back().empty())
-      store[first_bucket].pop_back();
+    {
+      // Eliminate the last item in the bin, along with its
+      // immediately preceding and trailing NULL items.
+      Bin &bin = store[first_bucket].back();
+      while (!bin.empty() && bin.back() == NULL)
+        bin.pop_back();
+      bin.pop_back();
+      while (!bin.empty() && bin.back() == NULL)
+        bin.pop_back();
 
+      if (bin.empty())
+        bin.clear();
+    }
+
+    assert(no_all_null_bins());
+
+    {
+      // eliminate empty bins in the bucket
+      Bucket &bucket = store[first_bucket];
+      while (!bucket.empty() && bucket.back().empty())
+        bucket.pop_back();
+    }
+
+    assert(no_all_null_bins());
+
+    // Update the first bucket index
     while (store[first_bucket].empty() && first_bucket < store.size() - 1)
       first_bucket += 1;
+
+    assert(no_all_null_bins());
   }
 
   Node * top() const
   {
+    assert(no_all_null_bins());
     assert(!empty());
     assert(first_bucket < store.size());
     assert(!store[first_bucket].empty());
@@ -111,6 +138,7 @@ public:
     // priority queue, we may have to scan an entire bin to find a
     // non-deleted element.
     const Bin &bin = store[first_bucket].back();
+    assert(!bin_vals_all_null(bin));
     for (typename Bin::const_reverse_iterator bin_it = bin.rbegin();
          bin_it != bin.rend();
          ++bin_it) {
@@ -124,7 +152,9 @@ public:
 
   void erase(const ItemPointer &ptr)
   {
-    std::cerr << "erase!" << std::endl;
+    assert(no_all_null_bins());
+
+    // std::cerr << "erase!" << std::endl;
     assert(!empty());
     assert(valid_item_pointer(ptr));
 
@@ -141,7 +171,8 @@ public:
 
     bool all_null = bin_vals_all_null(bin);
     if (all_null && bucket.size() == ptr.bin_num + 1) {
-      std::cerr << "bin at end to be popped" << std::endl;
+      // std::cerr << "bin at end to be popped" << std::endl;
+
       // The bin at the end of the bucket has been entirely deleted.
       // Get rid of it.
       //
@@ -150,7 +181,8 @@ public:
       bucket.pop_back();
 
       if (bucket.empty() && ptr.bucket_num == first_bucket) {
-        std::cerr << "first bucket to be updated" << std::endl;
+        // std::cerr << "first bucket to be updated" << std::endl;
+
         // The first bucket has been emptied.  We need to find the new
         // first bucket.
         assert(!empty());
@@ -159,13 +191,16 @@ public:
       }
     }
     else if (all_null) {
-      std::cerr << "non-last bin to be cleared" << std::endl;
+      // std::cerr << "non-last bin to be cleared" << std::endl;
+
       // A bin somewhere in the bucket, but not at the end, has been
       // entirely deleted.  Clear it out, but don't delete it, as
       // deletion would invalidate any ItemPointers that have been
       // handed out.
       bin.clear();
     }
+
+    assert(no_all_null_bins());
   }
 
   Node * lookup(const ItemPointer &ptr)
@@ -187,6 +222,12 @@ public:
   }
 
 private:
+  void reset()
+  {
+    first_bucket = boost::integer_traits<unsigned>::const_max;
+    store.clear();
+  }
+
   bool bin_vals_all_null(const Bin &bin) const
   {
     for (unsigned i = 0; i < bin.size(); ++i)
@@ -196,10 +237,17 @@ private:
     return true;
   }
 
-  void reset()
+  bool no_all_null_bins() const
   {
-    first_bucket = boost::integer_traits<unsigned>::const_max;
-    store.clear();
+    for (unsigned buck_i = 0; buck_i < store.size(); buck_i += 1) {
+      for (unsigned bin_i = 0; bin_i < store[buck_i].size(); bin_i += 1) {
+        if (!store[buck_i][bin_i].empty() && bin_vals_all_null(store[buck_i][bin_i])) {
+          std::cerr << "error: bin " << bin_i << " in bucket " << buck_i << " is all NULL!" << std::endl;
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
 
