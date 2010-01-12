@@ -1,3 +1,28 @@
+variant mydebug
+    :
+      <optimization>off
+      <debug-symbols>on
+      <inlining>off
+      <runtime-debugging>on
+      <define>_GLIBCXX_DEBUG
+      <toolset>gcc
+    ;
+
+variant myrelease
+    :
+      <optimization>speed
+      <debug-symbols>off
+      <runtime-debugging>off
+      <inlining>full
+      <define>NDEBUG
+      <threading>single
+      <link>static
+      <runtime-link>static
+      <toolset>gcc
+      <address-model>64
+    ;
+
+
 project switchback
     : requirements
         <include>boost_1_41_0
@@ -5,16 +30,11 @@ project switchback
     : source-location src
     : build-dir build
     : default-build
-#        <variant>release
-        <variant>debug
-#        <threading>single
-#        <link>static
-#        <runtime-link>static
-#        <address-model>64
-        <toolset>gcc
-        <define>_GLIBCXX_DEBUG
+        <variant>mydebug
+        <variant>myrelease
         <warnings>on
     ;
+
 
 exe tiles-search
     :
