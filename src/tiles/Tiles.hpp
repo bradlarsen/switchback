@@ -33,6 +33,15 @@ public:
   {
 #ifndef NDEBUG
     dump_abstraction_order(std::cerr);
+
+    std::cerr << "the 9 abstractions of the start node:" << std::endl
+              << "base level:" <<std::endl
+              << start << std::endl;
+    for (unsigned level = 0; level < 8; level += 1) {
+      TilesState15 abs_start = abstract(start, level);
+      std::cerr << "abstraction " << level+1 << ":" << std::endl
+                << abs_start << std::endl;
+    }
 #endif
     assert(is_goal(goal));
   }
