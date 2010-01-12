@@ -104,6 +104,14 @@ public:
         if (closed_it != closed.end()) {
           boost::optional<typename Open::ItemPointer> &open_ptr = closed_it->second;
 
+          // TODO: I could be smarter about memory usage here.
+          // Although my code appears to have no memory leaks when run
+          // with valgrind, I do leak memory here.  If a succesor has
+          // been generated, but is pruned, or if the successor
+          // replaces a worse version in the open list, the old
+          // versions are not freed, and end up hanging on to space in
+          // the memory pool.
+
           if ( !open_ptr ) {
             // node is not in the open list, but is closed.  Drop it!
           }
