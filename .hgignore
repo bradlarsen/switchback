@@ -3,3 +3,4 @@ syntax: glob
 boost_1_41_0/*
 bin/*
 build/*
+data/*
