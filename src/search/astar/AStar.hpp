@@ -82,6 +82,7 @@ public:
 
       Node *n = open.top();
       open.pop();
+      assert(closed.find(n) != closed.end());
       closed[n] = boost::none;
       assert(all_closed_item_ptrs_valid());
 
