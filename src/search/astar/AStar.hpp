@@ -126,6 +126,10 @@ public:
 
   const Node * get_goal() const
   {
+#ifndef NDEBUG
+    std::cerr << open.size() << " nodes in open at end of search" << std::endl
+              << closed.size() << " nodes in closed at end of search" << std::endl;
+#endif
     return goal;
   }
 
