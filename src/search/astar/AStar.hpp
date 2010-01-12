@@ -6,6 +6,7 @@
 
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
+#include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
 
 #include "search/BucketPriorityQueue.hpp"
@@ -25,6 +26,8 @@ private:
     boost::optional<typename Open::ItemPointer>,
     PointerHash<Node>,
     PointerEq<Node>
+    , boost::fast_pool_allocator< std::pair<Node * const,
+                                            boost::optional<typename Open::ItemPointer> > >
     > Closed;
 
 public:
@@ -35,7 +38,6 @@ public:
     , num_expanded(0)
     , num_generated(0)
   {
-    closed.max_load_factor(0.70);
   }
 
   ~AStar()

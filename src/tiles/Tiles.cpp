@@ -17,7 +17,7 @@ void TilesInstance15::print(std::ostream &o) const
 
 
 void TilesInstance15::expand(const TilesNode15 &n,
-                             std::vector<TilesNode15 *> &succs)
+                             std::vector<TilesNode15 *> &succs) const
 {
   succs.clear();
   const TilesNode15 *gp = n.get_parent();
@@ -64,10 +64,10 @@ const TilesState15 & TilesInstance15::get_goal_state() const
 }
 
 
-TilesNode15 * TilesInstance15::create_start_node()
+TilesNode15 * TilesInstance15::create_start_node() const
 {
   Cost h = md_heur.compute_full(start);
-  return new (node_pool.malloc())
+  return new (NodePool::malloc())
     TilesNode15(start, 0, h, static_cast<const TilesNode15 *>(NULL));
 }
 

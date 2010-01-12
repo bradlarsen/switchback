@@ -1,7 +1,7 @@
 #ifndef _TILES_HPP_
 #define _TILES_HPP_
 
-#include <boost/pool/pool.hpp>
+#include <boost/pool/singleton_pool.hpp>
 #include <iostream>
 #include <vector>
 
@@ -21,6 +21,10 @@
 // Drop everything on the floor when the program terminates!
 
 
+// Used with boost's singleton pool.
+struct TilesNode15Tag { };
+typedef boost::singleton_pool<TilesNode15Tag, sizeof(TilesNode15)> NodePool;
+
 
 class TilesInstance15 {
 public:
@@ -29,16 +33,9 @@ public:
     : start(start)
     , goal(goal)
     , md_heur(ManhattanDist15(goal))
-    , node_pool(sizeof(TilesNode15))
   {
     assert(is_goal(goal));
   }
-
-
-  ~TilesInstance15()
-  {
-  }
-
 
 
   void print(std::ostream &o) const;
@@ -52,7 +49,7 @@ public:
    * Expands the given node into the given vector for successors.  The
    * caller need not worry about disposing of the successors.
    */
-  void expand(const TilesNode15 &n, std::vector<TilesNode15 *> &succs);
+  void expand(const TilesNode15 &n, std::vector<TilesNode15 *> &succs) const;
 
   const TilesState15 & get_start_state() const;
   const TilesState15 & get_goal_state() const;
@@ -61,7 +58,7 @@ public:
    * Creates the start node, for the start state.  The caller need not
    * worry about disposing of the returned node.
    */
-  TilesNode15 * create_start_node();
+  TilesNode15 * create_start_node() const;
 
   /**
    * Indicates how many buckets will be needed in a bucket-based
@@ -75,7 +72,7 @@ public:
 private:
   TilesNode15 * child(const TilesState15 &new_state,
                       Cost new_g,
-                      const TilesNode15 &parent)
+                      const TilesNode15 &parent) const
   {
     assert(new_state != parent.get_state());
     assert(parent.get_parent() == NULL ||
@@ -84,7 +81,7 @@ private:
     if (!is_goal(new_state))
       new_h = 1 > new_h ? 1 : new_h;
 
-    TilesNode15 *child_node = new (node_pool.malloc()) TilesNode15(new_state,
+    TilesNode15 *child_node = new (NodePool::malloc()) TilesNode15(new_state,
                                                                    new_g,
                                                                    new_h,
                                                                    &parent);
@@ -99,8 +96,6 @@ private:
   const TilesState15 goal;
 
   const ManhattanDist15 md_heur;
-
-  boost::pool<> node_pool;
 
 private:
   TilesInstance15(const TilesInstance15 &other);

@@ -15,7 +15,7 @@ variant myrelease
       <runtime-debugging>off
       <inlining>full
       <define>NDEBUG
-      <threading>single
+      <threading>multi
       <link>static
       <runtime-link>static
       <toolset>gcc
