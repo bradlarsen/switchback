@@ -53,40 +53,24 @@ public:
 
   ItemPointer push(Node *n)
   {
-#ifndef NDEBUG
-    std::cerr << "push!" << std::endl;
-#endif
-
     num_elems += 1;
 
     const unsigned bucket_num = n->get_f();
-    if (bucket_num >= store.size()) {
-#ifndef NDEBUG
-      std::cerr << "resizing store from " << store.size() << " to " << bucket_num + 1 << std::endl;
-#endif
+    if (bucket_num >= store.size())
       store.resize(bucket_num + 1);
-    }
     assert(bucket_num < store.size());
  
     const unsigned bin_num = n->get_g();
-    if (bin_num >= store[bucket_num].size()) {
-#ifndef NDEBUG
-      std::cerr << "resizing bucket " << bucket_num << " from " << store[bucket_num].size() << " to " << bin_num + 1 << std::endl;
-#endif
+    if (bin_num >= store[bucket_num].size())
       store[bucket_num].resize(bin_num + 1);
-    }
     assert(bin_num < store[bucket_num].size());
 
     store[bucket_num][bin_num].push_back(n);
     
     const unsigned idx = store[bucket_num][bin_num].size() - 1;
 
-    if (bucket_num < first_bucket) {
-#ifndef NDEBUG
-      std::cerr << "changing first_bucket from " << first_bucket << " to " << bucket_num << std::endl;
-#endif
+    if (bucket_num < first_bucket)
       first_bucket = bucket_num;
-    }
 
     ItemPointer item_ptr = ItemPointer(bucket_num, bin_num, idx);
     return item_ptr;
@@ -94,18 +78,12 @@ public:
 
   void pop()
   {
-#ifndef NDEBUG
-    std::cerr << "pop!" << std::endl;
-#endif
     assert(!empty());
 
     num_elems -= 1;
 
     if (empty()) {
       // entire priority queue has been exhausted
-#ifndef NDEBUG
-      std::cerr << "priority queue exhausted" << std::endl;
-#endif
       first_bucket = boost::integer_traits<unsigned>::const_max;
       store.clear();
       return;
@@ -115,21 +93,11 @@ public:
     assert(!store[first_bucket].back().empty());
     store[first_bucket].back().pop_back();
 
-    while (!store[first_bucket].empty() && store[first_bucket].back().empty()) {
-#ifndef NDEBUG
-      std::cerr << "popping a bin from bucket " << first_bucket << std::endl
-                << "  bin has size " << store[first_bucket].back().size() << std::endl
-                << "  bucket " << first_bucket << " has size " << store[first_bucket].size() << std::endl;
-#endif
+    while (!store[first_bucket].empty() && store[first_bucket].back().empty())
       store[first_bucket].pop_back();
-    }
 
-    while (store[first_bucket].empty() && first_bucket < store.size() - 1) {
-#ifndef NDEBUG
-      std::cerr << "incrementing first_bucket from " << first_bucket << std::endl;
-#endif
+    while (store[first_bucket].empty() && first_bucket < store.size() - 1)
       first_bucket += 1;
-    }
   }
 
   Node * top() const
@@ -145,8 +113,8 @@ public:
 
   void erase(const ItemPointer &ptr)
   {
-    assert(false);
     assert(!empty());
+    assert(store[ptr.bucket_num][ptr.bin_num][ptr.idx] != NULL);
     store[ptr.bucket_num][ptr.bin_num][ptr.idx] = NULL;
   }
 
@@ -154,8 +122,7 @@ public:
   {
     assert(!empty());
     assert(ptr.bucket_num < store.size());
-    Node * ret = store[ptr.bucket_num][ptr.bin_num][ptr.idx];
-    assert(ret != NULL);
+    Node *ret = store[ptr.bucket_num][ptr.bin_num][ptr.idx];
     return ret;
   }
 
