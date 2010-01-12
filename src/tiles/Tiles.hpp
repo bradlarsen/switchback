@@ -10,17 +10,6 @@
 #include "tiles/TilesNode.hpp"
 
 
-// TODO: If the definitions are tweaked herememory pool is changed so
-// that its destructor is not called, it saves significant time at the
-// end.  In Revision 27, on Korf 1, it is the difference between ~24
-// seconds and ~14 seconds.
-//
-// Cleanup could be further quickened by ensuring A*'s closed set and
-// open set are not destructed.
-//
-// Drop everything on the floor when the program terminates!
-
-
 // Used with boost's singleton pool.
 struct TilesNode15Tag { };
 typedef boost::singleton_pool<TilesNode15Tag, sizeof(TilesNode15)> NodePool;
@@ -60,14 +49,6 @@ public:
    */
   TilesNode15 * create_start_node() const;
 
-  /**
-   * Indicates how many buckets will be needed in a bucket-based
-   * priority queue data structure.
-   *
-   * For the 15-puzzle, I believe the hardest instances have an
-   * f-value around 70.
-   */
-  unsigned get_num_buckets() const;
 
 private:
   TilesNode15 * child(const TilesState15 &new_state,

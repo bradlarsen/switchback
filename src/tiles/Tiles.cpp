@@ -72,11 +72,6 @@ TilesNode15 * TilesInstance15::create_start_node() const
 }
 
 
-unsigned TilesInstance15::get_num_buckets() const
-{
-  return 100;
-}
-
 
 std::ostream & operator <<(std::ostream &o, const TilesInstance15 &t)
 {
