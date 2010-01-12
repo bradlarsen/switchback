@@ -29,7 +29,7 @@ private:
 
 public:
   AStar(Domain &domain)
-    : closed(50000000)  // requested number of hash buckets
+    : closed()  // requested number of hash buckets
     , goal(NULL)
     , domain(domain)
     , num_expanded(0)
@@ -56,6 +56,7 @@ public:
                                            // allocation.
 
     {
+      assert(all_closed_item_ptrs_valid());
       Node *start_node = domain.create_start_node();
       boost::optional<typename Open::ItemPointer> open_ptr = open.push(start_node);
       assert(open_ptr);
@@ -63,18 +64,20 @@ public:
       assert(closed.find(start_node) != closed.end());
       assert(open.size() == 1);
       assert(closed.size() == 1);
+      assert(all_closed_item_ptrs_valid());
     }
 
     while (!open.empty())
     {
-#ifndef NDEBUG
-      std::cerr << "open size is " << open.size() << std::endl
-                << "closed size is " << closed.size() << std::endl;
-#endif
+// #ifndef NDEBUG
+//       std::cerr << "open size is " << open.size() << std::endl
+//                 << "closed size is " << closed.size() << std::endl;
+// #endif
 
       Node *n = open.top();
       open.pop();
       closed[n] = boost::none;
+      assert(all_closed_item_ptrs_valid());
 
       if (domain.is_goal(n->get_state())) {
         goal = n;
@@ -90,6 +93,7 @@ public:
            ++succs_it)
       {
         assert(open.size() <= closed.size());
+        assert(all_closed_item_ptrs_valid());
         typename Closed::iterator closed_it = closed.find(*succs_it);
         if (closed_it != closed.end()) {
           boost::optional<typename Open::ItemPointer> &open_ptr = closed_it->second;
@@ -106,6 +110,7 @@ public:
             open_ptr = open.push(*succs_it);
             assert(open_ptr);
             closed_it->second = open_ptr;
+            assert(all_closed_item_ptrs_valid());
           }
         }
         else {
@@ -113,6 +118,7 @@ public:
           assert(open_ptr);
           closed[*succs_it] = open_ptr;
           assert(closed.find(open.lookup(*open_ptr)) != closed.end());
+          assert(all_closed_item_ptrs_valid());
         }
       }
     }
@@ -137,6 +143,20 @@ public:
   unsigned get_num_expanded() const
   {
     return num_expanded;
+  }
+
+private:
+  bool all_closed_item_ptrs_valid() const
+  {
+    std::cerr << "checking if item pointers are valid" << std::endl
+              << "  " << closed.size() << " pointers to check" << std::endl;
+    for (typename Closed::const_iterator closed_it = closed.begin();
+         closed_it != closed.end();
+         ++closed_it) {
+      if ( closed_it->second && !open.valid_item_pointer(*closed_it->second) )
+        return false;
+    }
+    return true;
   }
 
 private:
