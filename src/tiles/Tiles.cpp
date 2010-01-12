@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <cassert>
+
 #include "tiles/Tiles.hpp"
 
 
@@ -186,4 +188,56 @@ TilesInstance15 * readTilesInstance15 (std::istream &in)
   }
 
   return NULL;
+}
+
+
+namespace
+{
+  template <class T>
+  struct lt_snd
+  {
+    bool operator ()(const T &p1, const T &p2) const
+    {
+      return p1.second < p2.second;
+    }
+  };
+}
+
+
+std::vector<TilesInstance15::TileCostPair>
+TilesInstance15::compute_abstraction_order(const TilesState15 &s,
+                                           const ManhattanDist15 &md) const
+{
+  std::vector<TileCostPair> pairs;
+
+  for (TileIndex i = 0; i < 4; i += 1)
+    for (TileIndex j = 0; j < 4; j += 1) {
+      Tile tile = s(i, j);
+      Cost cost = md.lookup_dist(tile, i * 4 + j);
+      pairs.push_back(std::make_pair(tile, cost));
+    }
+
+  sort(pairs.begin(), pairs.end(), lt_snd<TileCostPair>());
+
+  for(std::vector<TileCostPair>::iterator it = pairs.begin();
+      it != pairs.end();
+      ++it) {
+    if (it->first == 0) {
+      pairs.erase(it);
+      break;
+    }
+  }
+
+  assert(pairs.size() == 15);
+  return pairs;
+}
+
+
+void TilesInstance15::dump_abstraction_order(std::ostream &o) const
+{
+  o << "The abstraction order:" << std::endl;
+  for (unsigned i = 0; i < abstraction_order.size(); i += 1) {
+    const TilesInstance15::TileCostPair &p = abstraction_order[i];
+    o << "tile " << p.first << " has cost " << p.second << std::endl;
+  }
 }

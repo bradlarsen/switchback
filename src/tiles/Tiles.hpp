@@ -2,6 +2,7 @@
 #define _TILES_HPP_
 
 #include <boost/pool/singleton_pool.hpp>
+
 #include <iostream>
 #include <vector>
 
@@ -16,13 +17,21 @@ typedef boost::singleton_pool<TilesNode15Tag, sizeof(TilesNode15)> NodePool;
 
 
 class TilesInstance15 {
+
+private:
+  typedef std::pair<Tile, Cost> TileCostPair;
+
 public:
   TilesInstance15 (const TilesState15 &start,
                    const TilesState15 &goal)
     : start(start)
     , goal(goal)
-    , md_heur(ManhattanDist15(goal))
+    , md_heur(goal)
+    , abstraction_order(compute_abstraction_order(start, md_heur))
   {
+#ifndef NDEBUG
+    dump_abstraction_order(std::cerr);
+#endif
     assert(is_goal(goal));
   }
 
@@ -73,10 +82,18 @@ private:
   }
 
 
+  std::vector<TileCostPair> compute_abstraction_order(const TilesState15 &s,
+                                                      const ManhattanDist15 &md) const;
+
+  void dump_abstraction_order(std::ostream &o) const;
+
+
   const TilesState15 start;
   const TilesState15 goal;
 
   const ManhattanDist15 md_heur;
+
+  const std::vector<TileCostPair> abstraction_order;
 
 private:
   TilesInstance15(const TilesInstance15 &other);
