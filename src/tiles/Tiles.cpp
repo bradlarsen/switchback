@@ -74,6 +74,12 @@ TilesNode15 * TilesInstance15::create_start_node() const
 }
 
 
+void TilesInstance15::free_node(TilesNode15 *n) const
+{
+  assert(NodePool::is_from(n));
+  NodePool::free(n);
+}
+
 
 std::ostream & operator <<(std::ostream &o, const TilesInstance15 &t)
 {

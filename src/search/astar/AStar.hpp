@@ -101,35 +101,35 @@ public:
         assert(open.size() <= closed.size());
         assert(all_closed_item_ptrs_valid());
         typename Closed::iterator closed_it = closed.find(succ);
-        if (closed_it != closed.end()) {
+        if (closed.find(succ) != closed.end()) {
           boost::optional<typename Open::ItemPointer> &open_ptr = closed_it->second;
 
-          // TODO: I could be smarter about memory usage here.
-          // Although my code appears to have no memory leaks when run
-          // with valgrind, I do leak memory here.  If a succesor has
-          // been generated, but is pruned, or if the successor
-          // replaces a worse version in the open list, the old
-          // versions are not freed, and end up hanging on to space in
-          // the memory pool.
+          if ( open_ptr ) {
+            Node *old_succ = open.lookup(*open_ptr);
 
-          if ( !open_ptr ) {
-            // node is not in the open list, but is closed.  Drop it!
+            if ( succ->get_f() < old_succ->get_f() ) {
+              // A worse copy of succ is in the open list.  Replace it!
+              assert(old_succ->get_state() == succ->get_state());
+              assert(*old_succ == *succ);
+
+              domain.free_node(old_succ);    // get rid of the old copy
+              open.erase(*open_ptr);
+              closed.erase(succ);
+
+              open_ptr = open.push(succ);    // insert the new copy
+              closed[succ] = open_ptr;
+
+              assert(all_closed_item_ptrs_valid());
+            }
           }
-          else if (succ->get_f() < open.lookup(*open_ptr)->get_f()) {
-            // node is in the open list, but we found a better path
-            // to its state.
-            assert(open.lookup(*open_ptr)->get_state() == succ->get_state());
-            assert(*open.lookup(*open_ptr) == *succ);
-            open.erase(*open_ptr);
-            open_ptr = open.push(succ);
-            assert(open_ptr);
-            closed_it->second = open_ptr;
-            assert(all_closed_item_ptrs_valid());
+          else {
+            // succ is not in the open list, but is closed.  Drop it!
+            domain.free_node(succ);
           }
         }
         else {
+          // succ has not been generated before.
           boost::optional<typename Open::ItemPointer> open_ptr = open.push(succ);
-          assert(open_ptr);
           closed[succ] = open_ptr;
           assert(closed.find(open.lookup(*open_ptr)) != closed.end());
           assert(all_closed_item_ptrs_valid());
