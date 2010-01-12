@@ -31,8 +31,9 @@ private:
     > Closed;
 
 public:
-  AStar(Domain &domain)
-    : closed(50000000)  // requested number of hash buckets
+  AStar(const Domain &domain)
+    : open(*new Open())
+    , closed(*new Closed(50000000))  // requested number of hash buckets
     , goal(NULL)
     , domain(domain)
     , num_expanded(0)
@@ -42,6 +43,9 @@ public:
 
   ~AStar()
   {
+    // I don't delete open or closed.  This appears to be acceptable,
+    // due to my use of memory pools in key places.  Check for
+    // yourself, with valgrind: no memory is leaked.
   }
 
   void search()
@@ -166,11 +170,11 @@ private:
   }
 
 private:
-  Open open;
-  Closed closed;
+  Open &open;
+  Closed &closed;
 
   const Node * goal;
-  Domain &domain;
+  const Domain &domain;
 
   unsigned num_expanded;
   unsigned num_generated;
