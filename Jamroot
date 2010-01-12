@@ -5,13 +5,14 @@ project switchback
     : source-location src
     : build-dir build
     : default-build
-        <variant>release
+#        <variant>release
         <variant>debug
-        <threading>single
-        <link>static
-        <runtime-link>static
-        <address-model>64
+#        <threading>single
+#        <link>static
+#        <runtime-link>static
+#        <address-model>64
         <toolset>gcc
+        <define>_GLIBCXX_DEBUG
         <warnings>on
     ;
 
