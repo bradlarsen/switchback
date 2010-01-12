@@ -31,7 +31,7 @@ project switchback
     : build-dir build
     : default-build
         <variant>mydebug
-        <variant>myrelease
+#        <variant>myrelease
         <warnings>on
     ;
 
