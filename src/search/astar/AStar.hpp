@@ -29,7 +29,7 @@ private:
 
 public:
   AStar(Domain &domain)
-    : closed()  // requested number of hash buckets
+    : closed(50000000)  // requested number of hash buckets
     , goal(NULL)
     , domain(domain)
     , num_expanded(0)
@@ -119,8 +119,8 @@ public:
           assert(closed.find(open.lookup(*open_ptr)) != closed.end());
           assert(all_closed_item_ptrs_valid());
         }
-      }
-    }
+      } /* end for */
+    } /* end while */
   }
 
 
