@@ -36,6 +36,7 @@ public:
     : open(*new Open())
     , closed(*new Closed(50000000))  // requested number of hash buckets
     , goal(NULL)
+    , searched(false)
     , domain(domain)
     , num_expanded(0)
     , num_generated(0)
@@ -51,10 +52,9 @@ public:
 
   void search()
   {
-    // TODO: the following check is buggy.  What if there is no goal,
-    // and the search has been completed?
-    if (goal != NULL)
+    if (searched || goal != NULL)
       return;
+    searched = true;
 
     typename std::vector<Node *> succs;    // re-use a stack-allocated
                                            // vector for successor
@@ -184,6 +184,8 @@ private:
   Closed &closed;
 
   const Node * goal;
+  bool searched;
+
   const Domain &domain;
 
   unsigned num_expanded;
