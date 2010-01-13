@@ -170,6 +170,7 @@ public:
 private:
   bool all_closed_item_ptrs_valid() const
   {
+#ifdef CHECK_ALL_CLOSED_ITEM_PTRS_VALID
     std::cerr << "checking if item pointers are valid" << std::endl
               << "  " << closed.size() << " pointers to check" << std::endl;
     for (ClosedConstIterator closed_it = closed.begin();
@@ -179,6 +180,9 @@ private:
         return false;
     }
     return true;
+#else
+    return true;
+#endif
   }
 
 private:
