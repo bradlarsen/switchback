@@ -107,7 +107,7 @@ public:
         assert(all_closed_item_ptrs_valid());
         ClosedIterator closed_it = closed.find(succ);
         if (closed_it != closed.end()) {
-          MaybeItemPointer &open_ptr = closed_it->second;
+          const MaybeItemPointer &open_ptr = closed_it->second;
 
           if ( open_ptr ) {
             Node *old_succ = open.lookup(*open_ptr);
@@ -117,14 +117,17 @@ public:
               assert(old_succ->get_state() == succ->get_state());
               assert(*old_succ == *succ);
 
-              domain.free_node(old_succ);    // get rid of the old copy
               open.erase(*open_ptr);
-              closed.erase(succ);
+              closed.erase(old_succ);
+              domain.free_node(old_succ);    // get rid of the old copy
 
-              open_ptr = open.push(succ);    // insert the new copy
-              closed[succ] = open_ptr;
+              closed[succ] = open.push(succ);    // insert the new copy
 
               assert(all_closed_item_ptrs_valid());
+            }
+            else {
+              // This child is worse than the copy in the open list.  Drop it!
+              domain.free_node(succ);
             }
           }
           else {
