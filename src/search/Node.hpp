@@ -3,12 +3,15 @@
 
 
 template <
-  class State,
-  class Cost
+  class StateT,
+  class CostT
   >
 class Node
 {
 public:
+  typedef StateT State;
+  typedef CostT Cost;
+
   Node(const State &s,
        Cost g,
        Cost h,
