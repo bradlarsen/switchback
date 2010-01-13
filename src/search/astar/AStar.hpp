@@ -104,7 +104,7 @@ public:
         assert(open.size() <= closed.size());
         assert(all_closed_item_ptrs_valid());
         ClosedIterator closed_it = closed.find(succ);
-        if (closed.find(succ) != closed.end()) {
+        if (closed_it != closed.end()) {
           MaybeItemPointer &open_ptr = closed_it->second;
 
           if ( open_ptr ) {
