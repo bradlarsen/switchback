@@ -18,10 +18,15 @@ typedef boost::singleton_pool<TilesNode15Tag, sizeof(TilesNode15)> NodePool;
 
 
 class TilesInstance15 {
+public:
+  static const unsigned num_abstraction_levels = 8;
 
 private:
   typedef std::pair<Tile, Cost> TileCostPair;
-  typedef boost::array< boost::array<bool, 17>, 8 > AbstractionOrder;
+  typedef boost::array<
+    boost::array<bool, 17>,
+    num_abstraction_levels
+    > AbstractionOrder;
 
 public:
   TilesInstance15 (const TilesState15 &start,
@@ -37,7 +42,7 @@ public:
     std::cerr << "the 9 abstractions of the start node:" << std::endl
               << "base level:" <<std::endl
               << start << std::endl;
-    for (unsigned level = 0; level < 8; level += 1) {
+    for (unsigned level = 0; level < num_abstraction_levels; level += 1) {
       TilesState15 abs_start = abstract(start, level);
       std::cerr << "abstraction " << level+1 << ":" << std::endl
                 << abs_start << std::endl;
