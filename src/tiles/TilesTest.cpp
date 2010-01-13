@@ -24,8 +24,9 @@ int main()
 
   cout << "######## The Successors of Start ########" << endl;
   vector<TilesNode15 *> succs;
-  instance->expand(*start_node, succs);
+  instance->compute_successors(*start_node, succs);
   for (unsigned i = 0; i < succs.size(); i += 1) {
+    instance->compute_heuristic(*start_node, *succs[i]);
     cout << "######## Successor " << i+1 << " ########" << endl;
     cout << *succs[i] << endl;
     pqueue.push(succs[i]);

@@ -33,9 +33,19 @@ public:
     return g;
   }
 
+  inline void set_g(Cost new_g)
+  {
+    g = new_g;
+  }
+
   inline Cost get_h() const
   {
     return h;
+  }
+
+  inline void set_h(Cost new_h)
+  {
+    h = new_h;
   }
 
   inline const State & get_state() const

@@ -94,13 +94,14 @@ public:
         return;
       }
 
-      domain.expand(*n, succs);
+      domain.compute_successors(*n, succs);
       num_expanded += 1;
       num_generated += succs.size();
 
       for (unsigned succ_i = 0; succ_i < succs.size(); succ_i += 1)
       {
         Node *succ = succs[succ_i];
+        domain.compute_heuristic(*n, *succ);
         assert(open.size() <= closed.size());
         assert(all_closed_item_ptrs_valid());
         ClosedIterator closed_it = closed.find(succ);
@@ -169,7 +170,6 @@ public:
 private:
   bool all_closed_item_ptrs_valid() const
   {
-    return true;
     std::cerr << "checking if item pointers are valid" << std::endl
               << "  " << closed.size() << " pointers to check" << std::endl;
     for (ClosedConstIterator closed_it = closed.begin();

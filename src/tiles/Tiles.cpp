@@ -18,8 +18,34 @@ void TilesInstance15::print(std::ostream &o) const
 }
 
 
-void TilesInstance15::expand(const TilesNode15 &n,
-                             std::vector<TilesNode15 *> &succs) const
+TilesNode15 * TilesInstance15::child(const TilesState15 &new_state,
+                                     Cost new_g,
+                                     const TilesNode15 &parent) const
+{
+  assert(new_state != parent.get_state());
+  assert(parent.get_parent() == NULL ||
+         new_state != parent.get_parent()->get_state());
+  TilesNode15 *child_node = new (NodePool::malloc()) TilesNode15(new_state,
+                                                                 new_g,
+                                                                 0,
+                                                                 &parent);
+  return child_node;
+}
+
+
+void TilesInstance15::compute_heuristic(const TilesNode15 &parent,
+                                        TilesNode15 &child) const
+{
+  Cost new_h = md_heur.compute_incr(child.get_state(), parent);
+  if (!is_goal(child.get_state()))
+    new_h = 1 > new_h ? 1 : new_h;
+  child.set_h(new_h);
+}
+
+
+
+void TilesInstance15::compute_successors(const TilesNode15 &n,
+                                         std::vector<TilesNode15 *> &succs) const
 {
   succs.clear();
   const TilesNode15 *gp = n.get_parent();
@@ -52,6 +78,14 @@ void TilesInstance15::expand(const TilesNode15 &n,
     succs.push_back(child_node);
   }
 }
+
+
+void TilesInstance15::compute_predecessors(const TilesNode15 &n,
+                                           std::vector<TilesNode15 *> &succs) const
+{
+  compute_successors(n, succs);
+}
+
 
 
 const TilesState15 & TilesInstance15::get_start_state() const
