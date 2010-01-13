@@ -271,16 +271,16 @@ private:
 
   void dump_open_sizes(std::ostream &o) const
   {
-    o << "open sizes: ";
+    o << "open sizes: " << std::endl;
     for (unsigned level = 0; level < hierarchy_height; level += 1)
-      o << "  " << open[level].size() << std::endl;
+      o << "  " << level << ": " << open[level].size() << std::endl;
   }
 
   void dump_closed_sizes(std::ostream &o) const
   {
-    o << "closed sizes: ";
+    o << "closed sizes: " << std::endl;
     for (unsigned level = 0; level < hierarchy_height; level += 1)
-      o << "  " << closed[level].size() << std::endl;
+      o << "  " << level << ": " << closed[level].size() << std::endl;
   }
 };
 
