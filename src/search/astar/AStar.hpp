@@ -26,8 +26,9 @@ private:
     boost::optional<typename Open::ItemPointer>,
     PointerHash<Node>,
     PointerEq<Node>
-    , boost::fast_pool_allocator< std::pair<Node * const,
-                                            boost::optional<typename Open::ItemPointer> > >
+    , boost::fast_pool_allocator<
+        std::pair<Node * const,
+                  boost::optional<typename Open::ItemPointer> > >
     > Closed;
 
 public:
