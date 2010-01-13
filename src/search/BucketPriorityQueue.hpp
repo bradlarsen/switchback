@@ -241,12 +241,31 @@ private:
     for (unsigned buck_i = 0; buck_i < store.size(); buck_i += 1) {
       for (unsigned bin_i = 0; bin_i < store[buck_i].size(); bin_i += 1) {
         if (!store[buck_i][bin_i].empty() && bin_vals_all_null(store[buck_i][bin_i])) {
-          std::cerr << "error: bin " << bin_i << " in bucket " << buck_i << " is all NULL!" << std::endl;
+          std::cerr << "error: bin " << bin_i << " in bucket " << buck_i
+                    << " is all NULL!" << std::endl;
           return false;
         }
       }
     }
     return true;
+  }
+
+  bool size_is_accurate() const
+  {
+    if (num_elems != size())
+      return false;
+
+    unsigned sum_num_elems = 0;
+    for (unsigned buck_i = 0; buck_i < store.size(); buck_i += 1) {
+      for (unsigned bin_i = 0; bin_i < store[buck_i].size(); bin_i += 1) {
+        for (unsigned idx = 0; idx < store[buck_i][bin_i].size(); idx += 1) {
+          if (store[buck_i][bin_i][idx] != NULL)
+            sum_num_elems += 1;
+        }
+      }
+    }
+
+    return sum_num_elems == num_elems;
   }
 
 
@@ -257,6 +276,24 @@ public:
       ptr.bucket_num < store.size() &&
       ptr.bin_num < store[ptr.bucket_num].size() &&
       ptr.idx < store[ptr.bucket_num][ptr.bin_num].size();
+  }
+
+  bool invariants_satisfied() const
+  {
+    if (!size_is_accurate())
+      return false;
+    if (!no_all_null_bins())
+      return false;
+    if (empty() && first_bucket != boost::integer_traits<unsigned>::const_max)
+      return false;
+    if (!empty() && first_bucket >= store.size())
+      return false;
+    if (!empty() && store[first_bucket].empty())
+      return false;
+    if (!empty() && store[first_bucket].back().empty())
+      return false;
+
+    return true;
   }
 };
 
