@@ -167,6 +167,13 @@ private:
 
     // A*-ish code goes here
     while (!open[level].empty()) {
+      if (get_num_expanded() % 500000 == 0) {
+        std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
+                  << get_num_generated() << " total nodes generated" << std::endl;
+        dump_open_sizes(std::cerr);
+        dump_closed_sizes(std::cerr);
+      }
+
       Node *n = open[level].top();
       open[level].pop();
       assert(closed[level].find(n) != closed[level].end());
