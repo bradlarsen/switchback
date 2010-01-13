@@ -9,6 +9,23 @@
 #include "tiles/TilesTypes.hpp"
 
 
+// TODO: make ManhattanDist15 take into account obscured tiles when
+// computing heuristic values.  Presently, obscured tiles are given a
+// heuristic value of 0.  If an obscured tile is in a position in the
+// goal board that is /not/ obscured, then we know that the obscured
+// tile needs to be moved at least to the nearest obscured tile in the
+// goal board.
+//
+// This would complicate things, however, since then ManhattanDist15
+// would need to be aware of abstraction levels.  We could do this by
+// passing in the goal & all its abstractions in the constructor, and
+// building a 3d table indexed by (level, tile, index).  (Currently, a
+// 2d table is constructed, indexed by (tile, index).)
+//
+// But this is a bit of tricky work, to improve MD when using
+// abstraction.  Manhattan distance sucks when using abstraction!  So
+// I delay implementing this for now.
+
 class ManhattanDist15 {
 public:
   ManhattanDist15(const TilesState15 &goal);
@@ -38,10 +55,10 @@ public:
   
   inline Cost lookup_dist(Tile tile, TileIndex pos) const
   {
-    assert(0 <= tile && tile <= 15);
-    assert(0 <= pos && pos <= 15);
+    assert(valid_tile(tile));
+    assert(valid_tile_index(pos));
 
-    return table[tile][pos];
+    return tile == -1 ? 0 : table[tile][pos];
   }
 
 
