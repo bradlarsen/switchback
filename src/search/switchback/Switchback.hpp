@@ -180,10 +180,16 @@ private:
         dump_closed_sizes(std::cerr);
       }
 
+      assert(open[level].invariants_satisfied());
       Node *n = open[level].top();
-      open[level].pop();
+
       assert(closed[level].find(n) != closed[level].end());
       assert(closed[level].find(n)->second);
+      assert(open[level].valid_item_pointer(*closed[level].find(n)->second));
+
+      open[level].pop();
+      assert(open[level].invariants_satisfied());
+
       closed[level][n] = boost::none;
       assert(all_closed_item_ptrs_valid(level));
 
@@ -195,6 +201,9 @@ private:
       num_generated[level] += children.size();
       
       for (unsigned child_idx = 0; child_idx < children.size(); child_idx += 1) {
+
+        assert(open[level].invariants_satisfied());
+
         assert(open[level].size() <= closed[level].size());
         assert(all_closed_item_ptrs_valid(level));
 
@@ -203,47 +212,34 @@ private:
         // std::cerr << "child's h-value: " << child->get_h() << std::endl;
 
         ClosedIterator closed_it = closed[level].find(child);
-        if (closed_it != closed[level].end()) {
-          // The child has been generated before.
-          
-          // BUGS HERE
+        if (closed_it == closed[level].end()) {
+          // The child has not been generated before.
+          closed[level][child] = open[level].push(child);
+        }
+        else if (child->get_f() < closed_it->first->get_f() && closed_it->second) {
+          // A worse version of the child is in the open list.
+          open[level].erase(*closed_it->second);  // knock out the old
+                                                  // one from the open
+                                                  // list
 
-          const MaybeItemPointer &open_ptr = closed_it->second;
+          assert(open[level].invariants_satisfied());
 
-          if (open_ptr) {
-            Node *old_child = open[level].lookup(*open_ptr);
+          domain.free_node(closed_it->first);     // free the old,
+                                                  // worse copy
 
-            if ( child->get_f() < old_child->get_f() ) {
-              // A worse copy of succ is in the open list.  Replace it!
-              assert(old_child->get_state() == child->get_state());
-              assert(*old_child == *child);
+          closed[level].erase(closed_it);         // insert better
+                                                  // version of child
+          closed[level][child] = open[level].push(child);
 
-              assert(closed[level].find(child) == closed[level].find(old_child));
-              closed[level].erase(closed_it);
-
-              // open[level].erase(*open_ptr);
-              //closed[level].erase(old_child);
-              // domain.free_node(old_child);    // get rid of the old copy
-
-              closed[level][child] = open[level].push(child);    // insert the new copy
-
-              assert(all_closed_item_ptrs_valid(level));
-            }
-            else {
-              // This child is worse than the copy in the open list.  Drop it!
-              domain.free_node(child);
-            }
-          }
-          else {
-            // child is not in the open list, but is closed.  Drop it!
-            domain.free_node(child);
-          }
+          assert(open[level].invariants_satisfied());
         }
         else {
-          // child has not been generated before.
-          closed[level][child] = open[level].push(child);
-          assert(all_closed_item_ptrs_valid(level));
+          // The child has either already been expanded, or is worse
+          // than the version in the open list.
+          domain.free_node(child);
         }
+
+        assert(open[level].invariants_satisfied());
       } /* end for */
 
       if (n->get_state() == goal_state)
@@ -281,8 +277,7 @@ private:
                                             h_val,
                                             NULL
                                             );
-      MaybeItemPointer open_ptr = open[level].push(start_node);
-      closed[level][start_node] = open_ptr;
+      closed[level][start_node] = open[level].push(start_node);
     }
   }
 
