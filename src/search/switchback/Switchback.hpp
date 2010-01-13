@@ -177,6 +177,7 @@ private:
       Node *n = open[level].top();
       open[level].pop();
       assert(closed[level].find(n) != closed[level].end());
+      assert(closed[level].find(n)->second);
       closed[level][n] = boost::none;
       assert(all_closed_item_ptrs_valid(level));
 
@@ -203,9 +204,9 @@ private:
               assert(old_child->get_state() == child->get_state());
               assert(*old_child == *child);
 
-              domain.free_node(old_child);    // get rid of the old copy
               open[level].erase(*open_ptr);
-              closed[level].erase(child);
+              closed[level].erase(old_child);
+              domain.free_node(old_child);    // get rid of the old copy
 
               open_ptr = open[level].push(child);    // insert the new copy
               closed[level][child] = open_ptr;

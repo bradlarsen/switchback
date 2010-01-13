@@ -75,7 +75,9 @@ public:
   }
 
   /**
-   * Equality is determined by the enclosed tile puzzle states.
+   * Equality is determined by the enclosed states.
+   *
+   * This is kind of horrible.
    */
   inline bool operator ==(const Node<State, Cost> &other) const
   {
