@@ -71,7 +71,7 @@ public:
 
   void search()
   {
-    if (searched || goal != NULL)
+    if (searched)
       return;
     searched = true;
 
