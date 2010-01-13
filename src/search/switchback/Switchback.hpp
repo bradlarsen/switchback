@@ -130,8 +130,9 @@ private:
     // This smells of bad design!
     Node goal_node(goal_state, 0, 0);
     ClosedIterator closed_it = closed[level].find(&goal_node);
-    if (closed_it != closed[level].end())
+    if (closed_it != closed[level].end()) {
       return closed_it->first->get_g();
+    }
 
     const State abstracted_goal_state = domain.abstract(level + 1, goal_state);
 
@@ -149,12 +150,12 @@ private:
   {
     assert(is_valid_level(level));
 
-    std::cerr << "conducting hierarchical search at level " << level
-              << " for the following state:" << std::endl
-              << goal_state << std::endl;
+    // std::cerr << "conducting hierarchical search at level " << level
+    //           << " for the following state:" << std::endl
+    //           << goal_state << std::endl;
 
-    dump_open_sizes(std::cerr);
-    dump_closed_sizes(std::cerr);
+    // dump_open_sizes(std::cerr);
+    // dump_closed_sizes(std::cerr);
 
     // Dummy goal node, for hash table lookup.
     Node goal_node(goal_state, 0, 0);
@@ -190,34 +191,41 @@ private:
       
       for (unsigned child_idx = 0; child_idx < children.size(); child_idx += 1) {
         Node *child = children[child_idx];
+        child->set_h(heuristic(level, child->get_state()));
+        // std::cerr << "child's h-value: " << child->get_h() << std::endl;
         assert(open[level].size() <= closed[level].size());
         assert(all_closed_item_ptrs_valid(level));
         ClosedIterator closed_it = closed[level].find(child);
         if (closed_it != closed[level].end()) {
-          MaybeItemPointer &open_ptr = closed_it->second;
+          // BUGS HERE
 
-          if (open_ptr) {
-            Node *old_child = open[level].lookup(*open_ptr);
+          // const MaybeItemPointer &open_ptr = closed_it->second;
 
-            if ( child->get_f() < old_child->get_f() ) {
-              // A worse copy of succ is in the open list.  Replace it!
-              assert(old_child->get_state() == child->get_state());
-              assert(*old_child == *child);
+          // if (open_ptr) {
+          //   Node *old_child = open[level].lookup(*open_ptr);
 
-              open[level].erase(*open_ptr);
-              closed[level].erase(old_child);
-              domain.free_node(old_child);    // get rid of the old copy
+          //   if ( child->get_f() < old_child->get_f() ) {
+          //     // A worse copy of succ is in the open list.  Replace it!
+          //     assert(old_child->get_state() == child->get_state());
+          //     assert(*old_child == *child);
 
-              open_ptr = open[level].push(child);    // insert the new copy
-              closed[level][child] = open_ptr;
+          //     domain.free_node(old_child);    // get rid of the old copy
+          //     open[level].erase(*open_ptr);
+          //     closed[level].erase(child);
 
-              assert(all_closed_item_ptrs_valid(level));
-            }
-          }
-          else {
-            // child is not in the open list, but is closed.  Drop it!
-            domain.free_node(child);
-          }
+          //     closed[level][child] = open[level].push(child);    // insert the new copy
+
+          //     assert(all_closed_item_ptrs_valid(level));
+          //   }
+          //   else {
+          //     // This child is worse than the copy in the open list.  Drop it!
+          //     domain.free_node(child);
+          //   }
+          // }
+          // else {
+          //   // child is not in the open list, but is closed.  Drop it!
+          //   domain.free_node(child);
+          // }
         }
         else {
           // child has not been generated before.
@@ -239,18 +247,26 @@ private:
   {
     for (int level = Domain::num_abstraction_levels; level >= 0; level -= 1) {
       std::cerr << "initializing level " << level << std::endl;
-      State state = level % 2 == 0
+      State start = level % 2 == 0
                       ? domain.get_start_state()
                       : domain.get_goal_state();
+      State goal = level % 2 == 0
+                     ? domain.get_goal_state()
+                     : domain.get_start_state();
 
-      State abstract_state = domain.abstract(level, state);
-      Node *start = domain.create_node(abstract_state,
-                                       0,
-                                       heuristic(level, abstract_state),
-                                       NULL
-                                       );
-      MaybeItemPointer open_ptr = open[level].push(start);
-      closed[level][start] = open_ptr;
+      State abstract_start = domain.abstract(level, start);
+      State abstract_goal = domain.abstract(level, goal);
+
+      // I think there is trouble with the heuristic initialization
+      // here.  Should it be called with level + 1 and
+      // abstract_abstract_start?
+      Node *start_node = domain.create_node(abstract_start,
+                                            0,
+                                            heuristic(level, abstract_start),
+                                            NULL
+                                            );
+      MaybeItemPointer open_ptr = open[level].push(start_node);
+      closed[level][start_node] = open_ptr;
     }
   }
 
