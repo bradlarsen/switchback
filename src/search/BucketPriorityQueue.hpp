@@ -78,8 +78,8 @@ public:
 
   void pop()
   {
-    assert(no_all_null_bins());
     assert(!empty());
+    assert(invariants_satisfied());
 
     num_elems -= 1;
 
@@ -117,19 +117,19 @@ public:
     }
 
     assert(no_all_null_bins());
+    assert(no_trailing_empty_bins());
 
     // Update the first bucket index
     while (store[first_bucket].empty() && first_bucket < store.size() - 1)
       first_bucket += 1;
 
-    assert(no_all_null_bins());
+    assert(invariants_satisfied());
   }
 
   Node * top() const
   {
-    assert(no_all_null_bins());
     assert(!empty());
-    assert(first_bucket < store.size());
+    assert(invariants_satisfied());
     assert(!store[first_bucket].empty());
     assert(!store[first_bucket].back().empty());
 
@@ -173,11 +173,10 @@ public:
       // std::cerr << "bin at end to be popped" << std::endl;
 
       // The bin at the end of the bucket has been entirely deleted.
-      // Get rid of it.
-      //
-      // An invariant is that at most one bin needs to be popped when
-      // erasing an element.
-      bucket.pop_back();
+      // Get rid of trailing empty bins.
+      do {
+        bucket.pop_back();
+      } while (!bucket.empty() && bucket.back().empty());
 
       if (bucket.empty() && ptr.bucket_num == first_bucket) {
         // std::cerr << "first bucket to be updated" << std::endl;
@@ -250,6 +249,15 @@ private:
     return true;
   }
 
+  bool no_trailing_empty_bins() const
+  {
+    for (unsigned buck_i = 0; buck_i < store.size(); buck_i += 1) {
+      if (!store[buck_i].empty() && store[buck_i].back().empty())
+        return false;
+    }
+    return true;
+  }
+
   bool size_is_accurate() const
   {
     if (num_elems != size())
@@ -268,6 +276,22 @@ private:
     return sum_num_elems == num_elems;
   }
 
+  bool first_bucket_is_correct() const
+  {
+    if (empty() && first_bucket != boost::integer_traits<unsigned>::const_max)
+      return false;
+    if (!empty() && first_bucket >= store.size())
+      return false;
+
+    if (!empty()) {
+      for (unsigned i = 0; i < first_bucket; i += 1) {
+        if (!store[i].empty())
+          return false;
+      }
+    }
+
+    return true;
+   }
 
 public:
   bool valid_item_pointer(const ItemPointer &ptr) const
@@ -284,9 +308,9 @@ public:
       return false;
     if (!no_all_null_bins())
       return false;
-    if (empty() && first_bucket != boost::integer_traits<unsigned>::const_max)
+    if (!no_trailing_empty_bins())
       return false;
-    if (!empty() && first_bucket >= store.size())
+    if (!first_bucket_is_correct())
       return false;
     if (!empty() && store[first_bucket].empty())
       return false;
