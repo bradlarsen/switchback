@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <iomanip>
 
 #include "tiles/Tiles.hpp"
 
@@ -12,7 +13,7 @@ void TilesInstance15::print(std::ostream &o) const
   o << std::endl << "Goal state:" << std::endl
     << goal << std::endl;
 
-  o << std::endl << "Initial heuristic estimate: "
+  o << std::endl << "Initial Manhattan distance heuristic estimate: "
     << md_heur.compute_full(start)
     << std::endl;
 }
@@ -42,6 +43,14 @@ void TilesInstance15::compute_heuristic(const TilesNode15 &parent,
   child.set_h(new_h);
 }
 
+
+void TilesInstance15::compute_heuristic(TilesNode15 &child) const
+{
+  Cost new_h = md_heur.compute_full(child.get_state());
+  if (!is_goal(child.get_state()))
+    new_h = 1 > new_h ? 1 : new_h;
+  child.set_h(new_h);
+}
 
 
 void TilesInstance15::compute_successors(const TilesNode15 &n,
@@ -100,11 +109,12 @@ const TilesState15 & TilesInstance15::get_goal_state() const
 }
 
 
-TilesNode15 * TilesInstance15::create_start_node() const
+TilesNode15 * TilesInstance15::create_node(const TilesState15 &state,
+                                           Cost g,
+                                           Cost h,
+                                           const TilesNode15 *parent) const
 {
-  Cost h = md_heur.compute_full(start);
-  return new (NodePool::malloc())
-    TilesNode15(start, 0, h, static_cast<const TilesNode15 *>(NULL));
+  return new (NodePool::malloc()) TilesNode15(state, g, h, parent);
 }
 
 
@@ -115,15 +125,16 @@ void TilesInstance15::free_node(TilesNode15 *n) const
 }
 
 
-TilesState15 TilesInstance15::abstract(const TilesState15 &s, unsigned level) const
+TilesState15 TilesInstance15::abstract(unsigned level,
+                                       const TilesState15 &s) const
 {
-  assert(level < num_abstraction_levels);
+  assert(valid_level(level));
 
   TileArray new_tiles(s.get_tiles());
 
   for (TileIndex i = 0; i < 4; i += 1)
     for (TileIndex j = 0; j < 4; j += 1) {
-      if ( should_abstract(s(i, j), level) )
+      if ( should_abstract(level, s(i, j)) )
         new_tiles[i * 4 + j] = -1;
     }
 
@@ -293,12 +304,14 @@ TilesInstance15::compute_abstraction_order(const TilesState15 &s,
   assert(pairs.size() == 15);
 
   AbstractionOrder order;
-  for (unsigned level = 0; level < num_abstraction_levels; level += 1) {
-    order[level][-1 + 1] = false;
-    order[level][0 + 1] = false;
+  order[0].assign(false);
+  for (unsigned level = 1; level <= num_abstraction_levels; level += 1) {
+    order[level][0] = false;
+    order[level][1] = false;
     for (Tile t = 1; t < 16; t += 1)
-      order[level][t + 1] = find_tile_index(pairs, t) < level + 7;
+      order[level][t + 1] = find_tile_index(pairs, t) < level + 6;
   }
+
   return order;
 }
 
@@ -306,20 +319,28 @@ TilesInstance15::compute_abstraction_order(const TilesState15 &s,
 void TilesInstance15::dump_abstraction_order(std::ostream &o) const
 {
   o << "The following abstraction schedule will be used:" << std::endl;
-  for (unsigned level = 0; level < num_abstraction_levels; level += 1) {
+  for (unsigned level = 0; level <= num_abstraction_levels; level += 1) {
     o << "  " << level << ": ";
     for (Tile t = -1; t <= 15; t += 1)
-      if (should_abstract(t, level))
-        o << t << " ";
+      if (should_abstract(level, t))
+        o << std::setw(4) << t;
+      else
+        o << "    ";
     o << std::endl;
   }
 }
 
 
-bool TilesInstance15::should_abstract(Tile t, unsigned level) const
+bool TilesInstance15::should_abstract(unsigned level, Tile t) const
 {
-  assert(-1 <= t && t <= 15);
-  assert(level < num_abstraction_levels);
+  assert(valid_tile(t));
+  assert(valid_level(level));
 
   return abstraction_order[level][t+1];
+}
+
+
+bool TilesInstance15::valid_level(unsigned level)
+{
+  return level <= num_abstraction_levels;
 }

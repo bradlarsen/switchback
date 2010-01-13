@@ -18,7 +18,11 @@ int main()
 
   cout << "######## The Instance ########" << endl;
   cout << *instance << endl;
-  scoped_ptr<TilesNode15> start_node(instance->create_start_node());
+  scoped_ptr<TilesNode15> start_node(instance->create_node(instance->get_start_state(),
+                                                           0,
+                                                           0,
+                                                           NULL));
+  instance->compute_heuristic(*start_node);
 
   BucketPriorityQueue<TilesNode15> pqueue;
 

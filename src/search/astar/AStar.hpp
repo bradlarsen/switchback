@@ -66,7 +66,8 @@ public:
 
     {
       assert(all_closed_item_ptrs_valid());
-      Node *start_node = domain.create_start_node();
+      Node *start_node = domain.create_node(domain.get_start_state(), 0, 0, NULL);
+      domain.compute_heuristic(*start_node);
       MaybeItemPointer open_ptr = open.push(start_node);
       assert(open_ptr);
       closed[start_node] = open_ptr;
