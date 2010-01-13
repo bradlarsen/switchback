@@ -11,12 +11,17 @@
 
 
 class TilesState15 {
+private:
+  std::size_t hash_value;
+  TileIndex blank_index;
+  TileArray tiles;
+
 public:
   TilesState15(const TileArray &tiles,
                TileIndex blank_index)
-    : blank_index(blank_index)
+    : hash_value(compute_hash(tiles))
+    , blank_index(blank_index)
     , tiles(tiles)
-    , hash_value(compute_hash())
   {
     assert(tiles[blank_index] == 0);
   }
@@ -98,7 +103,7 @@ public:
 
 
 private:
-  std::size_t compute_hash() const
+  static std::size_t compute_hash(const TileArray &tiles)
   {
     return boost::hash_range(tiles.begin(), tiles.end());
   }
@@ -109,16 +114,12 @@ private:
     TilesState15 new_state(*this);
     new_state.blank_index = new_blank_index;
     std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
-    new_state.hash_value = new_state.compute_hash();
+    new_state.hash_value = compute_hash(new_state.tiles);
 
     return new_state;
   }
 
   TilesState15 & operator =(const TilesState15 &other);
-
-  TileIndex blank_index;
-  TileArray tiles;
-  std::size_t hash_value;
 };
 
 
