@@ -81,6 +81,10 @@ public:
 
   const Node * get_goal() const
   {
+    std::cerr << "final open/closed sizes:" << std::endl;
+    dump_open_sizes(std::cerr);
+    dump_closed_sizes(std::cerr);
+
     return goal;
   }
 
@@ -128,15 +132,16 @@ private:
 
     // Need to create a dummy goal node to look up in the hash table.
     // This smells of bad design!
-    Node goal_node(goal_state, 0, 0);
-    ClosedIterator closed_it = closed[level].find(&goal_node);
-    if (closed_it != closed[level].end()) {
+    const unsigned next_level = level + 1;
+    const State abstract_goal_state = domain.abstract(next_level, goal_state);
+    Node abstract_goal_node(abstract_goal_state, 0, 0);
+
+    ClosedIterator closed_it = closed[next_level].find(&abstract_goal_node);
+    if (closed_it != closed[next_level].end()) {
       return closed_it->first->get_g();
     }
 
-    const State abstracted_goal_state = domain.abstract(level + 1, goal_state);
-
-    Node *result = resume_search(level + 1, abstracted_goal_state);
+    Node *result = resume_search(next_level, abstract_goal_state);
     if (result == NULL) {
       std::cerr << "whoops, infinite heuristic estimate!" << std::endl;
       assert(false);  // for the domains I am running on, there should
@@ -166,7 +171,7 @@ private:
 
     std::vector<Node *> children;
 
-    // A*-ish code goes here
+    // A*-ish code ahead
     while (!open[level].empty()) {
       if (get_num_expanded() % 500000 == 0) {
         std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
@@ -190,48 +195,53 @@ private:
       num_generated[level] += children.size();
       
       for (unsigned child_idx = 0; child_idx < children.size(); child_idx += 1) {
+        assert(open[level].size() <= closed[level].size());
+        assert(all_closed_item_ptrs_valid(level));
+
         Node *child = children[child_idx];
         child->set_h(heuristic(level, child->get_state()));
         // std::cerr << "child's h-value: " << child->get_h() << std::endl;
-        assert(open[level].size() <= closed[level].size());
-        assert(all_closed_item_ptrs_valid(level));
+
         ClosedIterator closed_it = closed[level].find(child);
         if (closed_it != closed[level].end()) {
+          // The child has been generated before.
+          
           // BUGS HERE
 
-          // const MaybeItemPointer &open_ptr = closed_it->second;
+          const MaybeItemPointer &open_ptr = closed_it->second;
 
-          // if (open_ptr) {
-          //   Node *old_child = open[level].lookup(*open_ptr);
+          if (open_ptr) {
+            Node *old_child = open[level].lookup(*open_ptr);
 
-          //   if ( child->get_f() < old_child->get_f() ) {
-          //     // A worse copy of succ is in the open list.  Replace it!
-          //     assert(old_child->get_state() == child->get_state());
-          //     assert(*old_child == *child);
+            if ( child->get_f() < old_child->get_f() ) {
+              // A worse copy of succ is in the open list.  Replace it!
+              assert(old_child->get_state() == child->get_state());
+              assert(*old_child == *child);
 
-          //     domain.free_node(old_child);    // get rid of the old copy
-          //     open[level].erase(*open_ptr);
-          //     closed[level].erase(child);
+              assert(closed[level].find(child) == closed[level].find(old_child));
+              closed[level].erase(closed_it);
 
-          //     closed[level][child] = open[level].push(child);    // insert the new copy
+              // open[level].erase(*open_ptr);
+              //closed[level].erase(old_child);
+              // domain.free_node(old_child);    // get rid of the old copy
 
-          //     assert(all_closed_item_ptrs_valid(level));
-          //   }
-          //   else {
-          //     // This child is worse than the copy in the open list.  Drop it!
-          //     domain.free_node(child);
-          //   }
-          // }
-          // else {
-          //   // child is not in the open list, but is closed.  Drop it!
-          //   domain.free_node(child);
-          // }
+              closed[level][child] = open[level].push(child);    // insert the new copy
+
+              assert(all_closed_item_ptrs_valid(level));
+            }
+            else {
+              // This child is worse than the copy in the open list.  Drop it!
+              domain.free_node(child);
+            }
+          }
+          else {
+            // child is not in the open list, but is closed.  Drop it!
+            domain.free_node(child);
+          }
         }
         else {
           // child has not been generated before.
-          MaybeItemPointer open_ptr = open[level].push(child);
-          closed[level][child] = open_ptr;
-          assert(closed[level].find(open[level].lookup(*open_ptr)) != closed[level].end());
+          closed[level][child] = open[level].push(child);
           assert(all_closed_item_ptrs_valid(level));
         }
       } /* end for */
@@ -247,6 +257,11 @@ private:
   {
     for (int level = Domain::num_abstraction_levels; level >= 0; level -= 1) {
       std::cerr << "initializing level " << level << std::endl;
+        std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
+                  << get_num_generated() << " total nodes generated" << std::endl;
+        dump_open_sizes(std::cerr);
+        dump_closed_sizes(std::cerr);
+
       State start = level % 2 == 0
                       ? domain.get_start_state()
                       : domain.get_goal_state();
@@ -255,14 +270,15 @@ private:
                      : domain.get_start_state();
 
       State abstract_start = domain.abstract(level, start);
-      State abstract_goal = domain.abstract(level, goal);
+
+      Cost h_val = heuristic(level, start);
 
       // I think there is trouble with the heuristic initialization
       // here.  Should it be called with level + 1 and
       // abstract_abstract_start?
       Node *start_node = domain.create_node(abstract_start,
                                             0,
-                                            heuristic(level, abstract_start),
+                                            h_val,
                                             NULL
                                             );
       MaybeItemPointer open_ptr = open[level].push(start_node);
