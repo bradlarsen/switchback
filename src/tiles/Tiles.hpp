@@ -24,7 +24,7 @@ public:
   static const unsigned num_abstraction_levels = 8;
 
 private:
-  typedef std::pair<Tile, Cost> TileCostPair;
+  typedef std::pair<Tile, TileCost> TileCostPair;
   typedef boost::array<
     boost::array<bool, 17>,
     num_abstraction_levels + 1
@@ -93,8 +93,8 @@ public:
 
 
   TilesNode15 * create_node(const TilesState15 &state,
-                            Cost g,
-                            Cost h,
+                            TileCost g,
+                            TileCost h,
                             const TilesNode15 *parent) const;
 
   void free_node(TilesNode15 *n) const;
@@ -104,7 +104,7 @@ public:
   
 private:
   TilesNode15 * child(const TilesState15 &new_state,
-                      Cost new_g,
+                      TileCost new_g,
                       const TilesNode15 &parent) const;
 
   unsigned find_tile_index(const std::vector<TileCostPair> &pairs,

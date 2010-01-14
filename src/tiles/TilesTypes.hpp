@@ -16,14 +16,14 @@
 typedef int Tile;
 typedef unsigned TileIndex;
 typedef boost::array<Tile, 16>  TileArray;
-typedef unsigned Cost;
+typedef unsigned TileCost;
 #else
 // Beware!  Using small int types doesn't seem to play well with
 // overloading resolution.
 typedef boost::int_t<8>::least  Tile;
 typedef boost::uint_t<8>::least TileIndex;
 typedef boost::array<Tile, 16>  TileArray;
-typedef boost::uint_t<8>::least Cost;
+typedef boost::uint_t<8>::least TileCost;
 
 
 #include <iostream>

@@ -20,7 +20,7 @@ void TilesInstance15::print(std::ostream &o) const
 
 
 TilesNode15 * TilesInstance15::child(const TilesState15 &new_state,
-                                     Cost new_g,
+                                     TileCost new_g,
                                      const TilesNode15 &parent) const
 {
   assert(new_state != parent.get_state());
@@ -37,7 +37,7 @@ TilesNode15 * TilesInstance15::child(const TilesState15 &new_state,
 void TilesInstance15::compute_heuristic(const TilesNode15 &parent,
                                         TilesNode15 &child) const
 {
-  Cost new_h = md_heur.compute_incr(child.get_state(), parent);
+  TileCost new_h = md_heur.compute_incr(child.get_state(), parent);
   if (!is_goal(child.get_state()))
     new_h = 1 > new_h ? 1 : new_h;
   child.set_h(new_h);
@@ -46,7 +46,7 @@ void TilesInstance15::compute_heuristic(const TilesNode15 &parent,
 
 void TilesInstance15::compute_heuristic(TilesNode15 &child) const
 {
-  Cost new_h = md_heur.compute_full(child.get_state());
+  TileCost new_h = md_heur.compute_full(child.get_state());
   if (!is_goal(child.get_state()))
     new_h = 1 > new_h ? 1 : new_h;
   child.set_h(new_h);
@@ -63,8 +63,8 @@ void TilesInstance15::compute_successors(const TilesNode15 &n,
   const unsigned col = blank % 4;
   const unsigned row = blank / 4;
 
-  const Cost g = n.get_g();
-  const Cost new_g = g + 1;
+  const TileCost g = n.get_g();
+  const TileCost new_g = g + 1;
 
   if (col > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 1)) {
     const TilesState15 new_state = n.get_state().move_blank_left();
@@ -110,8 +110,8 @@ const TilesState15 & TilesInstance15::get_goal_state() const
 
 
 TilesNode15 * TilesInstance15::create_node(const TilesState15 &state,
-                                           Cost g,
-                                           Cost h,
+                                           TileCost g,
+                                           TileCost h,
                                            const TilesNode15 *parent) const
 {
   return new (NodePool::malloc()) TilesNode15(state, g, h, parent);
@@ -296,7 +296,7 @@ TilesInstance15::compute_abstraction_order(const TilesState15 &s,
       Tile tile = s(i, j);
       if (tile == 0)
         continue;
-      Cost cost = md.lookup_dist(tile, i * 4 + j);
+      TileCost cost = md.lookup_dist(tile, i * 4 + j);
       pairs.push_back(std::make_pair(tile, cost));
     }
 

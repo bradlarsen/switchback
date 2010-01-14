@@ -24,6 +24,7 @@ class Switchback : boost::noncopyable
 private:
   typedef typename Node::Cost Cost;
   typedef typename Node::State State;
+
   typedef BucketPriorityQueue<Node> Open;
   typedef boost::optional<typename Open::ItemPointer> MaybeItemPointer;
 

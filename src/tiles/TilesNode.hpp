@@ -7,8 +7,8 @@
 #include "tiles/TilesState.hpp"
 
 
-template class Node<TilesState15, Cost>;
-typedef Node<TilesState15, Cost> TilesNode15;
+template class Node<TilesState15, TileCost>;
+typedef Node<TilesState15, TileCost> TilesNode15;
 
 
 #endif /* !_TILES_NODE_HPP_ */

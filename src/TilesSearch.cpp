@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 
+#include "search/BucketPriorityQueue.hpp"
 #include "search/astar/AStar.hpp"
 #include "search/switchback/Switchback.hpp"
 #include "tiles/Tiles.hpp"
@@ -13,6 +14,21 @@ using namespace boost;
 
 typedef AStar<TilesInstance15, TilesNode15> TilesAStar;
 typedef Switchback<TilesInstance15, TilesNode15> TilesSwitchback;
+
+
+void print_size_info(ostream &o)
+{
+  o << "sizeof(unsigned) is " << sizeof(unsigned) << endl
+    << "sizeof(Tile) is " << sizeof(Tile) << endl
+    << "sizeof(TileIndex) is " << sizeof(TileIndex) << endl
+    << "sizeof(TileArray) is " << sizeof(TileArray) << endl
+    << "sizeof(TileCost) is " << sizeof(TileCost) << endl
+    << "sizeof(TilesState15) is " << sizeof(TilesState15) << endl
+    << "sizeof(TilesNode15) is " << sizeof(TilesNode15) << endl
+    << "sizeof(size_t) is " << sizeof(size_t) << endl
+    << "sizeof(BucketPriorityQueue<TilesNode15>::ItemPointer) is "
+    << sizeof(BucketPriorityQueue<TilesNode15>::ItemPointer) << endl;
+}
 
 
 void print_usage(ostream &o, const char *prog_name)
@@ -73,6 +89,10 @@ int main(int argc, char * argv[])
     cerr << "error reading instance!" << endl;
     return 1;
   }
+
+  cout << "######## Type Size Information ########" << endl;
+  print_size_info(cout);
+  cout << endl;
 
   cout << "######## The Instance ########" << endl;
   cout << *instance << endl;
