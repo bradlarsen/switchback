@@ -1,4 +1,3 @@
-#include <boost/scoped_ptr.hpp>
 #include <boost/timer.hpp>
 
 #include <iostream>
@@ -61,13 +60,13 @@ int main(int argc, char * argv[])
     return 1;
   }
 
-  scoped_ptr<TilesInstance15> instance;
+  TilesInstance15 *instance;
   if (argc == 3) {
     ifstream infile(argv[2]);
-    instance.reset(readTilesInstance15(infile));
+    instance = readTilesInstance15(infile);
   }
   else {
-    instance.reset(readTilesInstance15(cin));
+    instance = readTilesInstance15(cin);
   }
 
   if (instance == NULL) {
@@ -80,11 +79,11 @@ int main(int argc, char * argv[])
 
   const string alg_string(argv[1]);
   if (alg_string == "astar") {
-    TilesAStar astar(*instance);
+    TilesAStar &astar = *new TilesAStar(*instance);
     search(astar);
   }
   else if (alg_string == "switchback") {
-    TilesSwitchback switchback(*instance);
+    TilesSwitchback &switchback = *new TilesSwitchback(*instance);
     search(switchback);
   }
   else {
