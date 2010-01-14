@@ -13,14 +13,18 @@
 class TilesState15
 {
 private:
-  std::size_t hash_value;
   TileArray tiles;
+#ifdef CACHE_TILES_HASH_VALUE
+  std::size_t hash_value;
+#endif
 
 
 public:
   TilesState15(const TileArray &tiles)
-    : hash_value(compute_hash(tiles))
-    , tiles(tiles)
+    : tiles(tiles)
+#ifdef CACHE_TILES_HASH_VALUE
+    , hash_value(compute_hash(tiles))
+#endif
   {
     assert(tiles[get_blank()] == 0);
   }
@@ -35,7 +39,9 @@ public:
   inline bool operator ==(const TilesState15 &other) const
   {
     return
+#ifdef CACHE_TILES_HASH_VALUE
       hash_value == other.hash_value &&
+#endif
       tiles == other.tiles;
   }
 
@@ -66,7 +72,11 @@ public:
 
   inline size_t get_hash_value() const
   {
+#ifdef CACHE_TILES_HASH_VALUE
     return hash_value;
+#else
+    return compute_hash(tiles);
+#endif
   }
 
 
@@ -104,7 +114,9 @@ private:
     TileIndex new_blank_index = blank_index + new_blank_offset;
     TilesState15 new_state(*this);
     std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
+#ifdef CACHE_TILES_HASH_VALUE
     new_state.hash_value = compute_hash(new_state.tiles);
+#endif
 
     return new_state;
   }
