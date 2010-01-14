@@ -1,6 +1,8 @@
+#include <boost/scoped_ptr.hpp>
+#include <boost/timer.hpp>
+
 #include <iostream>
 #include <fstream>
-#include <boost/scoped_ptr.hpp>
 
 #include "search/astar/AStar.hpp"
 #include "search/switchback/Switchback.hpp"
@@ -8,6 +10,10 @@
 
 using namespace std;
 using namespace boost;
+
+
+typedef AStar<TilesInstance15, TilesNode15> TilesAStar;
+typedef Switchback<TilesInstance15, TilesNode15> TilesSwitchback;
 
 
 void print_usage(ostream &o, const char *prog_name)
@@ -24,6 +30,7 @@ void print_usage(ostream &o, const char *prog_name)
 template <class Searcher>
 void search(Searcher &searcher)
 {
+  timer search_timer;
   searcher.search();
 
   const TilesNode15 *goal = searcher.get_goal();
@@ -35,8 +42,15 @@ void search(Searcher &searcher)
     cout << *goal << endl;
   }
 
-  cout << searcher.get_num_expanded() << " expanded" << endl
-       << searcher.get_num_generated() << " generated" << endl;
+  const double seconds_elapsed = search_timer.elapsed();
+  const unsigned exp_per_second = searcher.get_num_expanded() / seconds_elapsed;
+  const unsigned gen_per_second = searcher.get_num_expanded() / seconds_elapsed;
+
+  cout << searcher.get_num_expanded() << " expanded ("
+       << exp_per_second << "/s)" << endl
+       << searcher.get_num_generated() << " generated ("
+       << gen_per_second << "/s)" << endl
+       << search_timer.elapsed() << "s" << endl;
 }
 
 
@@ -66,11 +80,11 @@ int main(int argc, char * argv[])
 
   const string alg_string(argv[1]);
   if (alg_string == "astar") {
-    AStar<TilesInstance15, TilesNode15> astar(*instance);
+    TilesAStar astar(*instance);
     search(astar);
   }
   else if (alg_string == "switchback") {
-    Switchback<TilesInstance15, TilesNode15> switchback(*instance);
+    TilesSwitchback switchback(*instance);
     search(switchback);
   }
   else {

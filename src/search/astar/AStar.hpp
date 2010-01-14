@@ -35,10 +35,24 @@ private:
   typedef typename Closed::iterator ClosedIterator;
   typedef typename Closed::const_iterator ClosedConstIterator;
 
+
+private:
+  Open open;
+  Closed closed;
+
+  const Node * goal;
+  bool searched;
+
+  const Domain &domain;
+
+  unsigned num_expanded;
+  unsigned num_generated;
+
+
 public:
   AStar(const Domain &domain)
-    : open(*new Open())
-    , closed(*new Closed(50000000))  // requested number of hash buckets
+    : open()
+    , closed(50000000)  // requested number of hash buckets
     , goal(NULL)
     , searched(false)
     , domain(domain)
@@ -49,9 +63,10 @@ public:
 
   ~AStar()
   {
-    // I don't delete open or closed.  This appears to be acceptable,
-    // due to my use of memory pools in key places.  Check for
-    // yourself, with valgrind: no memory is leaked.
+    for (ClosedIterator closed_it = closed.begin();
+         closed_it != closed.end();
+         ++closed_it)
+      domain.free_node(closed_it->first);
   }
 
   void search()
@@ -177,22 +192,6 @@ private:
     return true;
 #endif
   }
-
-private:
-  Open &open;
-  Closed &closed;
-
-  const Node * goal;
-  bool searched;
-
-  const Domain &domain;
-
-  unsigned num_expanded;
-  unsigned num_generated;
-
-private:
-  AStar(const AStar<Domain, Node> &);
-  AStar<Domain, Node> & operator =(const AStar<Domain, Node> &);
 };
 
 
