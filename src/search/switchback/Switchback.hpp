@@ -38,13 +38,14 @@ private:
   typedef typename Closed::iterator ClosedIterator;
   typedef typename Closed::const_iterator ClosedConstIterator;
 
+
 private:
+  const static unsigned hierarchy_height = Domain::num_abstraction_levels + 1;
+
   const Node *goal;
   bool searched;
 
   const Domain &domain;
-
-  const static unsigned hierarchy_height = Domain::num_abstraction_levels + 1;
 
   boost::array<unsigned, hierarchy_height> num_expanded;
   boost::array<unsigned, hierarchy_height> num_generated;
@@ -58,6 +59,10 @@ public:
     : goal(NULL)
     , searched(false)
     , domain(domain)
+    , num_expanded()
+    , num_generated()
+    , open()
+    , closed()
   {
     num_expanded.assign(0);
     num_generated.assign(0);
