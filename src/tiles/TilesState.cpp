@@ -25,7 +25,7 @@ bool TilesState15::valid() const
     for (unsigned j = 0; j < 4; ++j) {
       if ((*this)(i, j) == 0)
         hasBlank = true;
-      if ((*this)(i, j) < -1 || (*this)(i, j) > 15)
+      if ( !valid_tile((*this)(i, j)) ) 
         return false;
     }
   }

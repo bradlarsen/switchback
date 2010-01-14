@@ -10,11 +10,13 @@
 #include "TilesTypes.hpp"
 
 
-class TilesState15 {
+class TilesState15
+{
 private:
   std::size_t hash_value;
   TileIndex blank_index;
   TileArray tiles;
+
 
 public:
   TilesState15(const TileArray &tiles,
@@ -24,10 +26,6 @@ public:
     , tiles(tiles)
   {
     assert(tiles[blank_index] == 0);
-  }
-
-  ~TilesState15()
-  {
   }
 
   inline Tile operator ()(unsigned i, unsigned j) const
@@ -75,7 +73,6 @@ public:
     return hash_value;
   }
 
-  bool valid() const;
 
   TilesState15 move_blank_up() const
   {
@@ -101,13 +98,10 @@ public:
     return move_blank(1);
   }
 
+  bool valid() const;
+
 
 private:
-  static std::size_t compute_hash(const TileArray &tiles)
-  {
-    return boost::hash_range(tiles.begin(), tiles.end());
-  }
-
   inline TilesState15 move_blank(TileIndex new_blank_offset) const
   {
     TileIndex new_blank_index = blank_index + new_blank_offset;
@@ -119,7 +113,10 @@ private:
     return new_state;
   }
 
-  TilesState15 & operator =(const TilesState15 &other);
+  static std::size_t compute_hash(const TileArray &tiles)
+  {
+    return boost::hash_range(tiles.begin(), tiles.end());
+  }
 };
 
 
