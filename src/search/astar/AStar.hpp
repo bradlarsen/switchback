@@ -79,11 +79,6 @@ public:
 
     while (!open.empty())
     {
-// #ifndef NDEBUG
-//       std::cerr << "open size is " << open.size() << std::endl
-//                 << "closed size is " << closed.size() << std::endl;
-// #endif
-
       Node *n = open.top();
       open.pop();
       assert(closed.find(n) != closed.end());
@@ -101,47 +96,7 @@ public:
 
       for (unsigned succ_i = 0; succ_i < succs.size(); succ_i += 1)
       {
-        Node *succ = succs[succ_i];
-        domain.compute_heuristic(*n, *succ);
-        assert(open.size() <= closed.size());
-        assert(all_closed_item_ptrs_valid());
-        ClosedIterator closed_it = closed.find(succ);
-        if (closed_it != closed.end()) {
-          const MaybeItemPointer &open_ptr = closed_it->second;
-
-          if ( open_ptr ) {
-            Node *old_succ = open.lookup(*open_ptr);
-
-            if ( succ->get_f() < old_succ->get_f() ) {
-              // A worse copy of succ is in the open list.  Replace it!
-              assert(old_succ->get_state() == succ->get_state());
-              assert(*old_succ == *succ);
-
-              open.erase(*open_ptr);
-              closed.erase(old_succ);
-              domain.free_node(old_succ);    // get rid of the old copy
-
-              closed[succ] = open.push(succ);    // insert the new copy
-
-              assert(all_closed_item_ptrs_valid());
-            }
-            else {
-              // This child is worse than the copy in the open list.  Drop it!
-              domain.free_node(succ);
-            }
-          }
-          else {
-            // succ is not in the open list, but is closed.  Drop it!
-            domain.free_node(succ);
-          }
-        }
-        else {
-          // succ has not been generated before.
-          MaybeItemPointer open_ptr = open.push(succ);
-          closed[succ] = open_ptr;
-          assert(closed.find(open.lookup(*open_ptr)) != closed.end());
-          assert(all_closed_item_ptrs_valid());
-        }
+        process_child(n, succs[succ_i]);
       } /* end for */
     } /* end while */
   }
@@ -172,6 +127,39 @@ public:
   }
 
 private:
+  void process_child(Node *parent, Node *child)
+  {
+    domain.compute_heuristic(*parent, *child);
+    assert(open.size() <= closed.size());
+    assert(all_closed_item_ptrs_valid());
+
+    ClosedIterator closed_it = closed.find(child);
+    if (closed_it == closed.end()) {
+      // The child has not been generated before.
+      closed[child] = open.push(child);
+    }
+    else if (closed_it->second && child->get_f() < closed_it->first->get_f()) {
+      // A worse version of the child is in the open list.
+      open.erase(*closed_it->second);  // knock out the old one from
+                                       // the open list
+
+      domain.free_node(closed_it->first);     // free the old, worse
+                                              // copy
+      closed.erase(closed_it);
+
+      closed[child] = open.push(child);  // insert better version of child
+    }
+    else {
+      // The child has either already been expanded, or is worse
+      // than the version in the open list.
+      domain.free_node(child);
+    }
+
+    assert(all_closed_item_ptrs_valid());
+    assert(open.invariants_satisfied());
+  }
+
+
   bool all_closed_item_ptrs_valid() const
   {
 #ifdef CHECK_ALL_CLOSED_ITEM_PTRS_VALID
