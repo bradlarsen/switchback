@@ -12,14 +12,23 @@ public:
   typedef StateT State;
   typedef CostT Cost;
 
+
+private:
+  const Node<State, Cost> *parent;
+  const State state;
+  Cost g;
+  Cost h;
+
+
+public:
   Node(const State &s,
        Cost g,
        Cost h,
        const Node<State, Cost> *p = NULL)
-    : g(g)
-    , h(h)
+    : parent(p)
     , state(s)
-    , parent(p)
+    , g(g)
+    , h(h)
   {
   }
 
@@ -83,12 +92,6 @@ public:
   {
     return state == other.state;
   }
-
-private:
-  Cost g;
-  Cost h;
-  const State state;
-  const Node<State, Cost> *parent;
 };
 
 
