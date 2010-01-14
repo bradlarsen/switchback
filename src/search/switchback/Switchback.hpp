@@ -244,8 +244,6 @@ private:
   void init_open_and_closed()
   {
     for (unsigned level = 0; level <= Domain::num_abstraction_levels; level += 1) {
-      std::cerr << "initializing level " << level << std::endl;
-
       num_generated[level] += 1;
       State start = level % 2 == 0
                       ? domain.get_start_state()
@@ -257,8 +255,6 @@ private:
                                             );
       closed[level][start_node] = open[level].push(start_node);
     }
-
-    std::cerr << "###### INITIALIZATION COMPLETE ######" << std::endl;
   }
 
 

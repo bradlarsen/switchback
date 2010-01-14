@@ -96,7 +96,9 @@ int main(int argc, char * argv[])
 
   cout << "######## The Instance ########" << endl;
   cout << *instance << endl;
+  cout << endl;
 
+  cout << "######## Search Results ########" << endl;
   const string alg_string(argv[1]);
   if (alg_string == "astar") {
     TilesAStar &astar = *new TilesAStar(*instance);

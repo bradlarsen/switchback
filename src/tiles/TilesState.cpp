@@ -3,15 +3,18 @@
 
 std::ostream & operator <<(std::ostream &o, const TilesState15 &tiles)
 {
-  o << "Hash: " << hash_value(tiles) << std::endl;
   for (unsigned y = 0; y < 4; y += 1) {
       unsigned x = 0;
       do {
         o << tiles(y, x) << '\t';
         x += 1;
       } while (x < 3);
-      o << tiles(y, 3) << '\n';
+      o << tiles(y, 3) << std::endl;
   }
+
+#ifndef NDEBUG
+  o << "Hash: " << hash_value(tiles) << std::endl;
+#endif
 
   return o;
 }
