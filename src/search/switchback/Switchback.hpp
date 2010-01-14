@@ -137,7 +137,7 @@ private:
     Node abstract_goal_node(abstract_goal_state, 0, 0);
 
     ClosedIterator closed_it = closed[next_level].find(&abstract_goal_node);
-    if (closed_it != closed[next_level].end()) {
+    if (closed_it != closed[next_level].end() && !closed_it->second) {
       return closed_it->first->get_g();
     }
 
@@ -148,6 +148,7 @@ private:
                       // never be an infinite heuristic estimate.
     }
     assert(closed[next_level].find(&abstract_goal_node) != closed[next_level].end());
+    assert(!closed[next_level].find(&abstract_goal_node)->second);
 
     return result->get_g();
   }
@@ -160,7 +161,7 @@ private:
     Node goal_node(goal_state, 0, 0);
     ClosedIterator closed_it = closed[level].find(&goal_node);
 
-    if (closed_it != closed[level].end())
+    if (closed_it != closed[level].end() &&!closed_it->second)
       return closed_it->first;
 
     std::vector<Node *> children;
@@ -238,29 +239,22 @@ private:
 
   void init_open_and_closed()
   {
-    for (int level = Domain::num_abstraction_levels; level >= 0; level -= 1) {
+    for (unsigned level = 0; level <= Domain::num_abstraction_levels; level += 1) {
       std::cerr << "initializing level " << level << std::endl;
-        std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
-                  << get_num_generated() << " total nodes generated" << std::endl;
-        dump_open_sizes(std::cerr);
-        dump_closed_sizes(std::cerr);
 
+      num_generated[level] += 1;
       State start = level % 2 == 0
                       ? domain.get_start_state()
                       : domain.get_goal_state();
-
-      State abstract_start = domain.abstract(level, start);
-
-      // I think there is trouble with the heuristic initialization
-      // here.  Should it be called with level + 1 and
-      // abstract_abstract_start?
-      Node *start_node = domain.create_node(abstract_start,
+      Node *start_node = domain.create_node(domain.abstract(level, start),
                                             0,
                                             0,
                                             NULL
                                             );
       closed[level][start_node] = open[level].push(start_node);
     }
+
+    std::cerr << "###### INITIALIZATION COMPLETE ######" << std::endl;
   }
 
 
