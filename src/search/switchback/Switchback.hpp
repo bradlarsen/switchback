@@ -147,6 +147,7 @@ private:
       assert(false);  // for the domains I am running on, there should
                       // never be an infinite heuristic estimate.
     }
+    assert(closed[next_level].find(&abstract_goal_node) != closed[next_level].end());
 
     return result->get_g();
   }
@@ -154,13 +155,6 @@ private:
   Node * resume_search(const unsigned level, const State &goal_state)
   {
     assert(is_valid_level(level));
-
-    // std::cerr << "conducting hierarchical search at level " << level
-    //           << " for the following state:" << std::endl
-    //           << goal_state << std::endl;
-
-    // dump_open_sizes(std::cerr);
-    // dump_closed_sizes(std::cerr);
 
     // Dummy goal node, for hash table lookup.
     Node goal_node(goal_state, 0, 0);
@@ -180,15 +174,11 @@ private:
         dump_closed_sizes(std::cerr);
       }
 
-      assert(open[level].invariants_satisfied());
       Node *n = open[level].top();
-
       assert(closed[level].find(n) != closed[level].end());
       assert(closed[level].find(n)->second);
       assert(open[level].valid_item_pointer(*closed[level].find(n)->second));
-
       open[level].pop();
-      assert(open[level].invariants_satisfied());
 
       closed[level][n] = boost::none;
       assert(all_closed_item_ptrs_valid(level));
@@ -201,52 +191,49 @@ private:
       num_generated[level] += children.size();
       
       for (unsigned child_idx = 0; child_idx < children.size(); child_idx += 1) {
-
-        assert(open[level].invariants_satisfied());
-
-        assert(open[level].size() <= closed[level].size());
-        assert(all_closed_item_ptrs_valid(level));
-
-        Node *child = children[child_idx];
-        child->set_h(heuristic(level, child->get_state()));
-        // std::cerr << "child's h-value: " << child->get_h() << std::endl;
-
-        ClosedIterator closed_it = closed[level].find(child);
-        if (closed_it == closed[level].end()) {
-          // The child has not been generated before.
-          closed[level][child] = open[level].push(child);
-        }
-        else if (child->get_f() < closed_it->first->get_f() && closed_it->second) {
-          // A worse version of the child is in the open list.
-          open[level].erase(*closed_it->second);  // knock out the old
-                                                  // one from the open
-                                                  // list
-
-          assert(open[level].invariants_satisfied());
-
-          domain.free_node(closed_it->first);     // free the old,
-                                                  // worse copy
-
-          closed[level].erase(closed_it);         // insert better
-                                                  // version of child
-          closed[level][child] = open[level].push(child);
-
-          assert(open[level].invariants_satisfied());
-        }
-        else {
-          // The child has either already been expanded, or is worse
-          // than the version in the open list.
-          domain.free_node(child);
-        }
-
-        assert(open[level].invariants_satisfied());
-      } /* end for */
+        process_child(level, children[child_idx]);
+      }
 
       if (n->get_state() == goal_state)
         return n;
     } /* end while */
 
     return NULL;
+  }
+
+  void process_child(const unsigned level, Node *child)
+  {
+    assert(open[level].invariants_satisfied());
+    assert(open[level].size() <= closed[level].size());
+    assert(all_closed_item_ptrs_valid(level));
+
+    child->set_h(heuristic(level, child->get_state()));
+
+    ClosedIterator closed_it = closed[level].find(child);
+    if (closed_it == closed[level].end()) {
+      // The child has not been generated before.
+      closed[level][child] = open[level].push(child);
+    }
+    else if (closed_it->second && child->get_f() < closed_it->first->get_f()) {
+      // A worse version of the child is in the open list.
+      open[level].erase(*closed_it->second);  // knock out the old
+                                              // one from the open
+                                              // list
+
+      domain.free_node(closed_it->first);     // free the old,
+                                              // worse copy
+      closed[level].erase(closed_it);
+
+      closed[level][child] = open[level].push(child);  // insert better version of child
+    }
+    else {
+      // The child has either already been expanded, or is worse
+      // than the version in the open list.
+      domain.free_node(child);
+    }
+
+    assert(all_closed_item_ptrs_valid(level));
+    assert(open[level].invariants_satisfied());
   }
 
   void init_open_and_closed()
@@ -261,20 +248,15 @@ private:
       State start = level % 2 == 0
                       ? domain.get_start_state()
                       : domain.get_goal_state();
-      State goal = level % 2 == 0
-                     ? domain.get_goal_state()
-                     : domain.get_start_state();
 
       State abstract_start = domain.abstract(level, start);
-
-      Cost h_val = heuristic(level, start);
 
       // I think there is trouble with the heuristic initialization
       // here.  Should it be called with level + 1 and
       // abstract_abstract_start?
       Node *start_node = domain.create_node(abstract_start,
                                             0,
-                                            h_val,
+                                            0,
                                             NULL
                                             );
       closed[level][start_node] = open[level].push(start_node);
