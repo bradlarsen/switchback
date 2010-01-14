@@ -19,10 +19,9 @@ private:
 
 
 public:
-  TilesState15(const TileArray &tiles,
-               TileIndex blank_index)
+  TilesState15(const TileArray &tiles)
     : hash_value(compute_hash(tiles))
-    , blank_index(blank_index)
+    , blank_index(find_blank_index(tiles))
     , tiles(tiles)
   {
     assert(tiles[blank_index] == 0);
@@ -116,6 +115,16 @@ private:
   static std::size_t compute_hash(const TileArray &tiles)
   {
     return boost::hash_range(tiles.begin(), tiles.end());
+  }
+
+  static TileIndex find_blank_index(const TileArray &tiles)
+  {
+    for (TileIndex i = 0; i < tiles.size(); i += 1)
+      if (tiles[i] == 0)
+        return i;
+
+    assert(false);
+    return 0;
   }
 };
 

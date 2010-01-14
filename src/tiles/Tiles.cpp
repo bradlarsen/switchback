@@ -138,7 +138,7 @@ TilesState15 TilesInstance15::abstract(unsigned level,
         new_tiles[i * 4 + j] = -1;
     }
 
-  return TilesState15(new_tiles, s.get_blank());
+  return TilesState15(new_tiles);
 }
 
 
@@ -153,19 +153,16 @@ std::ostream & operator <<(std::ostream &o, const TilesInstance15 &t)
 
 namespace
 {
-  bool readTiles (std::istream &in, TileIndex &blank, TileArray &tiles)
+  bool readTiles (std::istream &in, TileArray &tiles)
   {
     unsigned pos;
     unsigned i;
 
-    for (i = 0; i < 16; ++i) {
+    for (i = 0; i < tiles.size(); ++i) {
       in >> pos;
       if (pos < 0 || pos > 15) {
         return true;
       }
-
-      if (i == 0)
-        blank = pos;
 
       tiles[pos] = i;
     }
@@ -188,10 +185,8 @@ TilesInstance15 * readTilesInstance15 (std::istream &in)
   std::string inputWord;
 
   TileArray startTiles;
-  TileIndex startBlankIndex;
 
   TileArray goalTiles;
-  TileIndex goalBlankIndex;
 
   if (!err) {
     in >> inputWord;
@@ -230,7 +225,7 @@ TilesInstance15 * readTilesInstance15 (std::istream &in)
   }
 
   if (!err) {
-    err = readTiles(in, startBlankIndex, startTiles);
+    err = readTiles(in, startTiles);
   }
 
   if (!err) {
@@ -244,12 +239,12 @@ TilesInstance15 * readTilesInstance15 (std::istream &in)
   }
 
   if (!err) {
-    err = readTiles(in, goalBlankIndex, goalTiles);
+    err = readTiles(in, goalTiles);
   }
 
   if (!err) {
-    TilesState15 start(startTiles, startBlankIndex);
-    TilesState15 goal(goalTiles, goalBlankIndex);
+    TilesState15 start(startTiles);
+    TilesState15 goal(goalTiles);
 
     if (start.valid() && goal.valid())
       return new TilesInstance15(start, goal);
