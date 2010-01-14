@@ -9,6 +9,7 @@
 #include <boost/optional.hpp>
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/utility.hpp>
 
 #include "search/BucketPriorityQueue.hpp"
 #include "util/PointerOps.hpp"
@@ -18,7 +19,7 @@ template <
   class Domain,
   class Node
   >
-class Switchback
+class Switchback : boost::noncopyable
 {
 private:
   typedef typename Node::Cost Cost;
@@ -51,9 +52,6 @@ private:
   boost::array<Open, hierarchy_height> open;
   boost::array<Closed, hierarchy_height> closed;
 
-private:
-  Switchback(const Switchback<Domain, Node> &);
-  Switchback<Domain, Node> & operator =(const Switchback<Domain, Node> &);
 
 public:
   Switchback(const Domain &domain)

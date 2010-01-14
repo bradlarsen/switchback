@@ -3,6 +3,7 @@
 
 #include <boost/array.hpp>
 #include <boost/pool/singleton_pool.hpp>
+#include <boost/utility.hpp>
 
 #include <iostream>
 #include <vector>
@@ -17,7 +18,8 @@ struct TilesNode15Tag { };
 typedef boost::singleton_pool<TilesNode15Tag, sizeof(TilesNode15)> NodePool;
 
 
-class TilesInstance15 {
+class TilesInstance15 : boost::noncopyable
+{
 public:
   static const unsigned num_abstraction_levels = 8;
 
@@ -123,10 +125,6 @@ private:
   const ManhattanDist15 md_heur;
 
   const AbstractionOrder abstraction_order;
-
-private:
-  TilesInstance15(const TilesInstance15 &other);
-  TilesInstance15 & operator =(const TilesInstance15 &other);
 };
 
 

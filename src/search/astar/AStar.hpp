@@ -8,6 +8,7 @@
 #include <boost/optional.hpp>
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/utility.hpp>
 
 #include "search/BucketPriorityQueue.hpp"
 #include "util/PointerOps.hpp"
@@ -17,7 +18,7 @@ template <
   class Domain,
   class Node
   >
-class AStar
+class AStar : boost::noncopyable
 {
 private:
   typedef BucketPriorityQueue<Node> Open;
