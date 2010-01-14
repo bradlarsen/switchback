@@ -23,32 +23,32 @@ public:
   {
   }
 
-  inline Cost get_f() const
+  Cost get_f() const
   {
     return g + h;
   }
 
-  inline Cost get_g() const
+  Cost get_g() const
   {
     return g;
   }
 
-  inline void set_g(Cost new_g)
+  void set_g(Cost new_g)
   {
     g = new_g;
   }
 
-  inline Cost get_h() const
+  Cost get_h() const
   {
     return h;
   }
 
-  inline void set_h(Cost new_h)
+  void set_h(Cost new_h)
   {
     h = new_h;
   }
 
-  inline const State & get_state() const
+  const State & get_state() const
   {
     return state;
   }
@@ -61,7 +61,7 @@ public:
   /**
    * Compare nodes by f-value, breaking ties in favor of high g-value.
    */
-  inline bool operator <(const Node<State, Cost> &other) const
+  bool operator <(const Node<State, Cost> &other) const
   {
     Cost my_f = get_f();
     Cost other_f = other.get_f();
@@ -69,7 +69,7 @@ public:
     return my_f < other_f || (my_f == other_f && get_g() > other.get_g());
   }
 
-  inline bool operator >=(const Node<State, Cost> &other) const
+  bool operator >=(const Node<State, Cost> &other) const
   {
     return !(*this < other);
   }
@@ -79,7 +79,7 @@ public:
    *
    * This is kind of horrible.
    */
-  inline bool operator ==(const Node<State, Cost> &other) const
+  bool operator ==(const Node<State, Cost> &other) const
   {
     return state == other.state;
   }
@@ -100,25 +100,9 @@ template <
   class State,
   class Cost
   >
-inline std::size_t hash_value(Node<State, Cost> const &node)
+std::size_t hash_value(Node<State, Cost> const &node)
 {
   return hash_value(node.get_state());
-}
-
-
-/**
- * This procedure is needed for the bucket-based priority queue, which
- * has constant time operations.
- *
- * The bucket for a node is its f-value.
- */
-template <
-  class State,
-  class Cost
-  >
-inline unsigned get_bucket(const Node<State, Cost> &n)
-{
-  return n.get_f();
 }
 
 
