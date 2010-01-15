@@ -44,6 +44,7 @@ public:
   BucketPriorityQueue()
     : num_elems(0)
     , first_bucket(boost::integer_traits<unsigned>::const_max)
+    , store()
   {
     assert(empty());
   }
@@ -221,13 +222,14 @@ public:
     return num_elems;
   }
 
-private:
   void reset()
   {
+    num_elems = 0;
     first_bucket = boost::integer_traits<unsigned>::const_max;
     store.clear();
   }
 
+private:
   bool bin_vals_all_null(const Bin &bin) const
   {
     for (unsigned i = 0; i < bin.size(); ++i)
