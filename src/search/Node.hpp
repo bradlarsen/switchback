@@ -82,6 +82,17 @@ public:
     return parent;
   }
 
+  unsigned num_nodes_to_start() const
+  {
+    unsigned num_nodes = 1;
+    const Node<State, Cost> *parent_ptr = get_parent();
+    while (parent_ptr != NULL) {
+      num_nodes += 1;
+      parent_ptr = parent_ptr->get_parent();
+    }
+    return num_nodes; 
+  }
+
   /**
    * Compare nodes by f-value, breaking ties in favor of high g-value.
    */
