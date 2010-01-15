@@ -47,7 +47,7 @@ private:
   const Node *goal;
   bool searched;
 
-  const Domain &domain;
+  Domain &domain;
 
   boost::array<unsigned, hierarchy_height> num_expanded;
   boost::array<unsigned, hierarchy_height> num_generated;
@@ -57,7 +57,7 @@ private:
 
 
 public:
-  Switchback(const Domain &domain)
+  Switchback(Domain &domain)
     : goal(NULL)
     , searched(false)
     , domain(domain)
@@ -249,8 +249,7 @@ private:
       Node *start_node = domain.create_node(domain.abstract(level, start),
                                             0,
                                             0,
-                                            NULL
-                                            );
+                                            NULL);
       closed[start_node] = open[level].push(start_node);
     }
   }

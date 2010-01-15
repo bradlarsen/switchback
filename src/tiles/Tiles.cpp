@@ -11,6 +11,7 @@ TilesInstance15::TilesInstance15 (const TilesState15 &start,
     , goal(goal)
     , md_heur(goal)
     , abstraction_order(compute_abstraction_order(start, md_heur))
+    , node_pool(sizeof(TilesNode15))
 {
 #ifndef NDEBUG
   dump_abstraction_order(std::cerr);
@@ -44,15 +45,15 @@ void TilesInstance15::print(std::ostream &o) const
 
 TilesNode15 * TilesInstance15::child(const TilesState15 &new_state,
                                      TileCost new_g,
-                                     const TilesNode15 &parent) const
+                                     const TilesNode15 &parent)
 {
   assert(new_state != parent.get_state());
   assert(parent.get_parent() == NULL ||
          new_state != parent.get_parent()->get_state());
-  TilesNode15 *child_node = new (NodePool::malloc()) TilesNode15(new_state,
-                                                                 new_g,
-                                                                 0,
-                                                                 &parent);
+  TilesNode15 *child_node = create_node(new_state,
+                                        new_g,
+                                        0,
+                                        &parent);
   return child_node;
 }
 
@@ -77,7 +78,7 @@ void TilesInstance15::compute_heuristic(TilesNode15 &child) const
 
 
 void TilesInstance15::compute_successors(const TilesNode15 &n,
-                                         std::vector<TilesNode15 *> &succs) const
+                                         std::vector<TilesNode15 *> &succs)
 {
   succs.clear();
   const TilesNode15 *gp = n.get_parent();
@@ -113,7 +114,7 @@ void TilesInstance15::compute_successors(const TilesNode15 &n,
 
 
 void TilesInstance15::compute_predecessors(const TilesNode15 &n,
-                                           std::vector<TilesNode15 *> &succs) const
+                                           std::vector<TilesNode15 *> &succs)
 {
   compute_successors(n, succs);
 }
@@ -135,16 +136,16 @@ const TilesState15 & TilesInstance15::get_goal_state() const
 TilesNode15 * TilesInstance15::create_node(const TilesState15 &state,
                                            TileCost g,
                                            TileCost h,
-                                           const TilesNode15 *parent) const
+                                           const TilesNode15 *parent)
 {
-  return new (NodePool::malloc()) TilesNode15(state, g, h, parent);
+  return new (node_pool.malloc()) TilesNode15(state, g, h, parent);
 }
 
 
-void TilesInstance15::free_node(TilesNode15 *n) const
+void TilesInstance15::free_node(TilesNode15 *n)
 {
-  assert(NodePool::is_from(n));
-  NodePool::free(n);
+  assert(node_pool.is_from(n));
+  node_pool.free(n);
 }
 
 

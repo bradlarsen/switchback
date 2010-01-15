@@ -2,7 +2,7 @@
 #define _TILES_HPP_
 
 #include <boost/array.hpp>
-#include <boost/pool/singleton_pool.hpp>
+#include <boost/pool/pool.hpp>
 #include <boost/utility.hpp>
 
 #include <iostream>
@@ -11,11 +11,6 @@
 #include "tiles/ManhattanDistance.hpp"
 #include "tiles/TilesState.hpp"
 #include "tiles/TilesNode.hpp"
-
-
-// Used with boost's singleton pool.
-struct TilesNode15Tag { };
-typedef boost::singleton_pool<TilesNode15Tag, sizeof(TilesNode15)> NodePool;
 
 
 class TilesInstance15 : boost::noncopyable
@@ -52,7 +47,7 @@ public:
    * nodes: that must be done by the caller.
    */
   void compute_successors(const TilesNode15 &n,
-                          std::vector<TilesNode15 *> &succs) const;
+                          std::vector<TilesNode15 *> &succs);
 
   /**
    * Expands the given node into the given vector for predecessors.
@@ -65,7 +60,7 @@ public:
    *
    */
   void compute_predecessors(const TilesNode15 &n,
-                            std::vector<TilesNode15 *> &succs) const;
+                            std::vector<TilesNode15 *> &succs);
 
   /**
    * Computes and assigned the heuristic for the given child node.
@@ -83,9 +78,9 @@ public:
   TilesNode15 * create_node(const TilesState15 &state,
                             TileCost g,
                             TileCost h,
-                            const TilesNode15 *parent) const;
+                            const TilesNode15 *parent);
 
-  void free_node(TilesNode15 *n) const;
+  void free_node(TilesNode15 *n);
   
   TilesState15 abstract(unsigned level, const TilesState15 &s) const;
 
@@ -96,7 +91,7 @@ public:
 private:
   TilesNode15 * child(const TilesState15 &new_state,
                       TileCost new_g,
-                      const TilesNode15 &parent) const;
+                      const TilesNode15 &parent);
 
   unsigned find_tile_index(const std::vector<TileCostPair> &pairs,
                            Tile t) const;
@@ -110,12 +105,15 @@ private:
 
   static bool valid_level(unsigned level);
 
+
+private:
   const TilesState15 start;
   const TilesState15 goal;
 
   const ManhattanDist15 md_heur;
-
   const AbstractionOrder abstraction_order;
+
+  boost::pool<> node_pool;
 };
 
 

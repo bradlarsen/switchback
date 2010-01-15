@@ -44,14 +44,14 @@ private:
   const Node * goal;
   bool searched;
 
-  const Domain &domain;
+  Domain &domain;
 
   unsigned num_expanded;
   unsigned num_generated;
 
 
 public:
-  AStar(const Domain &domain)
+  AStar(Domain &domain)
     : open()
     , closed(INITIAL_CLOSED_SET_SIZE)
     , goal(NULL)
