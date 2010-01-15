@@ -82,6 +82,7 @@ void search(Searcher &searcher)
   else {
     cout << "found a solution:" << endl;
     cout << *goal << endl;
+    assert(goal->num_nodes_to_start() == goal->get_g() + 1u);
   }
 
   const double seconds_elapsed = search_timer.elapsed();
