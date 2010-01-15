@@ -5,6 +5,7 @@
 
 #include "search/BucketPriorityQueue.hpp"
 #include "search/astar/AStar.hpp"
+#include "search/hastar/HAStar.hpp"
 #include "search/switchback/Switchback.hpp"
 #include "tiles/Tiles.hpp"
 
@@ -13,6 +14,7 @@ using namespace boost;
 
 
 typedef AStar<TilesInstance15, TilesNode15> TilesAStar;
+typedef HAStar<TilesInstance15, TilesNode15> TilesHAStar;
 typedef Switchback<TilesInstance15, TilesNode15> TilesSwitchback;
 
 
@@ -60,7 +62,7 @@ void print_usage(ostream &o, const char *prog_name)
 {
   o << "usage: " << prog_name << " ALGORITHM [FILE]" << endl
     << "where" << endl
-    << "  ALGORITHM is one of {astar, switchback}" << endl
+    << "  ALGORITHM is one of {astar, hastar, switchback}" << endl
     << "  FILE is the optional instance file to read from" << endl
     << endl
     << "If no file is specified, the instance is read from stdin." << endl;
@@ -128,10 +130,15 @@ int main(int argc, char * argv[])
   cout << endl;
 
   cout << "######## Search Results ########" << endl;
+
   const string alg_string(argv[1]);
   if (alg_string == "astar") {
     TilesAStar &astar = *new TilesAStar(*instance);
     search(astar);
+  }
+  else if (alg_string == "hastar") {
+    TilesHAStar &hastar = *new TilesHAStar(*instance);
+    search(hastar);
   }
   else if (alg_string == "switchback") {
     TilesSwitchback &switchback = *new TilesSwitchback(*instance);

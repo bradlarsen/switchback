@@ -2,6 +2,7 @@
 #define _HA_STAR_HPP_
 
 
+#include <iostream>
 #include <vector>
 
 #include <boost/array.hpp>
@@ -75,19 +76,14 @@ public:
       return;
     searched = true;
 
-    init_open_and_closed();
-    search_at_level(0);
+    goal = search_at_level(0,
+                           domain.get_start_state(),
+                           domain.get_goal_state());
   }
 
 
   const Node * get_goal() const
   {
-#ifndef NDEBUG
-    std::cerr << open[level].size()
-              << " nodes in open at end of search" << std::endl
-              << closed[level].size()
-              << " nodes in closed at end of search" << std::endl;
-#endif
     return goal;
   }
 
@@ -98,44 +94,63 @@ public:
 
   unsigned get_num_generated() const
   {
-    return num_generated;
+    unsigned sum = 0;
+    for (unsigned i = 0; i < hierarchy_height; i += 1)
+      sum += num_generated[i];
+
+    return sum;
+  }
+
+  unsigned get_num_generated(const unsigned level) const
+  {
+    return num_generated[level];
   }
 
   unsigned get_num_expanded() const
   {
-    return num_expanded;
+    unsigned sum = 0;
+    for (unsigned i = 0; i < hierarchy_height; i += 1)
+      sum += num_expanded[i];
+
+    return sum;
+  }
+
+  unsigned get_num_expanded(const unsigned level) const
+  {
+    return num_expanded[level];
   }
 
 
 private:
-  void init_open_and_closed()
+  Node * search_at_level(const unsigned level,
+                         const State &start_state,
+                         const State &goal_state)
   {
-    Node *start_node = domain.create_node(domain.get_start_state(),
+    Open open;
+    Closed closed;
+
+    Node *start_node = domain.create_node(start_state,
                                           0,
                                           0,
                                           NULL);
-    closed[0][start_node] = open[0].push(start_node);
-    assert(closed[0].find(start_node) != closed[0].end());
-    assert(open[0].size() == 1);
-    assert(closed[0].size() == 1);
-  }
+    closed[start_node] = open.push(start_node);
+    assert(closed.find(start_node) != closed.end());
+    assert(open.size() == 1);
+    assert(closed.size() == 1);
 
+    Node *goal_node = NULL;
 
-  void search_at_level(const unsigned level)
-  {
     std::vector<Node *> succs;
-
-    while (!open[level].empty())
+    while (!open.empty())
     {
-      Node *n = open[level].top();
-      open[level].pop();
-      assert(closed[level].find(n) != closed[level].end());
-      closed[level][n] = boost::none;
-      assert(all_closed_item_ptrs_valid(level));
+      Node *n = open.top();
+      open.pop();
+      assert(closed.find(n) != closed.end());
+      closed[n] = boost::none;
 
-      if (domain.is_goal(n->get_state())) {
-        goal = n;
-        return;
+      if (n->get_state() == goal_state) {
+        goal_node = n;
+        break;
       }
 
       domain.compute_successors(*n, succs);
@@ -143,37 +158,45 @@ private:
       num_generated[level] += succs.size();
 
       for (unsigned succ_i = 0; succ_i < succs.size(); succ_i += 1)
-      {
-        process_child(n, succs[succ_i]);
-      } /* end for */
+        process_child(level, open, closed, n, succs[succ_i]);
     } /* end while */
+
+    //    free_all_nodes(closed);
+    
+    if (goal_node == NULL) {
+      std::cerr << "no goal found!" << std::endl;
+      assert(false);
+    }
+
+    return goal_node;
   }
 
 
-  void process_child(const unsigned level, const Node *parent, Node *child)
+  void process_child(const unsigned level,
+                     Open &open,
+                     Closed &closed,
+                     const Node *parent,
+                     Node *child)
   {
     domain.compute_heuristic(*parent, *child);
-    assert(open[level].size() <= closed[level].size());
-    assert(all_closed_item_ptrs_valid(level));
+    assert(open.size() <= closed.size());
 
-    ClosedIterator closed_it = closed[level].find(child);
-    if (closed_it == closed[level].end()) {
+    ClosedIterator closed_it = closed.find(child);
+    if (closed_it == closed.end()) {
       // The child has not been generated before.
-      closed[level][child] = open[level].push(child);
+      closed[child] = open.push(child);
     }
     else if (closed_it->second && child->get_f() < closed_it->first->get_f()) {
       // A worse version of the child is in the open list.
-      open[level].erase(*closed_it->second);  // knock out the old one
-                                              // from the open list
+      open.erase(*closed_it->second);  // knock out the old one from
+                                       // the open list
 
       domain.free_node(closed_it->first);     // free the old, worse
                                               // copy
-      closed[level].erase(closed_it);
+      closed.erase(closed_it);
 
-      closed[level][child] = open[level].push(child);  // insert
-                                                       // better
-                                                       // version of
-                                                       // child
+      closed[child] = open.push(child);  // insert better version of
+                                         // child
     }
     else {
       // The child has either already been expanded, or is worse
@@ -181,26 +204,16 @@ private:
       domain.free_node(child);
     }
 
-    assert(all_closed_item_ptrs_valid(level));
-    assert(open[level].invariants_satisfied());
+    assert(open.invariants_satisfied());
   }
 
 
-  bool all_closed_item_ptrs_valid(const unsigned level) const
+  void free_all_nodes(Closed &closed)
   {
-#ifdef CHECK_ALL_CLOSED_ITEM_PTRS_VALID
-    std::cerr << "checking if item pointers are valid" << std::endl
-              << "  " << closed.size() << " pointers to check" << std::endl;
-    for (ClosedConstIterator closed_it = closed[level].begin();
-         closed_it != closed[level].end();
-         ++closed_it) {
-      if ( closed_it->second && !open[level].valid_item_pointer(*closed_it->second) )
-        return false;
-    }
-    return true;
-#else
-    return true;
-#endif
+    for (ClosedIterator closed_it = closed.begin();
+         closed_it != closed.end();
+         ++closed_it)
+      domain.free_node(closed_it->first);
   }
 };
 
