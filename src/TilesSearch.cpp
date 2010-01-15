@@ -16,6 +16,31 @@ typedef AStar<TilesInstance15, TilesNode15> TilesAStar;
 typedef Switchback<TilesInstance15, TilesNode15> TilesSwitchback;
 
 
+void print_build_info(ostream &o)
+{
+  o << "tiles state hash caching is "
+#ifdef CACHE_TILES_HASH_VALUE
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
+
+  o << "tiles state blank index caching is "
+#ifdef CACHE_TILES_BLANK_INDEX
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
+
+  o << "node f-value caching is "
+#ifdef CACHE_NODE_F_VALUE
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
+} 
+
+
 void print_size_info(ostream &o)
 {
   o << "sizeof(unsigned) is " << sizeof(unsigned) << endl
@@ -89,6 +114,10 @@ int main(int argc, char * argv[])
     cerr << "error reading instance!" << endl;
     return 1;
   }
+
+  cout << "######## Build Information ########" << endl;
+  print_build_info(cout);
+  cout << endl;
 
   cout << "######## Type Size Information ########" << endl;
   print_size_info(cout);

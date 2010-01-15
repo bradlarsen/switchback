@@ -2,9 +2,6 @@
 #define _NODE_HPP_
 
 
-#undef CACHE_NODE_F_VAL
-
-
 template <
   class StateT,
   class CostT
@@ -21,7 +18,7 @@ private:
   const State state;
   Cost g;
   Cost h;
-#ifdef CACHE_NODE_F_VAL
+#ifdef CACHE_NODE_F_VALUE
   Cost f;
 #endif
 
@@ -34,7 +31,7 @@ public:
     , state(s)
     , g(g)
     , h(h)
-#ifdef CACHE_NODE_F_VAL
+#ifdef CACHE_NODE_F_VALUE
     , f(g + h)
 #endif
   {
@@ -42,7 +39,7 @@ public:
 
   Cost get_f() const
   {
-#ifdef CACHE_NODE_F_VAL
+#ifdef CACHE_NODE_F_VALUE
     return f;
 #else
     return g + h;
@@ -57,7 +54,7 @@ public:
   void set_g(Cost new_g)
   {
     g = new_g;
-#ifdef CACHE_NODE_F_VAL
+#ifdef CACHE_NODE_F_VALUE
     f = g + h;
 #endif
   }
@@ -70,7 +67,7 @@ public:
   void set_h(Cost new_h)
   {
     h = new_h;
-#ifdef CACHE_NODE_F_VAL
+#ifdef CACHE_NODE_F_VALUE
     f = g + h;
 #endif
   }
