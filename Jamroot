@@ -24,6 +24,23 @@ variant myrelease
       <address-model>64
     ;
 
+variant speedrelease
+    : myrelease
+    :
+      <define>CACHE_NODE_F_VALUE
+      <define>CACHE_TILES_HASH_VALUE
+      <define>CACHE_TILES_BLANK_INDEX
+    ;
+
+#<undef> apparently doesn't work correctly.  bjam is buggy.
+variant spacerelease
+    : myrelease
+    :
+      <undef>CACHE_NODE_F_VALUE
+      <undef>CACHE_TILES_HASH_VALUE
+      <undef>CACHE_TILES_BLANK_INDEX
+    ;
+
 
 project switchback
     : requirements
@@ -33,7 +50,8 @@ project switchback
     : build-dir build
     : default-build
         <variant>mydebug
-#        <variant>myrelease
+#        <variant>speedrelease
+#        <variant>spacerelease
         <warnings>on
     ;
 
