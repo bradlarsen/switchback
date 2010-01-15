@@ -165,6 +165,12 @@ TilesState15 TilesInstance15::abstract(unsigned level,
 }
 
 
+bool TilesInstance15::is_valid_level(const unsigned level)
+{
+  return level <= num_abstraction_levels;
+}
+
+
 
 std::ostream & operator <<(std::ostream &o, const TilesInstance15 &t)
 {

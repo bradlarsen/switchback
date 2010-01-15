@@ -40,13 +40,19 @@ public:
     return s == goal;
   }
 
+  inline TileCost get_epsilon() const
+  {
+    return 1;
+  }
+
   /**
    * Expands the given node into the given vector for successors.
    *
    * Note that this does not assign the h values for the successor
    * nodes: that must be done by the caller.
    */
-  void compute_successors(const TilesNode15 &n, std::vector<TilesNode15 *> &succs) const;
+  void compute_successors(const TilesNode15 &n,
+                          std::vector<TilesNode15 *> &succs) const;
 
   /**
    * Expands the given node into the given vector for predecessors.
@@ -58,16 +64,19 @@ public:
    * nodes: that must be done by the caller.
    *
    */
-  void compute_predecessors(const TilesNode15 &n, std::vector<TilesNode15 *> &succs) const;
+  void compute_predecessors(const TilesNode15 &n,
+                            std::vector<TilesNode15 *> &succs) const;
 
   /**
    * Computes and assigned the heuristic for the given child node.
    */
-  void compute_heuristic(const TilesNode15 &parent, TilesNode15 &child) const;
+  void compute_heuristic(const TilesNode15 &parent,
+                         TilesNode15 &child) const;
 
   void compute_heuristic(TilesNode15 &child) const;
 
   const TilesState15 & get_start_state() const;
+
   const TilesState15 & get_goal_state() const;
 
 
@@ -81,10 +90,7 @@ public:
   TilesState15 abstract(unsigned level, const TilesState15 &s) const;
 
 
-  static bool is_valid_level(const unsigned level)
-  {
-    return level <= num_abstraction_levels;
-  }
+  static bool is_valid_level(const unsigned level);
 
   
 private:
