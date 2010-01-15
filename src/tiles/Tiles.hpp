@@ -40,7 +40,7 @@ public:
     return s == goal;
   }
 
-  inline TileCost get_epsilon() const
+  inline TileCost get_epsilon(const TilesState15 &s) const
   {
     return 1;
   }

@@ -165,6 +165,7 @@ private:
                   << get_num_generated() << " total nodes generated" << std::endl;
         dump_open_sizes(std::cerr);
         dump_closed_sizes(std::cerr);
+        dump_cache_size(std::cerr);
       }
 
       Node *n = open[level].top();
@@ -245,7 +246,7 @@ private:
     if (cache_it != cache.end())
       return cache_it->second;
 
-    Cost epsilon = domain.get_epsilon();
+    Cost epsilon = domain.get_epsilon(start_state);
 
     if (level == Domain::num_abstraction_levels) {
       return
@@ -267,10 +268,44 @@ private:
                       // never be an infinite heuristic estimate.
     }
 
-    Cost hval = std::max(epsilon, result->get_g());
+    std::cerr << "solution at level " << level << " has length "
+              << result->num_nodes_to_start() << std::endl;
+
+    Cost hval = result->get_g(); //std::max(epsilon, result->get_g());
     cache[start_state] = hval;
+    // cache_h_star(result);
+    // assert(cache.find(start_state) != cache.end());
+    // assert(cache.find(start_state)->second = hval);
 
     return hval;
+  }
+
+
+  void cache_h_star(const Node *goal_node)
+  {
+    assert(goal_node != NULL);
+
+    const Cost cost_to_goal = goal_node->get_g();
+
+    unsigned num_cached = 0;
+    const Node *parent = goal_node->get_parent();
+    while (parent != NULL) {
+      assert(cost_to_goal > parent->get_g());
+      const Cost hval = cost_to_goal - parent->get_g();
+
+      CacheIterator cache_it = cache.find(parent->get_state());
+      if (cache_it != cache.end()) {
+        assert(cache_it->second <= hval);
+        cache_it->second = hval;
+      }
+      else
+        cache[parent->get_state()] = hval;
+
+      parent = parent->get_parent();
+      num_cached += 1;
+    }
+
+    //    std::cerr << "cached h* values for " << num_cached << " nodes" << std::endl;
   }
 
 
@@ -296,6 +331,11 @@ private:
     o << "closed sizes: " << std::endl;
     for (unsigned level = 0; level < hierarchy_height; level += 1)
       o << "  " << level << ": " << closed[level].size() << std::endl;
+  }
+
+  void dump_cache_size(std::ostream &o) const
+  {
+    o << "cache size: " << cache.size() << std::endl;
   }
 };
 
