@@ -101,6 +101,12 @@ public:
   
   TilesState15 abstract(unsigned level, const TilesState15 &s) const;
 
+
+  static bool is_valid_level(const unsigned level)
+  {
+    return level <= num_abstraction_levels;
+  }
+
   
 private:
   TilesNode15 * child(const TilesState15 &new_state,

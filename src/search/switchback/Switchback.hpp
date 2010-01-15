@@ -130,7 +130,7 @@ public:
 private:
   Cost heuristic(const unsigned level, const State &goal_state)
   {
-    assert(is_valid_level(level));
+    assert(domain.is_valid_level(level));
 
     if (level == Domain::num_abstraction_levels)
       return 0;
@@ -160,7 +160,7 @@ private:
   
   Node * resume_search(const unsigned level, const State &goal_state)
   {
-    assert(is_valid_level(level));
+    assert(domain.is_valid_level(level));
 
     // Dummy goal node, for hash table lookup.
     Node goal_node(goal_state, 0, 0);
@@ -173,7 +173,7 @@ private:
 
     // A*-ish code ahead
     while (!open[level].empty()) {
-      if (get_num_expanded() % 500000 == 0) {
+      if (get_num_expanded() % 1000000 == 0) {
         std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
                   << get_num_generated() << " total nodes generated" << std::endl;
         dump_open_sizes(std::cerr);
@@ -253,12 +253,6 @@ private:
                                             );
       closed[start_node] = open[level].push(start_node);
     }
-  }
-
-
-  static bool is_valid_level(const unsigned level)
-  {
-    return level <= Domain::num_abstraction_levels;
   }
 
   void dump_open_sizes(std::ostream &o) const
