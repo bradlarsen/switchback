@@ -25,15 +25,17 @@ private:
 public:
     struct ItemPointer
     {
-      ItemPointer(unsigned bucket_num, unsigned bin_num, unsigned idx)
+      ItemPointer(unsigned short bucket_num,
+                  unsigned short bin_num,
+                  unsigned idx)
         : bucket_num(bucket_num)
         , bin_num(bin_num)
         , idx(idx)
       {
       }
 
-      unsigned bucket_num;
-      unsigned bin_num;
+      unsigned short bucket_num;
+      unsigned short bin_num;
       unsigned idx;
     };
 
@@ -169,7 +171,7 @@ public:
     bin[ptr.idx] = NULL;
 
     bool all_null = bin_vals_all_null(bin);
-    if (all_null && bucket.size() == ptr.bin_num + 1) {
+    if (all_null && bucket.size() == ptr.bin_num + 1u) {
       // std::cerr << "bin at end to be popped" << std::endl;
 
       // The bin at the end of the bucket has been entirely deleted.
