@@ -31,28 +31,7 @@ private:
     > AbstractionOrder;
 
 public:
-  TilesInstance15 (const TilesState15 &start,
-                   const TilesState15 &goal)
-    : start(start)
-    , goal(goal)
-    , md_heur(goal)
-    , abstraction_order(compute_abstraction_order(start, md_heur))
-  {
-#ifndef NDEBUG
-    dump_abstraction_order(std::cerr);
-
-    std::cerr << "the 9 abstractions of the start node:" << std::endl
-              << "base level:" <<std::endl
-              << start << std::endl;
-    for (unsigned level = 1; level <= num_abstraction_levels; level += 1) {
-      TilesState15 abs_start = abstract(level, start);
-      std::cerr << "abstraction " << level << ":" << std::endl
-                << abs_start << std::endl;
-    }
-#endif
-    assert(is_goal(goal));
-  }
-
+  TilesInstance15 (const TilesState15 &start, const TilesState15 &goal);
 
   void print(std::ostream &o) const;
 
