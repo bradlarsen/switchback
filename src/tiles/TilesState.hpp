@@ -17,6 +17,9 @@ private:
 #ifdef CACHE_TILES_HASH_VALUE
   std::size_t hash_value;
 #endif
+#ifdef CACHE_TILES_BLANK_INDEX
+  TileIndex blank_index;
+#endif
 
 
 public:
@@ -24,6 +27,9 @@ public:
     : tiles(tiles)
 #ifdef CACHE_TILES_HASH_VALUE
     , hash_value(compute_hash(tiles))
+#endif
+#ifdef CACHE_TILES_BLANK_INDEX
+    , blank_index(find_blank_index(tiles))
 #endif
   {
     assert(tiles[get_blank()] == 0);
@@ -42,6 +48,9 @@ public:
 #ifdef CACHE_TILES_HASH_VALUE
       hash_value == other.hash_value &&
 #endif
+#ifdef CACHE_TILES_BLANK_INDEX
+      blank_index == other.blank_index &&
+#endif
       tiles == other.tiles;
   }
 
@@ -52,7 +61,11 @@ public:
 
   inline TileIndex get_blank() const
   {
+#ifdef CACHE_TILES_BLANK_INDEX
+    return blank_index;
+#else
     return find_blank_index(tiles);
+#endif
   }
 
   inline TileIndex get_blank_row() const
@@ -116,6 +129,9 @@ private:
     std::swap(new_state.tiles[blank_index], new_state.tiles[new_blank_index]);
 #ifdef CACHE_TILES_HASH_VALUE
     new_state.hash_value = compute_hash(new_state.tiles);
+#endif
+#ifdef CACHE_TILES_BLANK_INDEX
+    new_state.blank_index = find_blank_index(new_state.tiles);
 #endif
 
     return new_state;
