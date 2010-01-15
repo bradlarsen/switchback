@@ -1,5 +1,5 @@
 variant mydebug
-    : debug
+    :
     :
       <optimization>off
       <debug-symbols>on
@@ -9,8 +9,9 @@ variant mydebug
       <toolset>gcc
     ;
 
+
 variant myrelease
-    : release
+    :
     :
       <optimization>speed
       <debug-symbols>off
@@ -21,7 +22,6 @@ variant myrelease
       <link>static
       <runtime-link>static
       <toolset>gcc
-      <address-model>64
     ;
 
 variant speedrelease
@@ -32,13 +32,9 @@ variant speedrelease
       <define>CACHE_TILES_BLANK_INDEX
     ;
 
-#<undef> apparently doesn't work correctly.  bjam is buggy.
 variant spacerelease
     : myrelease
     :
-      <undef>CACHE_NODE_F_VALUE
-      <undef>CACHE_TILES_HASH_VALUE
-      <undef>CACHE_TILES_BLANK_INDEX
     ;
 
 
