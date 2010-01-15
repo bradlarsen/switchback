@@ -10,6 +10,7 @@
 #include <boost/unordered_map.hpp>
 #include <boost/utility.hpp>
 
+#include "search/Constants.hpp"
 #include "search/BucketPriorityQueue.hpp"
 #include "util/PointerOps.hpp"
 
@@ -52,7 +53,7 @@ private:
 public:
   AStar(const Domain &domain)
     : open()
-    , closed(50000000)  // requested number of hash buckets
+    , closed(INITIAL_CLOSED_SET_SIZE)
     , goal(NULL)
     , searched(false)
     , domain(domain)

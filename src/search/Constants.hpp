@@ -1,0 +1,8 @@
+#ifndef _SEARCH_CONSTANTS_HPP_
+#define _SEARCH_CONSTANTS_HPP_
+
+
+const unsigned INITIAL_CLOSED_SET_SIZE = 25000000;
+
+
+#endif /* !_SEARCH_CONSTANTS_HPP_ */

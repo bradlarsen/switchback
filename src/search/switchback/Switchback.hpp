@@ -12,6 +12,7 @@
 #include <boost/utility.hpp>
 
 #include "search/BucketPriorityQueue.hpp"
+#include "search/Constants.hpp"
 #include "util/PointerOps.hpp"
 
 
@@ -52,7 +53,7 @@ private:
   boost::array<unsigned, hierarchy_height> num_generated;
 
   boost::array<Open, hierarchy_height> open;
-  boost::array<Closed, hierarchy_height> closed;
+  Closed closed;
 
 
 public:
@@ -63,7 +64,7 @@ public:
     , num_expanded()
     , num_generated()
     , open()
-    , closed()
+    , closed(INITIAL_CLOSED_SET_SIZE)
   {
     num_expanded.assign(0);
     num_generated.assign(0);
@@ -140,8 +141,8 @@ private:
     const State abstract_goal_state = domain.abstract(next_level, goal_state);
     Node abstract_goal_node(abstract_goal_state, 0, 0);
 
-    ClosedIterator closed_it = closed[next_level].find(&abstract_goal_node);
-    if (closed_it != closed[next_level].end() && !closed_it->second) {
+    ClosedIterator closed_it = closed.find(&abstract_goal_node);
+    if (closed_it != closed.end() && !closed_it->second) {
       return closed_it->first->get_g();
     }
 
@@ -151,8 +152,8 @@ private:
       assert(false);  // for the domains I am running on, there should
                       // never be an infinite heuristic estimate.
     }
-    assert(closed[next_level].find(&abstract_goal_node) != closed[next_level].end());
-    assert(!closed[next_level].find(&abstract_goal_node)->second);
+    assert(closed.find(&abstract_goal_node) != closed.end());
+    assert(!closed.find(&abstract_goal_node)->second);
 
     return result->get_g();
   }
@@ -163,9 +164,9 @@ private:
 
     // Dummy goal node, for hash table lookup.
     Node goal_node(goal_state, 0, 0);
-    ClosedIterator closed_it = closed[level].find(&goal_node);
+    ClosedIterator closed_it = closed.find(&goal_node);
 
-    if (closed_it != closed[level].end() &&!closed_it->second)
+    if (closed_it != closed.end() &&!closed_it->second)
       return closed_it->first;
 
     std::vector<Node *> children;
@@ -180,13 +181,12 @@ private:
       }
 
       Node *n = open[level].top();
-      assert(closed[level].find(n) != closed[level].end());
-      assert(closed[level].find(n)->second);
-      assert(open[level].valid_item_pointer(*closed[level].find(n)->second));
+      assert(closed.find(n) != closed.end());
+      assert(closed.find(n)->second);
+      assert(open[level].valid_item_pointer(*closed.find(n)->second));
       open[level].pop();
 
-      closed[level][n] = boost::none;
-      assert(all_closed_item_ptrs_valid(level));
+      closed[n] = boost::none;
 
       if (level % 2 == 0)
         domain.compute_successors(*n, children);
@@ -209,15 +209,14 @@ private:
   void process_child(const unsigned level, Node *child)
   {
     assert(open[level].invariants_satisfied());
-    assert(open[level].size() <= closed[level].size());
-    assert(all_closed_item_ptrs_valid(level));
+    assert(open[level].size() <= closed.size());
 
     child->set_h(heuristic(level, child->get_state()));
 
-    ClosedIterator closed_it = closed[level].find(child);
-    if (closed_it == closed[level].end()) {
+    ClosedIterator closed_it = closed.find(child);
+    if (closed_it == closed.end()) {
       // The child has not been generated before.
-      closed[level][child] = open[level].push(child);
+      closed[child] = open[level].push(child);
     }
     else if (closed_it->second && child->get_f() < closed_it->first->get_f()) {
       // A worse version of the child is in the open list.
@@ -227,9 +226,9 @@ private:
 
       domain.free_node(closed_it->first);     // free the old,
                                               // worse copy
-      closed[level].erase(closed_it);
+      closed.erase(closed_it);
 
-      closed[level][child] = open[level].push(child);  // insert better version of child
+      closed[child] = open[level].push(child);  // insert better version of child
     }
     else {
       // The child has either already been expanded, or is worse
@@ -237,7 +236,6 @@ private:
       domain.free_node(child);
     }
 
-    assert(all_closed_item_ptrs_valid(level));
     assert(open[level].invariants_satisfied());
   }
 
@@ -253,27 +251,10 @@ private:
                                             0,
                                             NULL
                                             );
-      closed[level][start_node] = open[level].push(start_node);
+      closed[start_node] = open[level].push(start_node);
     }
   }
 
-
-  bool all_closed_item_ptrs_valid(const unsigned level) const
-  {
-#ifdef CHECK_ALL_CLOSED_ITEM_PTRS_VALID
-    std::cerr << "checking if item pointers are valid" << std::endl
-              << "  " << closed.size() << " pointers to check" << std::endl;
-    for (ClosedConstIterator closed_it = closed[level].begin();
-         closed_it != closed[level].end();
-         ++closed_it) {
-      if ( closed_it->second && !open[level].valid_item_pointer(*closed_it->second) )
-        return false;
-    }
-    return true;
-#else
-    return true;
-#endif
-  }
 
   static bool is_valid_level(const unsigned level)
   {
@@ -289,9 +270,7 @@ private:
 
   void dump_closed_sizes(std::ostream &o) const
   {
-    o << "closed sizes: " << std::endl;
-    for (unsigned level = 0; level < hierarchy_height; level += 1)
-      o << "  " << level << ": " << closed[level].size() << std::endl;
+    o << "closed size: " << closed.size() << std::endl;
   }
 };
 
