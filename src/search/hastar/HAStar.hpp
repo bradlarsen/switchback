@@ -10,7 +10,6 @@
 #include <boost/optional.hpp>
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
 #include <boost/utility.hpp>
 
 #include "search/BucketPriorityQueue.hpp"
@@ -40,12 +39,15 @@ private:
   typedef typename Closed::iterator ClosedIterator;
   typedef typename Closed::const_iterator ClosedConstIterator;
 
-  typedef boost::unordered_set<
-    Node *
+  typedef boost::unordered_map<
+    State,
+    Cost
     // , boost::hash<State>,
     // std::is_equal<State>,
-    // boost::fast_pool_allocator<Node *> >
+    // boost::fast_pool_allocator< std::pair<State const, Cost> >
     > Cache;
+
+  typedef typename Cache::iterator CacheIterator;
 
 
 private:
@@ -62,6 +64,7 @@ private:
   boost::array<Open, hierarchy_height> open;
   boost::array<Closed, hierarchy_height> closed;
 
+  Cache cache;
 
 public:
   HAStar(const Domain &domain)
@@ -72,6 +75,7 @@ public:
     , num_generated()
     , open()
     , closed()
+    , cache()
   {
     num_expanded.assign(0);
     num_generated.assign(0);
@@ -202,7 +206,7 @@ private:
     assert(open[level].invariants_satisfied());
     assert(open[level].size() <= closed[level].size());
 
-    child->set_h(heuristic(level, *child, *parent));
+    child->set_h(heuristic(level, child->get_state(), parent->get_state()));
 
     ClosedIterator closed_it = closed[level].find(child);
     if (closed_it == closed[level].end()) {
@@ -232,25 +236,29 @@ private:
 
 
   Cost heuristic (const unsigned level,
-                  const Node &start_node,
-                  const Node &goal_node)
+                  const State &start_state,
+                  const State &goal_state)
   {
     assert(domain.is_valid_level(level));
+
+    CacheIterator cache_it = cache.find(start_state);
+    if (cache_it != cache.end())
+      return cache_it->second;
 
     Cost epsilon = domain.get_epsilon();
 
     if (level == Domain::num_abstraction_levels) {
       return
-        start_node.get_state() != goal_node.get_state()
+        start_state == goal_state
         ? epsilon
         : 0;
     }
 
     const unsigned next_level = level + 1u;
     const State abstract_start = domain.abstract(next_level,
-                                                 start_node.get_state());
+                                                 start_state);
     const State abstract_goal = domain.abstract(next_level,
-                                                goal_node.get_state());
+                                                goal_state);
 
     Node *result = search_at_level(next_level, abstract_start, abstract_goal);
     if (result == NULL) {
@@ -258,7 +266,11 @@ private:
       assert(false);  // for the domains I am running on, there should
                       // never be an infinite heuristic estimate.
     }
-    return std::max(epsilon, result->get_g());
+
+    Cost hval = std::max(epsilon, result->get_g());
+    cache[start_state] = hval;
+
+    return hval;
   }
 
 
