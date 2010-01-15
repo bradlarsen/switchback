@@ -56,7 +56,7 @@ private:
   const Node * goal;
   bool searched;
 
-  const Domain &domain;
+  Domain &domain;
 
   boost::array<unsigned, hierarchy_height> num_expanded;
   boost::array<unsigned, hierarchy_height> num_generated;
@@ -67,7 +67,7 @@ private:
   Cache cache;
 
 public:
-  HAStar(const Domain &domain)
+  HAStar(Domain &domain)
     : goal(NULL)
     , searched(false)
     , domain(domain)
@@ -186,12 +186,6 @@ private:
         process_child(level, n, succs[succ_i]);
     } /* end while */
 
-    // The following line causes things to break.
-
-    // free_all_nodes(closed[level]);
-    closed[level].clear();
-    open[level].reset();
-    
     if (goal_node == NULL) {
       std::cerr << "no goal found!" << std::endl;
       assert(false);
@@ -280,6 +274,12 @@ private:
     assert(cache.find(start_state) != cache.end());
     assert(cache.find(start_state)->second = hval);
 
+    free_all_nodes(closed[next_level]);
+    closed[next_level].clear();
+    assert(closed[next_level].empty());
+    open[next_level].reset();
+    assert(open[next_level].empty());
+
     return hval;
   }
 
@@ -293,7 +293,7 @@ private:
     unsigned num_cached = 0;
     const Node *parent = goal_node->get_parent();
     while (parent != NULL) {
-      assert(cost_to_goal > parent->get_g());
+      assert(cost_to_goal >= parent->get_g());
       const Cost hval = cost_to_goal - parent->get_g();
 
       CacheIterator cache_it = cache.find(parent->get_state());
