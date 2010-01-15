@@ -237,8 +237,14 @@ private:
   {
     assert(domain.is_valid_level(level));
 
-    if (level == Domain::num_abstraction_levels)
-      return 0;
+    Cost epsilon = domain.get_epsilon();
+
+    if (level == Domain::num_abstraction_levels) {
+      return
+        start_node.get_state() != goal_node.get_state()
+        ? epsilon
+        : 0;
+    }
 
     const unsigned next_level = level + 1u;
     const State abstract_start = domain.abstract(next_level,
@@ -252,7 +258,7 @@ private:
       assert(false);  // for the domains I am running on, there should
                       // never be an infinite heuristic estimate.
     }
-    return result->get_g();
+    return std::max(epsilon, result->get_g());
   }
 
 
