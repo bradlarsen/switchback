@@ -1,4 +1,5 @@
 variant mydebug
+    : debug
     :
       <optimization>off
       <debug-symbols>on
@@ -9,6 +10,7 @@ variant mydebug
     ;
 
 variant myrelease
+    : release
     :
       <optimization>speed
       <debug-symbols>off
