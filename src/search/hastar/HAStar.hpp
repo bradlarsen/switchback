@@ -186,7 +186,9 @@ private:
         process_child(level, n, succs[succ_i]);
     } /* end while */
 
-    free_all_nodes(closed[level]);
+    // The following line causes things to break.
+
+    // free_all_nodes(closed[level]);
     closed[level].clear();
     open[level].reset();
     
@@ -194,6 +196,9 @@ private:
       std::cerr << "no goal found!" << std::endl;
       assert(false);
     }
+
+    // std::cerr << "solution at level " << level << " has length "
+    //           << goal_node->num_nodes_to_start() << std::endl;
 
     return goal_node;
   }
@@ -247,6 +252,7 @@ private:
       return cache_it->second;
 
     Cost epsilon = domain.get_epsilon(start_state);
+    assert(epsilon == 1);
 
     if (level == Domain::num_abstraction_levels) {
       return
@@ -268,14 +274,11 @@ private:
                       // never be an infinite heuristic estimate.
     }
 
-    std::cerr << "solution at level " << level << " has length "
-              << result->num_nodes_to_start() << std::endl;
-
-    Cost hval = result->get_g(); //std::max(epsilon, result->get_g());
+    Cost hval = std::max(epsilon, result->get_g());
     cache[start_state] = hval;
-    // cache_h_star(result);
-    // assert(cache.find(start_state) != cache.end());
-    // assert(cache.find(start_state)->second = hval);
+    cache_h_star(result);
+    assert(cache.find(start_state) != cache.end());
+    assert(cache.find(start_state)->second = hval);
 
     return hval;
   }
