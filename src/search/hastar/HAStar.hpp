@@ -6,6 +6,20 @@
 //#define HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
 //#define HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
 
+#ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+#ifndef HIERARCHICAL_A_STAR_CACHE_H_STAR
+#ifndef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+#error "Optimal path caching can only be used if either h* caching or P-g caching is enabled"
+#endif
+#endif
+#endif
+
+#ifdef HIERARCHICAL_A_STAR_CACHE_H_STAR
+#ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+#error "h* caching and P-g caching are mutually exclusive"
+#endif
+#endif
+
 
 #include <iostream>
 #include <vector>
@@ -58,6 +72,11 @@ private:
   inline static void set_cost(std::pair<bool, Cost> &p, Cost c)
   {
     p.second = c;
+  }
+
+  inline static bool is_exact_cost(std::pair<bool, Cost> &p)
+  {
+    return p.first;
   }
 #else
   typedef boost::unordered_map<
@@ -404,7 +423,8 @@ private:
         if (cache_it != cache.end()) {
           if (get_cost(cache_it->second) < p_minus_g)
             num_increased += 1;
-          set_cost(cache_it->second, std::max(cache_it->second, p_minus_g));
+          const Cost cached_cost = get_cost(cache_it->second);
+          set_cost(cache_it->second, std::max(cached_cost, p_minus_g));
         }
         else
           set_cost(cache[closed_it->first->get_state()], p_minus_g);
