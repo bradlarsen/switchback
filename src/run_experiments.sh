@@ -3,21 +3,20 @@
 set -e # exit on simple errors (?)
 
 
-#MEM_LIMIT=48234496  # 46 GB
-MEM_LIMIT=6291456  # 6 GB
+MEM_LIMIT=48234496  # 46 GB
+#MEM_LIMIT=6291456  # 6 GB
 
-#HOME="/home/blarsen"
 TILES_DIR="${HOME}/hg/switchback/testdata/korf100"
 SEARCH="${HOME}/hg/switchback/build/speedrelease/tiles-search"
 
-LOG_DIR="${HOME}/hg/switchback/runs_log"
+LOG_DIR="${HOME}/hg/switchback/run_log"
 
 ALGORITHMS="astar switchback"
 
 
 get_run_info ()
 {
-    echo "time: `date`"
+    echo "start time: `date`"
     echo "mercurial revision: `hg id -n`"
     echo "system: `hostname`"
 }
@@ -55,6 +54,9 @@ echo "$(get_run_info)" > "$LOG_DIR/run_info.log"
 for algorithm in $ALGORITHMS; do
     for instance in `seq 1 3`; do
         (
+            echo "########################################"
+            echo "# Running $algorithm on Korf #$instance"
+            echo "########################################"
             ulimit -v $MEM_LIMIT
             run_korf_instance $algorithm $instance
         )
