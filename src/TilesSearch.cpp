@@ -54,6 +54,13 @@ void print_build_info(ostream &o)
 #else
     << "disabled" << endl;
 #endif
+
+  o << "Hierarchical A*'s optimal path caching is "
+#ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
 } 
 
 
