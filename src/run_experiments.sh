@@ -62,3 +62,5 @@ for algorithm in $ALGORITHMS; do
         )
     done
 done
+
+echo "stop time: `date`" >> "$LOG_DIR/run_info.log"
