@@ -55,6 +55,8 @@ private:
   boost::array<Open, hierarchy_height> open;
   Closed closed;
 
+  boost::array<State, hierarchy_height> abstract_goals;
+
 
 public:
   Switchback(Domain &domain)
@@ -65,9 +67,11 @@ public:
     , num_generated()
     , open()
     , closed(INITIAL_CLOSED_SET_SIZE)
+    , abstract_goals()
   {
     num_expanded.assign(0);
     num_generated.assign(0);
+    initialize();
   }
 
   ~Switchback()
@@ -80,7 +84,6 @@ public:
       return;
     searched = true;
 
-    init_open_and_closed();
     goal = resume_search(0, domain.get_goal_state());
   }
 
@@ -132,8 +135,13 @@ private:
   {
     assert(domain.is_valid_level(level));
 
-    if (level == Domain::num_abstraction_levels)
+    if (goal_state == abstract_goals[level])
       return 0;
+
+    const Cost epsilon = domain.get_epsilon(goal_state);
+
+    if (level == Domain::num_abstraction_levels)
+      return epsilon;
 
     // Need to create a dummy goal node to look up in the hash table.
     // This smells of bad design!
@@ -143,7 +151,7 @@ private:
 
     ClosedIterator closed_it = closed.find(&abstract_goal_node);
     if (closed_it != closed.end() && !closed_it->second) {
-      return closed_it->first->get_g();
+      return std::max(closed_it->first->get_g(), epsilon);
     }
 
     Node *result = resume_search(next_level, abstract_goal_state);
@@ -155,7 +163,7 @@ private:
     assert(closed.find(&abstract_goal_node) != closed.end());
     assert(!closed.find(&abstract_goal_node)->second);
 
-    return result->get_g();
+    return std::max(result->get_g(), epsilon);
   }
   
   Node * resume_search(const unsigned level, const State &goal_state)
@@ -208,7 +216,6 @@ private:
 
   void process_child(const unsigned level, Node *child)
   {
-    assert(open[level].invariants_satisfied());
     assert(open[level].size() <= closed.size());
 
     child->set_h(heuristic(level, child->get_state()));
@@ -235,22 +242,24 @@ private:
       // than the version in the open list.
       domain.free_node(child);
     }
-
-    assert(open[level].invariants_satisfied());
   }
 
-  void init_open_and_closed()
+  void initialize()
   {
     for (unsigned level = 0; level <= Domain::num_abstraction_levels; level += 1) {
       num_generated[level] += 1;
       State start = level % 2 == 0
                       ? domain.get_start_state()
                       : domain.get_goal_state();
+      State goal = level % 2 == 0
+                      ? domain.get_goal_state()
+                      : domain.get_start_state();
       Node *start_node = domain.create_node(domain.abstract(level, start),
                                             0,
                                             0,
                                             NULL);
       closed[start_node] = open[level].push(start_node);
+      abstract_goals[level] = goal;
     }
   }
 
