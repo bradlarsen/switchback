@@ -94,6 +94,14 @@ void print_usage(ostream &o, const char *prog_name)
     << "  FILE is the optional instance file to read from" << endl
     << endl
     << "If no file is specified, the instance is read from stdin." << endl;
+
+  o << endl << endl;
+
+  o << "Build Information:" << endl;
+  print_build_info(o);
+  o << endl;
+  print_size_info(o);
+  o << endl;
 }
 
 
@@ -145,14 +153,6 @@ int main(int argc, char * argv[])
     cerr << "error reading instance!" << endl;
     return 1;
   }
-
-  cout << "######## Build Information ########" << endl;
-  print_build_info(cout);
-  cout << endl;
-
-  cout << "######## Type Size Information ########" << endl;
-  print_size_info(cout);
-  cout << endl;
 
   cout << "######## The Instance ########" << endl;
   cout << *instance << endl;
