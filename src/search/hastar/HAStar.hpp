@@ -3,8 +3,8 @@
 
 
 //#define HIERARCHICAL_A_STAR_CACHE_H_STAR
-//#define HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
-//#define HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+#define HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+#define HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
 #ifndef HIERARCHICAL_A_STAR_CACHE_H_STAR
@@ -74,9 +74,15 @@ private:
     p.second = c;
   }
 
-  inline static bool is_exact_cost(std::pair<bool, Cost> &p)
+  inline static bool is_exact_cost(const std::pair<bool, Cost> &p)
   {
     return p.first;
+  }
+
+  inline static void set_exact(std::pair<bool, Cost> &p)
+  {
+    assert(!p.first);
+    p.first = true;
   }
 #else
   typedef boost::unordered_map<
@@ -236,6 +242,36 @@ private:
         break;
       }
 
+#ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+      {
+        CacheConstIterator cache_it = cache.find(n->get_state());
+        if (cache_it != cache.end() && is_exact_cost(cache_it->second)) {
+          std::cerr << "optimal path cache hit!" << std::endl;
+          // Create a goal node to insert into the open list.
+          // 
+          // Note that the parent pointer for this goal node is
+          // somewhat bogus: the nodes along the optimal path from n
+          // to the ``real'' goal node are lost.  To be really proper,
+          // we would fix up the parent pointers for this synthesized
+          // goal node.  However, because optimal path caching will
+          // only occur at abstract levels (and not base levels), we
+          // only really care about having the actual cost of the goal
+          // node.
+          //
+          // We have the parent pointer of synthesized_goal point to
+          // n.  This is necessary for further optimal path caching.
+          Node *synthesized_goal =
+            domain.create_node(goal_abstractions[level],
+                               n->get_g() + get_cost(cache_it->second),
+                               0,
+                               n);
+          assert(closed[level].find(synthesized_goal) == closed[level].end());
+          closed[level][synthesized_goal] = open[level].push(synthesized_goal);
+          continue;
+        }
+      }
+#endif      
+
       domain.compute_successors(*n, succs);
       num_expanded[level] += 1;
       num_generated[level] += succs.size();
@@ -249,9 +285,6 @@ private:
       assert(false);
     }
 
-    // std::cerr << "solution at level " << level << " has length "
-    //           << goal_node->num_nodes_to_start() << std::endl;
-
     assert(goal_node->get_h() == 0);
     return goal_node;
   }
@@ -260,7 +293,6 @@ private:
   void process_child(const unsigned level, Node *child)
   {
     assert(domain.is_valid_level(level));
-    // assert(open[level].invariants_satisfied());
     assert(open[level].size() <= closed[level].size());
 
     compute_heuristic(level, child);
@@ -288,8 +320,6 @@ private:
       // than the version in the open list.
       domain.free_node(child);
     }
-
-    // assert(open[level].invariants_satisfied());
   }
 
 
@@ -380,9 +410,16 @@ private:
       if (cache_it != cache.end()) {
         assert(get_cost(cache_it->second) <= hval);
         set_cost(cache_it->second, hval);
+#ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+        set_exact(cache_it->second);
+#endif
       }
-      else
+      else {
         set_cost(cache[parent->get_state()], hval);
+#ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+        set_exact(cache[parent->get_state()]);
+#endif
+      }
 
       parent = parent->get_parent();
     } /* end while */
@@ -399,30 +436,16 @@ private:
 
     const Cost p = goal_node->get_g();
 
-    unsigned num_increased = 0;
-    unsigned num_potential = 0;
-
     for(ClosedConstIterator closed_it = closed[level].begin();
         closed_it != closed[level].end();
         ++closed_it) {
       if (!closed_it->second) {
-        num_potential += 1;
         const Cost g = closed_it->first->get_g();
-        const Cost h = closed_it->first->get_h();
         const Cost p_minus_g = p - g;
-
-        if (g > p) {
-          std::cerr << "p_minus_g is " << p_minus_g << std::endl
-                    << "p is " << p << std::endl
-                    << "g is " << g << std::endl
-                    << "h is " << h << std::endl;
-        }
         assert(g <= p);
 
         CacheIterator cache_it = cache.find(closed_it->first->get_state());
         if (cache_it != cache.end()) {
-          if (get_cost(cache_it->second) < p_minus_g)
-            num_increased += 1;
           const Cost cached_cost = get_cost(cache_it->second);
           set_cost(cache_it->second, std::max(cached_cost, p_minus_g));
         }
@@ -431,8 +454,24 @@ private:
       }
     } /* end for */
 
-    // std::cerr << "P-g caching increased the cached heuristic value for "
-    //           << num_increased << " out of " << num_potential << " nodes" << std::endl;
+#ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+    const Cost cost_to_goal = goal_node->get_g();
+    const Node *parent = goal_node->get_parent();
+
+    while (parent != NULL) {
+      assert(cost_to_goal >= parent->get_g());
+#ifndef NDEBUG
+      const Cost hval = cost_to_goal - parent->get_g();
+#endif
+
+      CacheIterator cache_it = cache.find(parent->get_state());
+      assert(cache_it != cache.end());
+      assert(get_cost(cache_it->second) == hval);
+      set_exact(cache_it->second);
+
+      parent = parent->get_parent();
+    } /* end while */
+#endif
   }
 #endif
 
