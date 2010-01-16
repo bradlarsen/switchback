@@ -45,8 +45,9 @@ project switchback
     : source-location src
     : build-dir build
     : default-build
-        <variant>mydebug
-#        <variant>speedrelease
+#        <variant>mydebug
+        <variant>speedrelease
+        <define>NDEBUG
 #        <variant>spacerelease
         <warnings>on
     ;
