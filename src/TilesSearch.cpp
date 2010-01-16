@@ -40,6 +40,20 @@ void print_build_info(ostream &o)
 #else
     << "disabled" << endl;
 #endif
+
+  o << "Hierarchical A*'s H* caching is "
+#ifdef HIERARCHICAL_A_STAR_CACHE_H_STAR
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
+
+  o << "Hierarchical A*'s P-g caching is "
+#ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
 } 
 
 
