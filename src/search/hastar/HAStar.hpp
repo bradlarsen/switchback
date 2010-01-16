@@ -2,6 +2,11 @@
 #define _HA_STAR_HPP_
 
 
+//#define HIERARCHICAL_A_STAR_CACHE_H_STAR
+#define HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+//#define HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+
+
 #include <iostream>
 #include <vector>
 
@@ -39,6 +44,22 @@ private:
   typedef typename Closed::iterator ClosedIterator;
   typedef typename Closed::const_iterator ClosedConstIterator;
 
+#ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+  typedef boost::unordered_map<
+    State,
+    std::pair<bool, Cost>
+    > Cache;
+
+  inline static Cost get_cost(const std::pair<bool, Cost> &p)
+  {
+    return p.second;
+  }
+
+  inline static void set_cost(std::pair<bool, Cost> &p, Cost c)
+  {
+    p.second = c;
+  }
+#else
   typedef boost::unordered_map<
     State,
     Cost
@@ -47,7 +68,19 @@ private:
     // boost::fast_pool_allocator< std::pair<State const, Cost> >
     > Cache;
 
+  static Cost get_cost(Cost c)
+  {
+    return c;
+  }
+
+  static void set_cost(Cost &p, Cost c)
+  {
+    p = c;
+  }
+#endif
+
   typedef typename Cache::iterator CacheIterator;
+  typedef typename Cache::const_iterator CacheConstIterator;
 
 
 private:
@@ -146,6 +179,7 @@ private:
     assert(domain.is_valid_level(level));
     assert(open[level].empty());
     assert(closed[level].empty());
+    assert(goal_state == domain.abstract(level, domain.get_goal_state()));
 
     Node *start_node = domain.create_node(start_state,
                                           0,
@@ -174,6 +208,7 @@ private:
       closed[level][n] = boost::none;
 
       if (n->get_state() == goal_state) {
+        assert(n->get_h() == 0);
         goal_node = n;
         break;
       }
@@ -183,7 +218,7 @@ private:
       num_generated[level] += succs.size();
 
       for (unsigned succ_i = 0; succ_i < succs.size(); succ_i += 1)
-        process_child(level, n, succs[succ_i]);
+        process_child(level, succs[succ_i], goal_state);
     } /* end while */
 
     if (goal_node == NULL) {
@@ -194,19 +229,22 @@ private:
     // std::cerr << "solution at level " << level << " has length "
     //           << goal_node->num_nodes_to_start() << std::endl;
 
+    assert(goal_node->get_h() == 0);
     return goal_node;
   }
 
 
   void process_child(const unsigned level,
-                     const Node *parent,
-                     Node *child)
+                     Node *child,
+                     const State &goal_state)
   {
     assert(domain.is_valid_level(level));
-    assert(open[level].invariants_satisfied());
+    // assert(open[level].invariants_satisfied());
     assert(open[level].size() <= closed[level].size());
+    assert(goal_state == domain.abstract(level, domain.get_goal_state()));
 
-    child->set_h(heuristic(level, child->get_state(), parent->get_state()));
+    child->set_h(heuristic(level, child->get_state(), goal_state));
+    assert(child->get_state() != goal_state || child->get_h() == 0);
 
     ClosedIterator closed_it = closed[level].find(child);
     if (closed_it == closed[level].end()) {
@@ -231,7 +269,7 @@ private:
       domain.free_node(child);
     }
 
-    assert(open[level].invariants_satisfied());
+    // assert(open[level].invariants_satisfied());
   }
 
 
@@ -240,10 +278,15 @@ private:
                   const State &goal_state)
   {
     assert(domain.is_valid_level(level));
+    assert(goal_state == domain.abstract(level, domain.get_goal_state()));
+
+    // This conditional shouldn't have to be here, I think!
+    if (start_state == goal_state)
+      return 0;
 
     CacheIterator cache_it = cache.find(start_state);
     if (cache_it != cache.end())
-      return cache_it->second;
+      return get_cost(cache_it->second);
 
     Cost epsilon = domain.get_epsilon(start_state);
     assert(epsilon == 1);
@@ -251,8 +294,8 @@ private:
     if (level == Domain::num_abstraction_levels) {
       return
         start_state == goal_state
-        ? epsilon
-        : 0;
+        ? 0
+        : epsilon;
     }
 
     const unsigned next_level = level + 1u;
@@ -267,12 +310,22 @@ private:
       assert(false);  // for the domains I am running on, there should
                       // never be an infinite heuristic estimate.
     }
+    assert(result->get_state() == abstract_goal);
+    assert(result->get_h() == 0);
+    assert(abstract_start != abstract_goal || result->get_h() == 0);
 
     Cost hval = std::max(epsilon, result->get_g());
-    cache[start_state] = hval;
-    cache_h_star(result);
+    set_cost(cache[start_state], hval);
     assert(cache.find(start_state) != cache.end());
-    assert(cache.find(start_state)->second = hval);
+    assert(get_cost(cache.find(start_state)->second) == hval);
+
+#ifdef HIERARCHICAL_A_STAR_CACHE_H_STAR
+    cache_h_star(next_level, result);
+#endif
+
+#ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+    cache_p_minus_g(next_level, result);
+#endif
 
     free_all_nodes(closed[next_level]);
     closed[next_level].clear();
@@ -284,32 +337,78 @@ private:
   }
 
 
-  void cache_h_star(const Node *goal_node)
+#ifdef HIERARCHICAL_A_STAR_CACHE_H_STAR
+  void cache_h_star(const unsigned level, const Node *goal_node)
   {
     assert(goal_node != NULL);
+    assert(goal_node->get_h() == 0);
+    assert(open[level].empty() || goal_node->get_f() <= open[level].top()->get_f());
 
     const Cost cost_to_goal = goal_node->get_g();
-
-    unsigned num_cached = 0;
     const Node *parent = goal_node->get_parent();
+
     while (parent != NULL) {
       assert(cost_to_goal >= parent->get_g());
       const Cost hval = cost_to_goal - parent->get_g();
 
       CacheIterator cache_it = cache.find(parent->get_state());
       if (cache_it != cache.end()) {
-        assert(cache_it->second <= hval);
-        cache_it->second = hval;
+        assert(get_cost(cache_it->second) <= hval);
+        set_cost(cache_it->second, hval);
       }
       else
-        cache[parent->get_state()] = hval;
+        set_cost(cache[parent->get_state()], hval);
 
       parent = parent->get_parent();
-      num_cached += 1;
-    }
-
-    //    std::cerr << "cached h* values for " << num_cached << " nodes" << std::endl;
+    } /* end while */
   }
+#endif
+
+
+#ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+  void cache_p_minus_g(const unsigned level, const Node *goal_node)
+  {
+    assert(goal_node != NULL);
+    assert(goal_node->get_h() == 0);
+    assert(open[level].empty() || goal_node->get_f() <= open[level].top()->get_f());
+
+    const Cost p = goal_node->get_g();
+
+    unsigned num_increased = 0;
+    unsigned num_potential = 0;
+
+    for(ClosedConstIterator closed_it = closed[level].begin();
+        closed_it != closed[level].end();
+        ++closed_it) {
+      if (!closed_it->second) {
+        num_potential += 1;
+        const Cost g = closed_it->first->get_g();
+        const Cost h = closed_it->first->get_h();
+        const Cost p_minus_g = p - g;
+
+        if (g > p) {
+          std::cerr << "p_minus_g is " << p_minus_g << std::endl
+                    << "p is " << p << std::endl
+                    << "g is " << g << std::endl
+                    << "h is " << h << std::endl;
+        }
+        assert(g <= p);
+
+        CacheIterator cache_it = cache.find(closed_it->first->get_state());
+        if (cache_it != cache.end()) {
+          if (get_cost(cache_it->second) < p_minus_g)
+            num_increased += 1;
+          set_cost(cache_it->second, std::max(cache_it->second, p_minus_g));
+        }
+        else
+          set_cost(cache[closed_it->first->get_state()], p_minus_g);
+      }
+    } /* end for */
+
+    // std::cerr << "P-g caching increased the cached heuristic value for "
+    //           << num_increased << " out of " << num_potential << " nodes" << std::endl;
+  }
+#endif
 
 
   void free_all_nodes(Closed &closed_level)
