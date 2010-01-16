@@ -23,6 +23,19 @@ private:
 
 
 public:
+  TilesState15()
+  {
+    for (TileIndex t = 0; t < 16; t += 1)
+      tiles[t] = t;
+
+#ifdef CACHE_TILES_HASH_VALUE
+    hash_value = compute_hash(tiles);
+#endif
+#ifdef CACHE_TILES_BLANK_INDEX
+    blank_index = 0;
+#endif
+  }
+
   TilesState15(const TileArray &tiles)
     : tiles(tiles)
 #ifdef CACHE_TILES_HASH_VALUE

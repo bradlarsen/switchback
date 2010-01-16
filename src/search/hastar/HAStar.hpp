@@ -99,6 +99,11 @@ private:
 
   Cache cache;
 
+  // The abstractions of the goal node at each level.  It makes sense
+  // to compute these once up front, rather than repeatedly computing
+  // them.
+  boost::array<State, hierarchy_height> goal_abstractions;
+
 public:
   HAStar(Domain &domain)
     : goal(NULL)
@@ -109,9 +114,13 @@ public:
     , open()
     , closed()
     , cache()
+    , goal_abstractions()
   {
     num_expanded.assign(0);
     num_generated.assign(0);
+
+    for (unsigned i = 0; i < hierarchy_height; i += 1)
+      goal_abstractions[i] = domain.abstract(i, domain.get_goal_state());
   }
 
   ~HAStar()
@@ -124,9 +133,7 @@ public:
       return;
     searched = true;
 
-    goal = search_at_level(0,
-                           domain.get_start_state(),
-                           domain.get_goal_state());
+    goal = search_at_level(0, domain.get_start_state());
   }
 
 
@@ -172,14 +179,11 @@ public:
 
 
 private:
-  Node * search_at_level(const unsigned level,
-                         const State &start_state,
-                         const State &goal_state)
+  Node * search_at_level(const unsigned level, const State &start_state)
   {
     assert(domain.is_valid_level(level));
     assert(open[level].empty());
     assert(closed[level].empty());
-    assert(goal_state == domain.abstract(level, domain.get_goal_state()));
 
     Node *start_node = domain.create_node(start_state,
                                           0,
@@ -207,7 +211,7 @@ private:
       assert(closed[level].find(n) != closed[level].end());
       closed[level][n] = boost::none;
 
-      if (n->get_state() == goal_state) {
+      if (n->get_state() == goal_abstractions[level]) {
         assert(n->get_h() == 0);
         goal_node = n;
         break;
@@ -218,7 +222,7 @@ private:
       num_generated[level] += succs.size();
 
       for (unsigned succ_i = 0; succ_i < succs.size(); succ_i += 1)
-        process_child(level, succs[succ_i], goal_state);
+        process_child(level, succs[succ_i]);
     } /* end while */
 
     if (goal_node == NULL) {
@@ -234,17 +238,14 @@ private:
   }
 
 
-  void process_child(const unsigned level,
-                     Node *child,
-                     const State &goal_state)
+  void process_child(const unsigned level, Node *child)
   {
     assert(domain.is_valid_level(level));
     // assert(open[level].invariants_satisfied());
     assert(open[level].size() <= closed[level].size());
-    assert(goal_state == domain.abstract(level, domain.get_goal_state()));
 
-    compute_heuristic(level, child, goal_state);
-    assert(child->get_state() != goal_state || child->get_h() == 0);
+    compute_heuristic(level, child);
+    assert(child->get_state() != goal_abstractions[level] || child->get_h() == 0);
 
     ClosedIterator closed_it = closed[level].find(child);
     if (closed_it == closed[level].end()) {
@@ -273,12 +274,12 @@ private:
   }
 
 
-  void compute_heuristic (const unsigned level,
-                          Node *start_node,
-                          const State &goal_state)
+  void compute_heuristic (const unsigned level, Node *start_node)
   {
     assert(domain.is_valid_level(level));
     assert(start_node != NULL);
+
+    const State &goal_state = goal_abstractions[level];
     assert(goal_state == domain.abstract(level, domain.get_goal_state()));
 
     const State &start_state = start_node->get_state();
@@ -309,7 +310,7 @@ private:
     const State abstract_goal = domain.abstract(next_level,
                                                 goal_state);
 
-    Node *result = search_at_level(next_level, abstract_start, abstract_goal);
+    Node *result = search_at_level(next_level, abstract_start);
     if (result == NULL) {
       std::cerr << "whoops, infinite heuristic estimate!" << std::endl;
       assert(false);  // for the domains I am running on, there should
