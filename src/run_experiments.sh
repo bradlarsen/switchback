@@ -52,7 +52,7 @@ mkdir -p "$LOG_DIR"
 echo "$(get_run_info)" > "$LOG_DIR/run_info.log"
 
 for algorithm in $ALGORITHMS; do
-    for instance in `seq 1 3`; do
+    for instance in `seq 1 100`; do
         (
             echo "########################################"
             echo "# Running $algorithm on Korf #$instance"
