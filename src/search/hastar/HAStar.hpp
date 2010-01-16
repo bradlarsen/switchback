@@ -222,6 +222,7 @@ private:
 
     std::vector<Node *> succs;
     while (!open[level].empty()) {
+#ifdef OUTPUT_SEARCH_PROGRESS
       if (get_num_expanded() % 1000000 == 0) {
         std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
                   << get_num_generated() << " total nodes generated" << std::endl;
@@ -229,6 +230,7 @@ private:
         dump_closed_sizes(std::cerr);
         dump_cache_size(std::cerr);
       }
+#endif
 
       Node *n = open[level].top();
       open[level].pop();

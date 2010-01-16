@@ -96,6 +96,13 @@ public:
 
     while (!open.empty())
     {
+#ifdef OUTPUT_SEARCH_PROGRESS
+      if (get_num_expanded() % 1000000 == 0) {
+        std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
+                  << get_num_generated() << " total nodes generated" << std::endl;
+      }
+#endif
+
       Node *n = open.top();
       open.pop();
       assert(closed.find(n) != closed.end());

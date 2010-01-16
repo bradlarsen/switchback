@@ -181,12 +181,14 @@ private:
 
     // A*-ish code ahead
     while (!open[level].empty()) {
+#ifdef OUTPUT_SEARCH_PROGRESS
       if (get_num_expanded() % 1000000 == 0) {
         std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
                   << get_num_generated() << " total nodes generated" << std::endl;
         dump_open_sizes(std::cerr);
         dump_closed_sizes(std::cerr);
       }
+#endif
 
       Node *n = open[level].top();
       assert(closed.find(n) != closed.end());
