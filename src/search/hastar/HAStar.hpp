@@ -243,7 +243,7 @@ private:
     assert(open[level].size() <= closed[level].size());
     assert(goal_state == domain.abstract(level, domain.get_goal_state()));
 
-    child->set_h(heuristic(level, child->get_state(), goal_state));
+    compute_heuristic(level, child, goal_state);
     assert(child->get_state() != goal_state || child->get_h() == 0);
 
     ClosedIterator closed_it = closed[level].find(child);
@@ -273,29 +273,34 @@ private:
   }
 
 
-  Cost heuristic (const unsigned level,
-                  const State &start_state,
-                  const State &goal_state)
+  void compute_heuristic (const unsigned level,
+                          Node *start_node,
+                          const State &goal_state)
   {
     assert(domain.is_valid_level(level));
+    assert(start_node != NULL);
     assert(goal_state == domain.abstract(level, domain.get_goal_state()));
 
+    const State &start_state = start_node->get_state();
+
     // This conditional shouldn't have to be here, I think!
-    if (start_state == goal_state)
-      return 0;
+    if (start_state == goal_state) {
+      start_node->set_h(0);
+      return;
+    }
 
     CacheIterator cache_it = cache.find(start_state);
-    if (cache_it != cache.end())
-      return get_cost(cache_it->second);
+    if (cache_it != cache.end()) {
+      start_node->set_h(get_cost(cache_it->second));
+      return;
+    }
 
     Cost epsilon = domain.get_epsilon(start_state);
     assert(epsilon == 1);
 
     if (level == Domain::num_abstraction_levels) {
-      return
-        start_state == goal_state
-        ? 0
-        : epsilon;
+      start_node->set_h(start_state == goal_state ? 0 : epsilon);
+      return;
     }
 
     const unsigned next_level = level + 1u;
@@ -333,7 +338,7 @@ private:
     open[next_level].reset();
     assert(open[next_level].empty());
 
-    return hval;
+    start_node->set_h(hval);
   }
 
 
