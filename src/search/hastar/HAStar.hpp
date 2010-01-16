@@ -81,7 +81,6 @@ private:
 
   inline static void set_exact(std::pair<bool, Cost> &p)
   {
-    assert(!p.first);
     p.first = true;
   }
 #else
@@ -246,7 +245,6 @@ private:
       {
         CacheConstIterator cache_it = cache.find(n->get_state());
         if (cache_it != cache.end() && is_exact_cost(cache_it->second)) {
-          std::cerr << "optimal path cache hit!" << std::endl;
           // Create a goal node to insert into the open list.
           // 
           // Note that the parent pointer for this goal node is
