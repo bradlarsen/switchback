@@ -61,6 +61,13 @@ void print_build_info(ostream &o)
 #else
     << "disabled" << endl;
 #endif
+
+  o << "NDEBUG is "
+#ifdef NDEBUG
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
 } 
 
 
