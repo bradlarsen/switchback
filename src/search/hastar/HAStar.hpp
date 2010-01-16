@@ -258,6 +258,7 @@ private:
           //
           // We have the parent pointer of synthesized_goal point to
           // n.  This is necessary for further optimal path caching.
+          assert(level != 0);
           Node *synthesized_goal =
             domain.create_node(goal_abstractions[level],
                                n->get_g() + get_cost(cache_it->second),
@@ -343,8 +344,7 @@ private:
       return;
     }
 
-    Cost epsilon = domain.get_epsilon(start_state);
-    assert(epsilon == 1);
+    const Cost epsilon = domain.get_epsilon(start_state);
 
     if (level == Domain::num_abstraction_levels) {
       start_node->set_h(start_state == goal_state ? 0 : epsilon);
@@ -453,7 +453,9 @@ private:
     } /* end for */
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+#ifndef NDEBUG
     const Cost cost_to_goal = goal_node->get_g();
+#endif
     const Node *parent = goal_node->get_parent();
 
     while (parent != NULL) {
