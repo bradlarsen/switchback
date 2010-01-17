@@ -16,7 +16,7 @@ TilesInstance15::TilesInstance15 (const TilesState15 &start,
 #ifndef NDEBUG
   dump_abstraction_order(std::cerr);
 
-  std::cerr << "the 9 abstractions of the start node:" << std::endl
+  std::cerr << "the abstractions of the start node:" << std::endl
             << "base level:" <<std::endl
             << start << std::endl;
   for (unsigned level = 1; level <= num_abstraction_levels; level += 1) {
@@ -334,7 +334,7 @@ TilesInstance15::compute_abstraction_order(const TilesState15 &s,
     order[level][0] = false;
     order[level][1] = false;
     for (Tile t = 1; t < 16; t += 1)
-      order[level][t + 1] = find_tile_index(pairs, t) < level + 6;
+      order[level][t + 1] = find_tile_index(pairs, t) < level + (14 - num_abstraction_levels);
   }
 
   return order;
