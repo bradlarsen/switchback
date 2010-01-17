@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "search/BucketPriorityQueue.hpp"
+#include "search/Constants.hpp"
 #include "search/astar/AStar.hpp"
 #include "search/hastar/HAStar.hpp"
 #include "search/switchback/Switchback.hpp"
@@ -68,6 +69,15 @@ void print_build_info(ostream &o)
 #else
     << "disabled" << endl;
 #endif
+
+  o << "OUTPUT_SEARCH_PROGRESS is "
+#ifdef OUTPUT_SEARCH_PROGRESS
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
+
+  o << "INITIAL_CLOSED_SET_SIZE is " << INITIAL_CLOSED_SET_SIZE << endl;
 } 
 
 
