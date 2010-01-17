@@ -7,7 +7,7 @@ MEM_LIMIT=48234496  # 46 GB
 #MEM_LIMIT=6291456  # 6 GB
 
 TILES_DIR="${HOME}/hg/switchback/testdata/korf100"
-SEARCH="${HOME}/hg/switchback/build/speedrelease/tiles-search"
+SEARCH="${HOME}/hg/switchback/build/spacerelease/tiles-search"
 
 LOG_DIR="${HOME}/hg/switchback/run_log"
 
