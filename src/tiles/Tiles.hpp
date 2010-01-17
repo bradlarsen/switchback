@@ -46,7 +46,7 @@ public:
    * Note that this does not assign the h values for the successor
    * nodes: that must be done by the caller.
    */
-  void compute_successors(const TilesNode15 &n,
+  void compute_successors(TilesNode15 &n,
                           std::vector<TilesNode15 *> &succs);
 
   /**
@@ -59,7 +59,7 @@ public:
    * nodes: that must be done by the caller.
    *
    */
-  void compute_predecessors(const TilesNode15 &n,
+  void compute_predecessors(TilesNode15 &n,
                             std::vector<TilesNode15 *> &succs);
 
   /**
@@ -78,7 +78,7 @@ public:
   TilesNode15 * create_node(const TilesState15 &state,
                             TileCost g,
                             TileCost h,
-                            const TilesNode15 *parent);
+                            TilesNode15 *parent);
 
   void free_node(TilesNode15 *n);
   
@@ -91,7 +91,7 @@ public:
 private:
   TilesNode15 * child(const TilesState15 &new_state,
                       TileCost new_g,
-                      const TilesNode15 &parent);
+                      TilesNode15 &parent);
 
   unsigned find_tile_index(const std::vector<TileCostPair> &pairs,
                            Tile t) const;

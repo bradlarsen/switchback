@@ -2,6 +2,8 @@
 #define _HA_STAR_HPP_
 
 
+#undef NDEBUG
+
 //#define HIERARCHICAL_A_STAR_CACHE_H_STAR
 #define HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
 #define HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
@@ -49,61 +51,95 @@ private:
   typedef BucketPriorityQueue<Node> Open;
   typedef boost::optional<typename Open::ItemPointer> MaybeItemPointer;
 
+
+  struct CacheEntry
+  {
+    // A pointer into the open list...
+    MaybeItemPointer open_ptr;
+
+    // ...valid during the indicated search iteration.
+    //
+    // This counter is necessary to use a single data structure as
+    // both closed list and heuristic cache.
+    unsigned search_iteration;
+
+    boost::optional< std::pair<bool, Cost> > cached_heuristic;
+
+    CacheEntry()
+      : open_ptr(boost::none)
+      , search_iteration(0)
+      , cached_heuristic(boost::none)
+    {
+    }
+
+
+    CacheEntry(const MaybeItemPointer &open_ptr,
+               unsigned search_iteration,
+               const boost::optional< std::pair<bool, Cost> > &cached_heuristic)
+      : open_ptr(open_ptr)
+      , search_iteration(search_iteration)
+      , cached_heuristic(cached_heuristic)
+    {
+    }
+
+    const MaybeItemPointer & get_open_ptr() const
+    {
+      return open_ptr;
+    }
+
+    void set_open_ptr(const MaybeItemPointer &ptr)
+    {
+      open_ptr = ptr;
+    }
+
+    unsigned get_search_iteration () const
+    {
+      return search_iteration;
+    }
+
+    void set_search_iteration (unsigned iter)
+    {
+      assert(iter != search_iteration);
+      search_iteration = iter;
+    }
+
+    bool is_exact_estimate() const
+    {
+      return cached_heuristic && cached_heuristic->first;
+    }
+
+    void set_exact_estimate()
+    {
+      assert(cached_heuristic);
+      cached_heuristic->first = true;
+    }
+
+    Cost get_cached_heuristic() const
+    {
+      assert(cached_heuristic);
+      return cached_heuristic->second;
+    }
+
+    void set_cached_heuristic(Cost h)
+    {
+      assert(cached_heuristic);
+      cached_heuristic->second = h;
+    }
+
+  };
+
+
+  // Cache is both the closed list and the heuristic estimate cache.
+  // ``Closed list'' here is a misnomer, as this contains a pointer to
+  // one copy of every state every generated, and so contains pointers
+  // to all nodes on open, as well as all nodes that are truly closed.
   typedef boost::unordered_map<
     Node *,
-    MaybeItemPointer,
+    CacheEntry,
     PointerHash<Node>,
     PointerEq<Node>,
-    boost::fast_pool_allocator< std::pair<Node * const, MaybeItemPointer > >
-    > Closed;
-  typedef typename Closed::iterator ClosedIterator;
-  typedef typename Closed::const_iterator ClosedConstIterator;
-
-#ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
-  typedef boost::unordered_map<
-    State,
-    std::pair<bool, Cost>
+    boost::fast_pool_allocator< std::pair<Node * const, CacheEntry > >
     > Cache;
-
-  inline static Cost get_cost(const std::pair<bool, Cost> &p)
-  {
-    return p.second;
-  }
-
-  inline static void set_cost(std::pair<bool, Cost> &p, Cost c)
-  {
-    p.second = c;
-  }
-
-  inline static bool is_exact_cost(const std::pair<bool, Cost> &p)
-  {
-    return p.first;
-  }
-
-  inline static void set_exact(std::pair<bool, Cost> &p)
-  {
-    p.first = true;
-  }
-#else
-  typedef boost::unordered_map<
-    State,
-    Cost
-    // , boost::hash<State>,
-    // std::is_equal<State>,
-    // boost::fast_pool_allocator< std::pair<State const, Cost> >
-    > Cache;
-
-  static Cost get_cost(Cost c)
-  {
-    return c;
-  }
-
-  static void set_cost(Cost &p, Cost c)
-  {
-    p = c;
-  }
-#endif
-
   typedef typename Cache::iterator CacheIterator;
   typedef typename Cache::const_iterator CacheConstIterator;
 
@@ -119,10 +155,16 @@ private:
   boost::array<unsigned, hierarchy_height> num_expanded;
   boost::array<unsigned, hierarchy_height> num_generated;
 
+  // An open list for each level.
   boost::array<Open, hierarchy_height> open;
-  boost::array<Closed, hierarchy_height> closed;
 
+  // The cache of heuristic values, and the closed list, for all levels.
   Cache cache;
+
+  // A unique numeric ID for the currently executing hierarchical
+  // search.  This allows us to determine whether or not an entry in
+  // the cache has a valid pointer into the open list.
+  unsigned search_number;
 
   // The abstractions of the goal node at each level.  It makes sense
   // to compute these once up front, rather than repeatedly computing
@@ -148,8 +190,8 @@ public:
     , num_expanded()
     , num_generated()
     , open()
-    , closed()
     , cache()
+    , search_number(0)
     , goal_abstractions()
 #ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
     , expanded_nodes()
@@ -157,13 +199,18 @@ public:
   {
     num_expanded.assign(0);
     num_generated.assign(0);
-
     for (unsigned i = 0; i < hierarchy_height; i += 1)
       goal_abstractions[i] = domain.abstract(i, domain.get_goal_state());
   }
 
+
   ~HAStar()
   {
+    for (CacheIterator cache_it = cache.begin();
+         cache_it != cache.end();
+         ++cache_it) {
+      domain.free_node(cache_it->first);
+    }
   }
 
   void search()
@@ -222,7 +269,6 @@ private:
   {
     assert(domain.is_valid_level(level));
     assert(open[level].empty());
-    assert(closed[level].empty());
 #ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
     assert(expanded_nodes[level].empty());
 #endif
@@ -231,10 +277,8 @@ private:
                                           0,
                                           0,
                                           NULL);
-    closed[level][start_node] = open[level].push(start_node);
-    assert(closed[level].find(start_node) != closed[level].end());
+    insert_node(level, start_node);
     assert(open[level].size() == 1);
-    assert(closed[level].size() == 1);
 
     Node *goal_node = NULL;
 
@@ -245,15 +289,14 @@ private:
         std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
                   << get_num_generated() << " total nodes generated" << std::endl;
         dump_open_sizes(std::cerr);
-        dump_closed_sizes(std::cerr);
         dump_cache_size(std::cerr);
       }
 #endif
 
       Node *n = open[level].top();
       open[level].pop();
-      assert(closed[level].find(n) != closed[level].end());
-      closed[level][n] = boost::none;
+      assert(cache.find(n) != cache.end());
+      cache.find(n)->second.set_open_ptr(boost::none);
 
       if (n->get_state() == goal_abstractions[level]) {
         assert(n->get_h() == 0);
@@ -267,8 +310,8 @@ private:
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
       {
-        CacheConstIterator cache_it = cache.find(n->get_state());
-        if (cache_it != cache.end() && is_exact_cost(cache_it->second)) {
+        CacheConstIterator cache_it = cache.find(n);
+        if (cache_it != cache.end() && cache_it->second.is_exact_estimate()) {
           // Create a goal node to insert into the open list.
           // 
           // Note that the parent pointer for this goal node is
@@ -285,11 +328,11 @@ private:
           assert(level != 0);
           Node *synthesized_goal =
             domain.create_node(goal_abstractions[level],
-                               n->get_g() + get_cost(cache_it->second),
+                               n->get_g() + cache_it->second.get_cached_heuristic(),
                                0,
                                n);
-          assert(closed[level].find(synthesized_goal) == closed[level].end());
-          closed[level][synthesized_goal] = open[level].push(synthesized_goal);
+          assert(!node_has_been_expanded(synthesized_goal));
+          insert_node(level, synthesized_goal);
           continue;
         }
       }
@@ -316,33 +359,68 @@ private:
   void process_child(const unsigned level, Node *child)
   {
     assert(domain.is_valid_level(level));
-    assert(open[level].size() <= closed[level].size());
 
     compute_heuristic(level, child);
     assert(child->get_state() != goal_abstractions[level] || child->get_h() == 0);
 
-    ClosedIterator closed_it = closed[level].find(child);
-    if (closed_it == closed[level].end()) {
+    CacheIterator cache_it = cache.find(child);
+    if (cache_it == cache.end()) {
       // The child has not been generated before.
-      closed[level][child] = open[level].push(child);
+      insert_node(level, child);
     }
-    else if (closed_it->second && child->get_f() < closed_it->first->get_f()) {
+    else if (node_is_open(cache_it->second) && child->get_f() < cache_it->first->get_f()) {
       // A worse version of the child is in the open list.
-      open[level].erase(*closed_it->second);  // knock out the old one from
-                                       // the open list
 
-      domain.free_node(closed_it->first);     // free the old, worse
-                                              // copy
-      closed[level].erase(closed_it);
+      // knock out the old one from the open list
+      open[level].erase(*cache_it->second.get_open_ptr());
 
-      closed[level][child] = open[level].push(child);  // insert better version of
-                                         // child
+      // free the old, worse copy
+      domain.free_node(cache_it->first);
+      cache.erase(cache_it);
+
+      // insert better version of child
+      insert_node(level, child);
     }
     else {
       // The child has either already been expanded, or is worse
       // than the version in the open list.
       domain.free_node(child);
     }
+  }
+
+
+  void insert_node (const unsigned level, Node *node)
+  {
+    typename Open::ItemPointer open_ptr = open[level].push(node);
+    CacheIterator cache_it = cache.find(node);
+    if (cache_it == cache.end()) {
+      cache[node] = CacheEntry(open_ptr,
+                               search_number,
+                               std::make_pair(false, node->get_h()));
+    }
+    else {
+      cache_it->second.set_open_ptr(open_ptr);
+      cache_it->second.set_search_iteration(search_number);
+    }
+  }
+
+
+  bool node_has_been_expanded(Node *node) const
+  {
+    CacheConstIterator cache_it = cache.find(node);
+
+    return
+      cache_it != cache.end() &&
+      (!cache_it->second.get_open_ptr() ||
+       cache_it->second.get_search_iteration() != search_number);
+  }
+
+
+  bool node_is_open (const CacheEntry &entry) const
+  {
+    return
+      entry.get_open_ptr() &&
+      entry.get_search_iteration() == search_number;
   }
 
 
@@ -362,9 +440,9 @@ private:
       return;
     }
 
-    CacheIterator cache_it = cache.find(start_state);
+    CacheIterator cache_it = cache.find(start_node);
     if (cache_it != cache.end()) {
-      start_node->set_h(get_cost(cache_it->second));
+      start_node->set_h(cache_it->second.get_cached_heuristic());
       return;
     }
 
@@ -392,9 +470,9 @@ private:
     assert(abstract_start != abstract_goal || result->get_h() == 0);
 
     Cost hval = std::max(epsilon, result->get_g());
-    set_cost(cache[start_state], hval);
-    assert(cache.find(start_state) != cache.end());
-    assert(get_cost(cache.find(start_state)->second) == hval);
+    cache[start_node].set_cached_heuristic(hval);
+    assert(cache.find(start_node) != cache.end());
+    assert(cache.find(start_node)->second.get_cached_heuristic() == hval);
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_H_STAR
     cache_h_star(next_level, result);
@@ -411,9 +489,6 @@ private:
     expanded_nodes[next_level].clear();
 #endif
 
-    free_all_nodes(closed[next_level]);
-    closed[next_level].clear();
-    assert(closed[next_level].empty());
     open[next_level].reset();
     assert(open[next_level].empty());
 
@@ -422,31 +497,31 @@ private:
 
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_H_STAR
-  void cache_h_star(const unsigned level, const Node *goal_node)
+  void cache_h_star(const unsigned level, Node *goal_node)
   {
     assert(goal_node != NULL);
     assert(goal_node->get_h() == 0);
     assert(open[level].empty() || goal_node->get_f() <= open[level].top()->get_f());
 
     const Cost cost_to_goal = goal_node->get_g();
-    const Node *parent = goal_node->get_parent();
+    Node *parent = goal_node->get_parent();
 
     while (parent != NULL) {
       assert(cost_to_goal >= parent->get_g());
       const Cost hval = cost_to_goal - parent->get_g();
 
-      CacheIterator cache_it = cache.find(parent->get_state());
+      CacheIterator cache_it = cache.find(parent);
       if (cache_it != cache.end()) {
-        assert(get_cost(cache_it->second) <= hval);
-        set_cost(cache_it->second, hval);
+        assert(cache_it->second.get_cached_heuristic() <= hval);
+        cache_it->second.set_cached_heuristic(hval);
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
-        set_exact(cache_it->second);
+        cache_it->second.set_exact_estimate();
 #endif
       }
       else {
-        set_cost(cache[parent->get_state()], hval);
+        cache[parent].set_cached_heuristic(hval);
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
-        set_exact(cache[parent->get_state()]);
+        cache[parent].set_exact_estimate();
 #endif
       }
 
@@ -457,7 +532,7 @@ private:
 
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
-  void cache_p_minus_g(const unsigned level, const Node *goal_node)
+  void cache_p_minus_g(const unsigned level, Node *goal_node)
   {
     assert(goal_node != NULL);
     assert(goal_node->get_h() == 0);
@@ -466,33 +541,29 @@ private:
     const Cost p = goal_node->get_g();
 
     for (unsigned i = 0; i < expanded_nodes[level].size(); i += 1) {
-      const Node *node = expanded_nodes[level][i];
+      Node *node = expanded_nodes[level][i];
       const Cost g = node->get_g();
       const Cost p_minus_g = p - g;
       assert(g <= p);
 
-      CacheIterator cache_it = cache.find(node->get_state());
-      if (cache_it != cache.end()) {
-        const Cost cached_cost = get_cost(cache_it->second);
-        set_cost(cache_it->second, std::max(cached_cost, p_minus_g));
-      }
-      else
-        set_cost(cache[node->get_state()], p_minus_g);
+      CacheIterator cache_it = cache.find(node);
+      assert (cache_it != cache.end());
+      const Cost cached_cost = cache_it->second.get_cached_heuristic();
+      cache_it->second.set_cached_heuristic(std::max(cached_cost, p_minus_g));
     } /* end for */
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
 #ifndef NDEBUG
     const Cost cost_to_goal = goal_node->get_g();
 #endif
-    const Node *parent = goal_node->get_parent();
+    Node *parent = goal_node->get_parent();
 
     while (parent != NULL) {
       assert(cost_to_goal >= parent->get_g());
-      CacheIterator cache_it = cache.find(parent->get_state());
+      CacheIterator cache_it = cache.find(parent);
       assert(cache_it != cache.end());
-      assert(get_cost(cache_it->second) == cost_to_goal - parent->get_g());
-      set_exact(cache_it->second);
-
+      assert(cache_it->second.get_cached_heuristic() == cost_to_goal - parent->get_g());
+      cache_it->second.set_exact_estimate();
       parent = parent->get_parent();
     } /* end while */
 #endif
@@ -500,28 +571,11 @@ private:
 #endif
 
 
-  void free_all_nodes(Closed &closed_level)
-  {
-    for (ClosedIterator closed_it = closed_level.begin();
-         closed_it != closed_level.end();
-         ++closed_it)
-      domain.free_node(closed_it->first);
-  }
-
-
-
   void dump_open_sizes(std::ostream &o) const
   {
     o << "open sizes: " << std::endl;
     for (unsigned level = 0; level < hierarchy_height; level += 1)
       o << "  " << level << ": " << open[level].size() << std::endl;
-  }
-
-  void dump_closed_sizes(std::ostream &o) const
-  {
-    o << "closed sizes: " << std::endl;
-    for (unsigned level = 0; level < hierarchy_height; level += 1)
-      o << "  " << level << ": " << closed[level].size() << std::endl;
   }
 
   void dump_cache_size(std::ostream &o) const

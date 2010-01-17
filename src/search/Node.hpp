@@ -14,7 +14,7 @@ public:
 
 
 private:
-  const Node<State, Cost> *parent;
+  Node<State, Cost> *parent;
   const State state;
   Cost g;
   Cost h;
@@ -26,7 +26,7 @@ public:
   Node(const State &s,
        Cost g,
        Cost h,
-       const Node<State, Cost> *p = NULL)
+       Node<State, Cost> *p = NULL)
     : parent(p)
     , state(s)
     , g(g)
@@ -77,7 +77,7 @@ public:
     return state;
   }
 
-  const Node<State, Cost> * get_parent() const
+  Node<State, Cost> * get_parent() const
   {
     return parent;
   }
