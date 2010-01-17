@@ -76,6 +76,11 @@ public:
 
   ~Switchback()
   {
+    for (ClosedIterator closed_it = closed.begin();
+         closed_it != closed.end();
+         ++closed_it) {
+      domain.free_node(closed_it->first);
+    }
   }
 
   void search()
