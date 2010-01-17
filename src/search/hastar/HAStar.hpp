@@ -128,6 +128,17 @@ private:
   // them.
   boost::array<State, hierarchy_height> goal_abstractions;
 
+#ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+  // A per-level vector of nodes that were expanded during a search,
+  // to speed up the P-g caching at the end.
+  //
+  // When a node is expanded, a pointer to it is appended to this
+  // vector.  To do P-g caching, only the nodes with pointers in this
+  // vector need to be scanned, rather than the entire closed list.
+  boost::array<std::vector<Node *>, hierarchy_height> expanded_nodes;
+#endif
+
+
 public:
   HAStar(Domain &domain)
     : goal(NULL)
@@ -139,6 +150,9 @@ public:
     , closed()
     , cache()
     , goal_abstractions()
+#ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+    , expanded_nodes()
+#endif
   {
     num_expanded.assign(0);
     num_generated.assign(0);
@@ -208,6 +222,9 @@ private:
     assert(domain.is_valid_level(level));
     assert(open[level].empty());
     assert(closed[level].empty());
+#ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+    assert(expanded_nodes[level].empty());
+#endif
 
     Node *start_node = domain.create_node(start_state,
                                           0,
@@ -242,6 +259,10 @@ private:
         goal_node = n;
         break;
       }
+
+#ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+      expanded_nodes[level].push_back(n);
+#endif
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
       {
@@ -382,6 +403,13 @@ private:
     cache_p_minus_g(next_level, result);
 #endif
 
+    // It is rather dirty, that all the search_at_level cleanup code
+    // has to go here, outside of search_at_level...
+
+#ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
+    expanded_nodes[next_level].clear();
+#endif
+
     free_all_nodes(closed[next_level]);
     closed[next_level].clear();
     assert(closed[next_level].empty());
@@ -436,22 +464,19 @@ private:
 
     const Cost p = goal_node->get_g();
 
-    for(ClosedConstIterator closed_it = closed[level].begin();
-        closed_it != closed[level].end();
-        ++closed_it) {
-      if (!closed_it->second) {
-        const Cost g = closed_it->first->get_g();
-        const Cost p_minus_g = p - g;
-        assert(g <= p);
+    for (unsigned i = 0; i < expanded_nodes[level].size(); i += 1) {
+      const Node *node = expanded_nodes[level][i];
+      const Cost g = node->get_g();
+      const Cost p_minus_g = p - g;
+      assert(g <= p);
 
-        CacheIterator cache_it = cache.find(closed_it->first->get_state());
-        if (cache_it != cache.end()) {
-          const Cost cached_cost = get_cost(cache_it->second);
-          set_cost(cache_it->second, std::max(cached_cost, p_minus_g));
-        }
-        else
-          set_cost(cache[closed_it->first->get_state()], p_minus_g);
+      CacheIterator cache_it = cache.find(node->get_state());
+      if (cache_it != cache.end()) {
+        const Cost cached_cost = get_cost(cache_it->second);
+        set_cost(cache_it->second, std::max(cached_cost, p_minus_g));
       }
+      else
+        set_cost(cache[node->get_state()], p_minus_g);
     } /* end for */
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
@@ -462,13 +487,9 @@ private:
 
     while (parent != NULL) {
       assert(cost_to_goal >= parent->get_g());
-#ifndef NDEBUG
-      const Cost hval = cost_to_goal - parent->get_g();
-#endif
-
       CacheIterator cache_it = cache.find(parent->get_state());
       assert(cache_it != cache.end());
-      assert(get_cost(cache_it->second) == hval);
+      assert(get_cost(cache_it->second) == cost_to_goal - parent->get_g());
       set_exact(cache_it->second);
 
       parent = parent->get_parent();
