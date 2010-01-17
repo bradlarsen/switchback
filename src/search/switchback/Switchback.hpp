@@ -33,8 +33,8 @@ private:
     Node *,
     MaybeItemPointer,
     PointerHash<Node>,
-    PointerEq<Node>
-    , boost::fast_pool_allocator< std::pair<Node * const, MaybeItemPointer> >
+    PointerEq<Node>,
+    boost::fast_pool_allocator< std::pair<Node * const, MaybeItemPointer> >
     > Closed;
 
   typedef typename Closed::iterator ClosedIterator;
