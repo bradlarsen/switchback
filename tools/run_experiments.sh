@@ -3,7 +3,7 @@
 set -e # exit on simple errors (?)
 
 
-MEM_LIMIT=48234496  # 46 GB
+MEM_LIMIT=49283072  # 47 GB
 #MEM_LIMIT=6291456  # 6 GB
 
 TILES_DIR="${HOME}/hg/switchback/testdata/korf100"
