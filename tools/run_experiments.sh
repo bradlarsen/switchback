@@ -6,6 +6,8 @@ set -e # exit on simple errors (?)
 MEM_LIMIT=49283072  # 47 GB
 #MEM_LIMIT=6291456  # 6 GB
 
+TIME_LIMIT=900  # 15 minutes
+
 TILES_DIR="${HOME}/hg/switchback/testdata/korf100"
 SEARCH="${HOME}/hg/switchback/build/spacerelease/tiles-search"
 
@@ -58,6 +60,7 @@ for algorithm in $ALGORITHMS; do
             echo "# Running $algorithm on Korf #$instance"
             echo "########################################"
             ulimit -v $MEM_LIMIT
+            ulimit -t $TIME_LIMIT
             run_korf_instance $algorithm $instance
         )
     done
