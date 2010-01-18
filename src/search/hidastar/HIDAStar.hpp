@@ -312,7 +312,9 @@ private:
         else
           new_cutoff = succ->get_f();
       }
-    }
+
+      node_pool.free(succ);
+    } /* end for */
 
     if (new_cutoff) {
       BoundedResult res(*new_cutoff);
