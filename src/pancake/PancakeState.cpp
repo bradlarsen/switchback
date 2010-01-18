@@ -12,7 +12,58 @@
 
 #include "pancake/PancakeState.hpp"
 
+PancakeState14 PancakeState14::canonical_goal(void)
+{
+	boost::array<Pancake, 14> cakes;
+
+	for (unsigned int i = 0; i < cakes.size(); i += 1)
+		cakes[i] = i + 1;
+
+	return PancakeState14(cakes);
+}
+
+// Read the pancake numbers from a file.
+// Return true on success and false on failure.
+static bool readCakes14(std::istream &in, boost::array<Pancake, 14> &cakes)
+{
+	for (unsigned int i = 0; i < cakes.size(); i += 1) {
+		unsigned int c;
+
+		in >> c;
+		if (c <= 0 || c > 14) {
+			std::cout << "Cake " << c << " is out of bounds"
+				  << std::endl;
+			return false;
+		}
+
+		cakes[i] = c;
+	}
+
+	return true;
+}
+
+
+PancakeState14 *PancakeState14::read(std::istream &in)
+{
+	boost::array<Pancake, 14> cakes;
+
+	if (!readCakes14(in, cakes)) {
+		std::cerr << "Error reading pancakes" << std::endl;
+		return NULL;
+	}
+
+	return new PancakeState14(cakes);
+}
+
+////////////////////////////////////////////////////////////
+// Members
+////////////////////////////////////////////////////////////
+
 PancakeState14::PancakeState14(boost::array<Pancake, 14> cs) : cakes(cs) {}
+
+
+PancakeState14::PancakeState14(const PancakeState14 &s)
+	: cakes(s.cakes) { }
 
 
 std::size_t PancakeState14::get_hash_value(void) const
@@ -42,6 +93,18 @@ PancakeState14 PancakeState14::flip(unsigned int n)
 		result[i] = cakes[i];
 
 	return result;
+}
+
+
+bool PancakeState14::operator ==(const PancakeState14 &other) const
+{
+	unsigned int n = cakes.size();
+
+	for (unsigned int i = 0; i <  n; i += 1)
+		if (cakes[i] != other.cakes[i])
+			return false;
+
+	return true;
 }
 
 

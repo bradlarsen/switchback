@@ -32,7 +32,17 @@ public:
 class PancakeState14 : public PancakeState
 {
 public:
+	// Get the canonical goal state.
+	static PancakeState14 canonical_goal(void);
+
+	// Read a pancake state from the given stream.
+	static PancakeState14 *read(std::istream &i);
+
+	// Make a new 14-pancake state from the given array.
 	PancakeState14(boost::array<Pancake, 14>);
+
+	// Copy a pancake state.
+	PancakeState14(const PancakeState14 &s);
 
 	// Gets the pancake at the given index.
 	inline Pancake operator[] (unsigned int i) const {
@@ -44,6 +54,9 @@ public:
 
 	// Flips the top [n] pancakes.
 	PancakeState14 flip(unsigned int n);
+
+	// Equality
+	bool operator ==(const PancakeState14 &other) const;
 
 	// How many pancakes are there?
 	inline unsigned int size(void) const {
