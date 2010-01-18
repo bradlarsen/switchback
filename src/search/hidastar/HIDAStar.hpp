@@ -426,6 +426,11 @@ private:
       assert(goal_abstraction.get_state() == abstract_goals[next_level]);
       cache[node_abstraction.get_state()].first = goal_abstraction.get_g();
       hval = goal_abstraction.get_g();
+
+      // TODO: I think this code leaks all the nodes along the goal
+      // path.  However, all attempts to put cleanup code for
+      // goal_abstraction's parents here has resulted in memory
+      // corruption...
     }
     else {
       hval = cache_it->second.first;
