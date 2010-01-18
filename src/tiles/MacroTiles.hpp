@@ -35,7 +35,19 @@ public:
 
   void print(std::ostream &o) const
   {
-    tiles_instance->print(o);
+    o << "Initial state:" << std::endl
+      << get_start_state() << std::endl;
+  
+    o << std::endl << "Goal state:" << std::endl
+      << get_goal_state() << std::endl;
+
+    TilesNode15 start_node(get_start_state(), 0, 0);
+    compute_heuristic(start_node);
+
+    o << std::endl << "Initial Manhattan distance heuristic estimate divided by 3: "
+      << start_node.get_h() << std::endl
+      << "(crippled for admissibility with macro tiles)"
+      << std::endl;
   }
 
   bool is_goal(const TilesState15 &s) const

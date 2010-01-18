@@ -137,10 +137,6 @@ TilesInstance15 * get_tiles_instance(int argc, char *argv[])
     exit(1);
   }
 
-  cout << "######## The Instance ########" << endl;
-  cout << *instance << endl;
-  cout << endl;
-
   return instance;
 }
 
@@ -201,12 +197,16 @@ int main(int argc, char * argv[])
   
   if (is_tiles && is_astar) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
     TilesAStar &astar = *new TilesAStar(*instance);
     search(astar);
   }
   else if (is_tiles && is_hastar) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
     TilesHAStar &hastar = *new TilesHAStar(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
     search(hastar);
   }
   else if (is_tiles && is_hidastar) {
@@ -216,16 +216,22 @@ int main(int argc, char * argv[])
   else if (is_tiles && is_switchback) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
     TilesSwitchback &switchback = *new TilesSwitchback(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
     search(switchback);
   }
   else if (is_macro_tiles && is_astar) {
     MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
     MacroTilesAStar &astar = *new MacroTilesAStar(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
     search(astar);
   }
   else if (is_macro_tiles && is_hastar) {
     MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
     MacroTilesHAStar &hastar = *new MacroTilesHAStar(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
     search(hastar);
   }
   else if (is_macro_tiles && is_hidastar) {
@@ -234,6 +240,8 @@ int main(int argc, char * argv[])
   else if (is_macro_tiles && is_switchback) {
     MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
     MacroTilesSwitchback &switchback = *new MacroTilesSwitchback(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
     search(switchback);
   }
   else if (!is_tiles && !is_macro_tiles) {
