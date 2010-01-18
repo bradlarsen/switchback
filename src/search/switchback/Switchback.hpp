@@ -2,6 +2,7 @@
 #define _SWITCHBACK_HPP_
 
 
+#include <cassert>
 #include <vector>
 
 #include <boost/array.hpp>
