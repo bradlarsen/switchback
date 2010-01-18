@@ -7,6 +7,7 @@
 #include "search/Constants.hpp"
 #include "search/astar/AStar.hpp"
 #include "search/hastar/HAStar.hpp"
+#include "search/hidastar/HIDAStar.hpp"
 #include "search/switchback/Switchback.hpp"
 #include "tiles/Tiles.hpp"
 #include "tiles/MacroTiles.hpp"
@@ -17,10 +18,12 @@ using namespace boost;
 
 typedef AStar<TilesInstance15, TilesNode15> TilesAStar;
 typedef HAStar<TilesInstance15, TilesNode15> TilesHAStar;
+typedef HIDAStar<TilesInstance15, TilesNode15> TilesHIDAStar;
 typedef Switchback<TilesInstance15, TilesNode15> TilesSwitchback;
 
 typedef AStar<MacroTilesInstance15, TilesNode15> MacroTilesAStar;
 typedef HAStar<MacroTilesInstance15, TilesNode15> MacroTilesHAStar;
+typedef HIDAStar<MacroTilesInstance15, TilesNode15> MacroTilesHIDAStar;
 typedef Switchback<MacroTilesInstance15, TilesNode15> MacroTilesSwitchback;
 
 
@@ -210,8 +213,11 @@ int main(int argc, char * argv[])
     search(hastar);
   }
   else if (is_tiles && is_hidastar) {
-    cerr << "HIDA* unimplemented" << endl;
-    exit(1);
+    TilesInstance15 *instance = get_tiles_instance(argc, argv);
+    TilesHIDAStar &hidastar = *new TilesHIDAStar(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
+    search(hidastar);
   }
   else if (is_tiles && is_switchback) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
@@ -235,7 +241,11 @@ int main(int argc, char * argv[])
     search(hastar);
   }
   else if (is_macro_tiles && is_hidastar) {
-    cerr << "HIDA* unimplemented" << endl;
+    MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
+    MacroTilesHIDAStar &hidastar = *new MacroTilesHIDAStar(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
+    search(hidastar);
   }
   else if (is_macro_tiles && is_switchback) {
     MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);

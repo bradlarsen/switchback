@@ -15,7 +15,7 @@ public:
 
 private:
   const Node<State, Cost> *parent;
-  const State state;
+  State state;
   Cost g;
   Cost h;
 #ifdef CACHE_NODE_F_VALUE
