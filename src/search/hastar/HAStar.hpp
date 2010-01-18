@@ -262,6 +262,7 @@ private:
 
       Node *n = open[level].top();
       open[level].pop();
+
       assert(closed[level].find(n) != closed[level].end());
       closed[level][n] = boost::none;
 
