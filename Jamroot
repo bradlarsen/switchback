@@ -53,11 +53,11 @@ project switchback
     ;
 
 
-exe tiles-search
+exe search
     :
       tiles/ManhattanDistance.cpp
       tiles/Tiles.cpp
       tiles/TilesState.cpp
-      TilesSearch.cpp
+      Search.cpp
     ;
 
