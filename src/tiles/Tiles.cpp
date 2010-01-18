@@ -11,7 +11,6 @@ TilesInstance15::TilesInstance15 (const TilesState15 &start,
     , goal(goal)
     , md_heur(goal)
     , abstraction_order(compute_abstraction_order(start, md_heur))
-    , node_pool(sizeof(TilesNode15))
 {
 #ifndef NDEBUG
   dump_abstraction_order(std::cerr);
@@ -45,15 +44,17 @@ void TilesInstance15::print(std::ostream &o) const
 
 TilesNode15 * TilesInstance15::child(const TilesState15 &new_state,
                                      TileCost new_g,
-                                     const TilesNode15 &parent)
+                                     const TilesNode15 &parent,
+                                     boost::pool<> &node_pool)
 {
   assert(new_state != parent.get_state());
   assert(parent.get_parent() == NULL ||
          new_state != parent.get_parent()->get_state());
-  TilesNode15 *child_node = create_node(new_state,
-                                        new_g,
-                                        0,
-                                        &parent);
+  TilesNode15 *child_node =
+    new (node_pool.malloc()) TilesNode15(new_state,
+                                         new_g,
+                                         0,
+                                         &parent);
   return child_node;
 }
 
@@ -78,7 +79,8 @@ void TilesInstance15::compute_heuristic(TilesNode15 &child) const
 
 
 void TilesInstance15::compute_successors(const TilesNode15 &n,
-                                         std::vector<TilesNode15 *> &succs)
+                                         std::vector<TilesNode15 *> &succs,
+                                         boost::pool<> &node_pool)
 {
   succs.clear();
   const TilesNode15 *gp = n.get_parent();
@@ -92,31 +94,32 @@ void TilesInstance15::compute_successors(const TilesNode15 &n,
 
   if (col > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 1)) {
     const TilesState15 new_state = n.get_state().move_blank_left();
-    TilesNode15 *child_node = child(new_state, new_g, n);
+    TilesNode15 *child_node = child(new_state, new_g, n, node_pool);
     succs.push_back(child_node);
   }
   if (col < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 1)) {
     const TilesState15 new_state = n.get_state().move_blank_right();
-    TilesNode15 *child_node = child(new_state, new_g, n);
+    TilesNode15 *child_node = child(new_state, new_g, n, node_pool);
     succs.push_back(child_node);
   }
   if (row > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 4)) {
     const TilesState15 new_state = n.get_state().move_blank_up();
-    TilesNode15 *child_node = child(new_state, new_g, n);
+    TilesNode15 *child_node = child(new_state, new_g, n, node_pool);
     succs.push_back(child_node);
   }
   if (row < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 4)) {
     const TilesState15 new_state = n.get_state().move_blank_down();
-    TilesNode15 *child_node = child(new_state, new_g, n);
+    TilesNode15 *child_node = child(new_state, new_g, n, node_pool);
     succs.push_back(child_node);
   }
 }
 
 
 void TilesInstance15::compute_predecessors(const TilesNode15 &n,
-                                           std::vector<TilesNode15 *> &succs)
+                                           std::vector<TilesNode15 *> &succs,
+                                           boost::pool<> &node_pool)
 {
-  compute_successors(n, succs);
+  compute_successors(n, succs, node_pool);
 }
 
 
@@ -130,22 +133,6 @@ const TilesState15 & TilesInstance15::get_start_state() const
 const TilesState15 & TilesInstance15::get_goal_state() const
 {
   return goal;
-}
-
-
-TilesNode15 * TilesInstance15::create_node(const TilesState15 &state,
-                                           TileCost g,
-                                           TileCost h,
-                                           const TilesNode15 *parent)
-{
-  return new (node_pool.malloc()) TilesNode15(state, g, h, parent);
-}
-
-
-void TilesInstance15::free_node(TilesNode15 *n)
-{
-  assert(node_pool.is_from(n));
-  node_pool.free(n);
 }
 
 

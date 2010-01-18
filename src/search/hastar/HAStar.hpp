@@ -28,6 +28,7 @@
 #include <boost/array.hpp>
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
+#include <boost/pool/pool.hpp>
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/utility.hpp>
@@ -129,6 +130,8 @@ private:
   // them.
   boost::array<State, hierarchy_height> goal_abstractions;
 
+  boost::array<boost::pool<> *, hierarchy_height> node_pool;
+
 #ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
   // A per-level vector of nodes that were expanded during a search,
   // to speed up the P-g caching at the end.
@@ -151,6 +154,7 @@ public:
     , closed()
     , cache()
     , goal_abstractions()
+    , node_pool()
 #ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
     , expanded_nodes()
 #endif
@@ -160,10 +164,15 @@ public:
 
     for (unsigned i = 0; i < hierarchy_height; i += 1)
       goal_abstractions[i] = domain.abstract(i, domain.get_goal_state());
+
+    for (unsigned i = 0; i < hierarchy_height; i += 1)
+      node_pool[i] = new boost::pool<>(sizeof(Node));
   }
 
   ~HAStar()
   {
+    for (unsigned i = 0; i < hierarchy_height; i += 1)
+      delete node_pool[i];
   }
 
   void search()
@@ -227,10 +236,11 @@ private:
     assert(expanded_nodes[level].empty());
 #endif
 
-    Node *start_node = domain.create_node(start_state,
-                                          0,
-                                          0,
-                                          NULL);
+    Node *start_node =
+      new (node_pool[level]->malloc()) Node(start_state,
+                                            0,
+                                            0,
+                                            NULL);
     closed[level][start_node] = open[level].push(start_node);
     assert(closed[level].find(start_node) != closed[level].end());
     assert(open[level].size() == 1);
@@ -252,6 +262,7 @@ private:
 
       Node *n = open[level].top();
       open[level].pop();
+
       assert(closed[level].find(n) != closed[level].end());
       closed[level][n] = boost::none;
 
@@ -284,10 +295,10 @@ private:
           // n.  This is necessary for further optimal path caching.
           assert(level != 0);
           Node *synthesized_goal =
-            domain.create_node(goal_abstractions[level],
-                               n->get_g() + get_cost(cache_it->second),
-                               0,
-                               n);
+            new (node_pool[level]->malloc()) Node(goal_abstractions[level],
+                                                  n->get_g() + get_cost(cache_it->second),
+                                                  0,
+                                                  n);
           assert(closed[level].find(synthesized_goal) == closed[level].end());
           closed[level][synthesized_goal] = open[level].push(synthesized_goal);
           continue;
@@ -295,7 +306,7 @@ private:
       }
 #endif      
 
-      domain.compute_successors(*n, succs);
+      domain.compute_successors(*n, succs, *node_pool[level]);
       num_expanded[level] += 1;
       num_generated[level] += succs.size();
 
@@ -331,8 +342,8 @@ private:
       open[level].erase(*closed_it->second);  // knock out the old one from
                                        // the open list
 
-      domain.free_node(closed_it->first);     // free the old, worse
-                                              // copy
+      // free the old, worse copy
+      node_pool[level]->free(closed_it->first);
       closed[level].erase(closed_it);
 
       closed[level][child] = open[level].push(child);  // insert better version of
@@ -341,7 +352,7 @@ private:
     else {
       // The child has either already been expanded, or is worse
       // than the version in the open list.
-      domain.free_node(child);
+      node_pool[level]->free(child);
     }
   }
 
@@ -411,7 +422,7 @@ private:
     expanded_nodes[next_level].clear();
 #endif
 
-    free_all_nodes(closed[next_level]);
+    node_pool[next_level]->purge_memory();
     closed[next_level].clear();
     assert(closed[next_level].empty());
     open[next_level].reset();
@@ -498,16 +509,6 @@ private:
 #endif
   }
 #endif
-
-
-  void free_all_nodes(Closed &closed_level)
-  {
-    for (ClosedIterator closed_it = closed_level.begin();
-         closed_it != closed_level.end();
-         ++closed_it)
-      domain.free_node(closed_it->first);
-  }
-
 
 
   void dump_open_sizes(std::ostream &o) const

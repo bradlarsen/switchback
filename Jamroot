@@ -35,6 +35,7 @@ variant speedrelease
 variant spacerelease
     : myrelease
     :
+      <define>CACHE_NODE_F_VALUE
     ;
 
 
@@ -45,8 +46,8 @@ project switchback
     : source-location src
     : build-dir build
     : default-build
-#        <variant>mydebug
-        <variant>speedrelease
+        <variant>mydebug
+#        <variant>speedrelease
         <variant>spacerelease
         <warnings>on
     ;
@@ -60,10 +61,3 @@ exe tiles-search
       TilesSearch.cpp
     ;
 
-exe tiles-test
-    :
-      tiles/ManhattanDistance.cpp
-      tiles/Tiles.cpp
-      tiles/TilesState.cpp
-      tiles/TilesTest.cpp
-    ;

@@ -47,7 +47,8 @@ public:
    * nodes: that must be done by the caller.
    */
   void compute_successors(const TilesNode15 &n,
-                          std::vector<TilesNode15 *> &succs);
+                          std::vector<TilesNode15 *> &succs,
+                          boost::pool<> &node_pool);
 
   /**
    * Expands the given node into the given vector for predecessors.
@@ -60,7 +61,8 @@ public:
    *
    */
   void compute_predecessors(const TilesNode15 &n,
-                            std::vector<TilesNode15 *> &succs);
+                            std::vector<TilesNode15 *> &succs,
+                            boost::pool<> &node_pool);
 
   /**
    * Computes and assigned the heuristic for the given child node.
@@ -75,13 +77,6 @@ public:
   const TilesState15 & get_goal_state() const;
 
 
-  TilesNode15 * create_node(const TilesState15 &state,
-                            TileCost g,
-                            TileCost h,
-                            const TilesNode15 *parent);
-
-  void free_node(TilesNode15 *n);
-  
   TilesState15 abstract(unsigned level, const TilesState15 &s) const;
 
 
@@ -91,7 +86,8 @@ public:
 private:
   TilesNode15 * child(const TilesState15 &new_state,
                       TileCost new_g,
-                      const TilesNode15 &parent);
+                      const TilesNode15 &parent,
+                      boost::pool<> &node_pool);
 
   unsigned find_tile_index(const std::vector<TileCostPair> &pairs,
                            Tile t) const;
@@ -112,8 +108,6 @@ private:
 
   const ManhattanDist15 md_heur;
   const AbstractionOrder abstraction_order;
-
-  boost::pool<> node_pool;
 };
 
 

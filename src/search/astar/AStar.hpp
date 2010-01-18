@@ -6,6 +6,7 @@
 
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
+#include <boost/pool/pool.hpp>
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/utility.hpp>
@@ -49,6 +50,8 @@ private:
   unsigned num_expanded;
   unsigned num_generated;
 
+  boost::pool<> node_pool;
+
 
 public:
   AStar(Domain &domain)
@@ -59,15 +62,12 @@ public:
     , domain(domain)
     , num_expanded(0)
     , num_generated(0)
+    , node_pool(sizeof(Node))
   {
   }
 
   ~AStar()
   {
-    for (ClosedIterator closed_it = closed.begin();
-         closed_it != closed.end();
-         ++closed_it)
-      domain.free_node(closed_it->first);
   }
 
   void search()
@@ -83,7 +83,10 @@ public:
 
     {
       assert(all_closed_item_ptrs_valid());
-      Node *start_node = domain.create_node(domain.get_start_state(), 0, 0, NULL);
+      Node *start_node = new (node_pool.malloc()) Node(domain.get_start_state(),
+                                                       0,
+                                                       0,
+                                                       NULL);
       domain.compute_heuristic(*start_node);
       MaybeItemPointer open_ptr = open.push(start_node);
       assert(open_ptr);
@@ -114,7 +117,7 @@ public:
         return;
       }
 
-      domain.compute_successors(*n, succs);
+      domain.compute_successors(*n, succs, node_pool);
       num_expanded += 1;
       num_generated += succs.size();
 
@@ -166,9 +169,8 @@ private:
       // A worse version of the child is in the open list.
       open.erase(*closed_it->second);  // knock out the old one from
                                        // the open list
-
-      domain.free_node(closed_it->first);     // free the old, worse
-                                              // copy
+     // free the old, worse copy
+      node_pool.free(closed_it->first);
       closed.erase(closed_it);
 
       closed[child] = open.push(child);  // insert better version of child
@@ -176,7 +178,7 @@ private:
     else {
       // The child has either already been expanded, or is worse
       // than the version in the open list.
-      domain.free_node(child);
+      node_pool.free(child);
     }
 
     assert(all_closed_item_ptrs_valid());

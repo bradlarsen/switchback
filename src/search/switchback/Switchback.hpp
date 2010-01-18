@@ -57,6 +57,8 @@ private:
 
   boost::array<State, hierarchy_height> abstract_goals;
 
+  boost::pool<> node_pool;
+
 
 public:
   Switchback(Domain &domain)
@@ -68,6 +70,7 @@ public:
     , open()
     , closed(INITIAL_CLOSED_SET_SIZE)
     , abstract_goals()
+    , node_pool(sizeof(Node))
   {
     num_expanded.assign(0);
     num_generated.assign(0);
@@ -199,9 +202,9 @@ private:
       closed[n] = boost::none;
 
       if (level % 2 == 0)
-        domain.compute_successors(*n, children);
+        domain.compute_successors(*n, children, node_pool);
       else
-        domain.compute_predecessors(*n, children);
+        domain.compute_predecessors(*n, children, node_pool);
       num_expanded[level] += 1;
       num_generated[level] += children.size();
       
@@ -233,8 +236,8 @@ private:
                                               // one from the open
                                               // list
 
-      domain.free_node(closed_it->first);     // free the old,
-                                              // worse copy
+     // free the old, worse copy
+      node_pool.free(closed_it->first);
       closed.erase(closed_it);
 
       closed[child] = open[level].push(child);  // insert better version of child
@@ -242,7 +245,7 @@ private:
     else {
       // The child has either already been expanded, or is worse
       // than the version in the open list.
-      domain.free_node(child);
+      node_pool.free(child);
     }
   }
 
@@ -256,10 +259,10 @@ private:
       State goal = level % 2 == 0
                       ? domain.get_goal_state()
                       : domain.get_start_state();
-      Node *start_node = domain.create_node(domain.abstract(level, start),
-                                            0,
-                                            0,
-                                            NULL);
+      Node *start_node = new (node_pool.malloc()) Node(domain.abstract(level, start),
+                                                       0,
+                                                       0,
+                                                       NULL);
       closed[start_node] = open[level].push(start_node);
       abstract_goals[level] = goal;
     }
