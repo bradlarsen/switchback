@@ -11,9 +11,9 @@ TIME_LIMIT=900  # 15 minutes
 TILES_DIR="${HOME}/hg/switchback/testdata/korf100"
 SEARCH="${HOME}/hg/switchback/build/spacerelease/search"
 
-LOG_DIR="${HOME}/hg/switchback/run_log"
+LOG_DIR="${HOME}/hg/switchback/run_log_switchback_astar_macro_tiles"
 
-ALGORITHMS="hastar switchback astar"
+ALGORITHMS="switchback astar"
 
 
 get_run_info ()
