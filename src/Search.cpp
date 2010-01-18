@@ -6,6 +6,7 @@
 #include "search/BucketPriorityQueue.hpp"
 #include "search/Constants.hpp"
 #include "search/astar/AStar.hpp"
+#include "search/idastar/IDAStar.hpp"
 #include "search/hastar/HAStar.hpp"
 #include "search/hidastar/HIDAStar.hpp"
 #include "search/switchback/Switchback.hpp"
@@ -17,11 +18,13 @@ using namespace boost;
 
 
 typedef AStar<TilesInstance15, TilesNode15> TilesAStar;
+typedef IDAStar<TilesInstance15, TilesNode15> TilesIDAStar;
 typedef HAStar<TilesInstance15, TilesNode15> TilesHAStar;
 typedef HIDAStar<TilesInstance15, TilesNode15> TilesHIDAStar;
 typedef Switchback<TilesInstance15, TilesNode15> TilesSwitchback;
 
 typedef AStar<MacroTilesInstance15, TilesNode15> MacroTilesAStar;
+typedef IDAStar<MacroTilesInstance15, TilesNode15> MacroTilesIDAStar;
 typedef HAStar<MacroTilesInstance15, TilesNode15> MacroTilesHAStar;
 typedef HIDAStar<MacroTilesInstance15, TilesNode15> MacroTilesHIDAStar;
 typedef Switchback<MacroTilesInstance15, TilesNode15> MacroTilesSwitchback;
@@ -109,7 +112,7 @@ void print_usage(ostream &o, const char *prog_name)
   o << "usage: " << prog_name << " DOMAIN ALGORITHM [FILE]" << endl
     << "where" << endl
     << "  DOMAIN is one of {tiles, macro_tiles}" << endl
-    << "  ALGORITHM is one of {astar, hastar, switchback, hidastar}" << endl
+    << "  ALGORITHM is one of {astar, hastar, idastar, hidastar, switchback}" << endl
     << "  FILE is the optional instance file to read from" << endl
     << endl
     << "If no file is specified, the instance is read from stdin." << endl;
@@ -196,8 +199,12 @@ int main(int argc, char * argv[])
   const bool is_astar = alg_string == "astar";
   const bool is_hastar = alg_string == "hastar";
   const bool is_hidastar = alg_string == "hidastar";
+  const bool is_idastar = alg_string == "idastar";
   const bool is_switchback = alg_string == "switchback";
-  
+
+  // ############################################################
+  // tiles domain
+  // ############################################################
   if (is_tiles && is_astar) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
@@ -219,6 +226,13 @@ int main(int argc, char * argv[])
     cout << *instance << endl << endl;
     search(hidastar);
   }
+  else if (is_tiles && is_idastar) {
+    TilesInstance15 *instance = get_tiles_instance(argc, argv);
+    TilesIDAStar &idastar = *new TilesIDAStar(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
+    search(idastar);
+  }
   else if (is_tiles && is_switchback) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
     TilesSwitchback &switchback = *new TilesSwitchback(*instance);
@@ -226,6 +240,10 @@ int main(int argc, char * argv[])
     cout << *instance << endl << endl;
     search(switchback);
   }
+
+  // ############################################################
+  // macro tiles domain
+  // ############################################################
   else if (is_macro_tiles && is_astar) {
     MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
     MacroTilesAStar &astar = *new MacroTilesAStar(*instance);
@@ -246,6 +264,13 @@ int main(int argc, char * argv[])
     cout << "######## The Instance ########" << endl;
     cout << *instance << endl << endl;
     search(hidastar);
+  }
+  else if (is_macro_tiles && is_idastar) {
+    MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
+    MacroTilesIDAStar &idastar = *new MacroTilesIDAStar(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
+    search(idastar);
   }
   else if (is_macro_tiles && is_switchback) {
     MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
