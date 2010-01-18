@@ -9,9 +9,9 @@ MEM_LIMIT=49283072  # 47 GB
 TILES_DIR="${HOME}/hg/switchback/testdata/korf100"
 SEARCH="${HOME}/hg/switchback/build/spacerelease/tiles-search"
 
-LOG_DIR="${HOME}/hg/switchback/run_log"
+LOG_DIR="${HOME}/hg/switchback/hastar_run_log"
 
-ALGORITHMS="astar switchback"
+ALGORITHMS="hastar"
 
 
 get_run_info ()
