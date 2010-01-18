@@ -101,7 +101,7 @@ private:
 private:
   const static unsigned hierarchy_height = Domain::num_abstraction_levels + 1;
 
-  const Node *goal;
+  Node goal;
   bool searched;
 
   Domain &domain;
@@ -118,7 +118,7 @@ private:
 
 public:
   HIDAStar(Domain &domain)
-    : goal(NULL)
+    : goal(domain.get_goal_state(), 0, 0)
     , searched(false)
     , domain(domain)
     , num_expanded()
@@ -135,7 +135,7 @@ public:
 
   const Node * get_goal() const
   {
-    return goal;
+    return &goal;
   }
 
   const Domain & get_domain() const
@@ -182,20 +182,28 @@ public:
       Node(domain.get_start_state(),
            0,
            0);
-    goal = hidastar_search(0, start_node);
+
+    Node goal_node(domain.get_goal_state(), 0, 0);
+    hidastar_search(0, start_node, &goal_node);
+
+    goal = goal_node;
   }
 
 
 private:
-  Node * hidastar_search(const unsigned level, Node *start_node)
+  // start_node should be const, but that didn't work out.
+  // goal_node is modified, if a goal is found.
+  // returns true if a goal was found.
+  bool hidastar_search(const unsigned level, Node *start_node, Node *goal_node)
   {
+    assert(start_node != NULL);
+    assert(goal_node != NULL);
     assert(start_node->num_nodes_to_start() == 1);
     Cost bound = start_node->get_h();
     bool failed = false;
+    bool goal_found = false;
 
-    Node *goal_node = NULL;
-
-    while ( goal_node == NULL && !failed ) {
+    while ( !goal_found && !failed ) {
 #ifdef OUTPUT_SEARCH_PROGRESS
       if (level == 0) {
         std::cerr << "hidastar_search at level " << level << std::endl;
@@ -214,8 +222,8 @@ private:
       else if (res.is_goal()) {
         assert(!res.is_cutoff());
         assert(!res.is_failure());
-        goal_node = res.get_goal();
-        assert(goal_node != NULL);
+        goal_found = true;
+        *goal_node = *res.get_goal();
       }
       else if (res.is_cutoff()) {
         assert(!res.is_goal());
@@ -227,9 +235,9 @@ private:
       }
     }
 
-    if (goal_node != NULL) {
+    if (goal_found) {
       cache_optimal_path(level, goal_node);
-      return goal_node;
+      return true;
     }
     else {
       std::cerr << "no solution found at level " << level << "!" << std::endl;
@@ -407,22 +415,17 @@ private:
     CacheConstIterator cache_it = cache.find(node_abstraction.get_state());
     if (cache_it == cache.end() || !cache_it->second.second) {
       cache[node_abstraction.get_state()] = std::make_pair(0, true);
-      Node *res = hidastar_search(next_level, &node_abstraction);
-      if (res == NULL) {
+      Node goal_abstraction(abstract_goals[next_level], 0, 0);
+      bool goal_found = hidastar_search(next_level, &node_abstraction, &goal_abstraction);
+      if (!goal_found) {
         std::cerr << "infinite heuristic estimate!" << std::endl;
         assert(false);
       }
       assert(cache.find(node_abstraction.get_state())->second.second);
-      assert(res->get_h() == 0);
-      assert(res->get_state() == abstract_goals[next_level]);
-      cache[node_abstraction.get_state()].first = res->get_g();
-      hval = res->get_g();
-
-      // TODO: I believe I am leaking all the nodes along the goal
-      // path.  But uncommenting the following lines leads to memory
-      // corruption...
-
-      // node_pool.free(res);
+      assert(goal_abstraction.get_h() == 0);
+      assert(goal_abstraction.get_state() == abstract_goals[next_level]);
+      cache[node_abstraction.get_state()].first = goal_abstraction.get_g();
+      hval = goal_abstraction.get_g();
     }
     else {
       hval = cache_it->second.first;
