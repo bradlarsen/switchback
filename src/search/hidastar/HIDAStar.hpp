@@ -275,13 +275,8 @@ private:
       assert(succ->num_nodes_to_start() == start_node->num_nodes_to_start() + 1u);
 
       Cost hval = heuristic(level, succ);
-      // assert(succ->get_state() == abstract_goals[level] ||
-      //        level == Domain::num_abstraction_levels ||
-      //        cache.find(succ->get_state()) != cache.end());
-
 
       // P-g caching
-      // TODO:  the following line is suspicious.
       const Cost p_minus_g = bound >= succ->get_g() ? bound - succ->get_g() : 0;
       hval = std::max(hval, p_minus_g);
       CacheIterator cache_it = cache.find(succ->get_state());
@@ -312,6 +307,11 @@ private:
                  succ);
           BoundedResult res(synthesized_goal);
           assert(res.is_goal());
+
+          // cleanup remaining successors
+          for (unsigned j = i + 1; j < succs.size(); j += 1)
+            node_pool.free(succs[j]);
+
           return res;
         }
       }
@@ -324,6 +324,11 @@ private:
         if (res.is_goal()) {
           assert(!res.is_cutoff());
           assert(!res.is_failure());
+
+          // cleanup remaining successors
+          for (unsigned j = i + 1; j < succs.size(); j += 1)
+            node_pool.free(succs[j]);
+
           return res;
         }
         else if (res.is_cutoff()) {
@@ -334,6 +339,8 @@ private:
             new_cutoff = std::min(*new_cutoff, res.get_cutoff());
           else
             new_cutoff = res.get_cutoff();
+
+          node_pool.free(succ);
         }
       }
       else {
@@ -341,12 +348,12 @@ private:
           new_cutoff = std::min(*new_cutoff, succ->get_f());
         else
           new_cutoff = succ->get_f();
+
+        node_pool.free(succ);
       }
       // end Normal IDA* stuff
     } /* end for */
 
-
-    // TODO:  freeing the successors has to be done somewhere
 
     if (new_cutoff) {
       BoundedResult res(*new_cutoff);
@@ -392,29 +399,36 @@ private:
       return domain.get_epsilon(node->get_state());
 
     const unsigned next_level = level + 1;
-    Node *node_abstraction = new (node_pool.malloc())
-      Node(domain.abstract(next_level, node->get_state()),
-           0,
-           0);
+    Node node_abstraction(domain.abstract(next_level, node->get_state()),
+                          0,
+                          0);
 
-    CacheConstIterator cache_it = cache.find(node_abstraction->get_state());
+    Cost hval;
+    CacheConstIterator cache_it = cache.find(node_abstraction.get_state());
     if (cache_it == cache.end() || !cache_it->second.second) {
-      cache[node_abstraction->get_state()] = std::make_pair(0, true);
-      Node *res = hidastar_search(next_level, node_abstraction);
+      cache[node_abstraction.get_state()] = std::make_pair(0, true);
+      Node *res = hidastar_search(next_level, &node_abstraction);
       if (res == NULL) {
         std::cerr << "infinite heuristic estimate!" << std::endl;
         assert(false);
       }
-      assert(cache.find(node_abstraction->get_state())->second.second);
+      assert(cache.find(node_abstraction.get_state())->second.second);
       assert(res->get_h() == 0);
       assert(res->get_state() == abstract_goals[next_level]);
-      cache[node_abstraction->get_state()].first = res->get_g();
+      cache[node_abstraction.get_state()].first = res->get_g();
+      hval = res->get_g();
+
+      // TODO: I believe I am leaking all the nodes along the goal
+      // path.  But uncommenting the following lines leads to memory
+      // corruption...
+
       // node_pool.free(res);
     }
+    else {
+      hval = cache_it->second.first;
+    }
 
-    assert(cache.find(node_abstraction->get_state()) != cache.end());
-    const Cost hval = cache.find(node_abstraction->get_state())->second.first;
-    node_pool.free(node_abstraction);
+    assert(cache.find(node_abstraction.get_state()) != cache.end());
 
     return hval;
   }
