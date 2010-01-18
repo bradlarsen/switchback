@@ -10,6 +10,19 @@ variant mydebug
     ;
 
 
+variant myprofile
+    :
+    :
+      <optimization>speed
+      <debug-symbols>on
+#      <profile-symbols>on
+      <inlining>off
+      <toolset>gcc
+      <define>NDEBUG
+      <cxxflags>"-pg"
+      <linkflags>"-pg"
+    ;
+    
 variant myrelease
     :
     :
