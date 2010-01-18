@@ -41,7 +41,19 @@ run_korf_instance ()
 
     local logfile=$(get_log_filename "korf100" "$algorithm" "$instance_num")
     local instancefile="${TILES_DIR}/${instance_num}"
-    "$SEARCH" "${algorithm}" "${instancefile}" 2>&1 | tee "$logfile"
+
+    "$SEARCH" "tiles" "${algorithm}" "${instancefile}" 2>&1 | tee "$logfile"
+}
+
+
+run_macro_korf_instance ()
+{
+    local algorithm=$1
+    local instance_num=$2
+
+    local logfile=$(get_log_filename "macro-korf100" "$algorithm" "$instance_num")
+    local instancefile="${TILES_DIR}/${instance_num}"
+    "$SEARCH" "macro_tiles" "${algorithm}" "${instancefile}" 2>&1 | tee "$logfile"
 }
 
 
@@ -57,10 +69,33 @@ for algorithm in $ALGORITHMS; do
     for instance in `seq 1 100`; do
         (
             echo "########################################"
+            echo "# Running $algorithm on Macro Korf #$instance"
+            echo "########################################"
+            
+            echo "attempting to set time limit to $TIME_LIMIT"
+            ulimit -t $TIME_LIMIT
+            echo "attempting to set memory limit to $MEM_LIMIT"
+            ulimit -v $MEM_LIMIT
+            echo "showtime!"
+
+            run_macro_korf_instance $algorithm $instance
+        )
+    done
+done
+
+for algorithm in $ALGORITHMS; do
+    for instance in `seq 1 100`; do
+        (
+            echo "########################################"
             echo "# Running $algorithm on Korf #$instance"
             echo "########################################"
-            ulimit -v $MEM_LIMIT
+            
+            echo "attempting to set time limit to $TIME_LIMIT"
             ulimit -t $TIME_LIMIT
+            echo "attempting to set memory limit to $MEM_LIMIT"
+            ulimit -v $MEM_LIMIT
+            echo "showtime!"
+
             run_korf_instance $algorithm $instance
         )
     done
