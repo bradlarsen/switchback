@@ -17,7 +17,7 @@ variant myrelease
       <debug-symbols>off
       <runtime-debugging>off
       <inlining>full
-#      <define>NDEBUG
+      <define>NDEBUG
       <threading>multi
       <link>static
       <runtime-link>static
@@ -47,8 +47,7 @@ project switchback
     : default-build
 #        <variant>mydebug
         <variant>speedrelease
-        <define>NDEBUG
-#        <variant>spacerelease
+        <variant>spacerelease
         <warnings>on
     ;
 
