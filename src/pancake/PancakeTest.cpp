@@ -22,8 +22,8 @@ int main(void)
  	PancakeState14 s(cakes);
 
 	std::cout << s.get_hash_value() << ": " << s << std::endl;
-	std::cout << s s.get_hash_value() << ": " <<.flip(4) << std::endl;
-	std::cout << s s.get_hash_value() << ": " <<.flip(5) << std::endl;
+	std::cout << s.get_hash_value() << ": " << s.flip(4) << std::endl;
+	std::cout << s.get_hash_value() << ": " << s.flip(5) << std::endl;
 
 	return EXIT_SUCCESS;
 }
