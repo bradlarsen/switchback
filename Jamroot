@@ -22,7 +22,7 @@ variant myprofile
       <cxxflags>"-pg"
       <linkflags>"-pg"
     ;
-    
+
 variant myrelease
     :
     :
@@ -72,5 +72,11 @@ exe search
       tiles/Tiles.cpp
       tiles/TilesState.cpp
       Search.cpp
+    ;
+
+exe cake_test
+    :
+      pancake/PancakeState.cpp
+      pancake/PancakeTest.cpp
     ;
 
