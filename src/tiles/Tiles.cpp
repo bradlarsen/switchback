@@ -123,6 +123,86 @@ void TilesInstance15::compute_predecessors(const TilesNode15 &n,
 }
 
 
+void TilesInstance15::compute_macro_successors(const TilesNode15 &n,
+                                               std::vector<TilesNode15 *> &succs,
+                                               boost::pool<> &node_pool)
+{
+  succs.clear();
+  const TilesNode15 *gp = n.get_parent();
+
+  const unsigned blank = n.get_state().get_blank();
+  const unsigned col = blank % 4;
+  const unsigned row = blank / 4;
+
+  const TileCost g = n.get_g();
+  const TileCost new_g = g + 1;
+
+  // move the blank up
+  for (unsigned i = 0; i < row; i += 1) {
+    const unsigned new_blank = col + 4 * i;
+    if (gp == NULL || gp->get_state().get_blank() != new_blank) {
+      TileArray new_tiles = n.get_state().get_tiles();
+      for(unsigned idx = blank; idx >= 4 * (i + 1); idx -= 4){
+        std::swap(new_tiles[idx], new_tiles[idx - 4]);
+      }
+
+      TilesNode15 *child_node = child(TilesState15(new_tiles), new_g, n, node_pool);
+      succs.push_back(child_node);
+    } /* end if */
+  } /* end for */
+
+  // move the blank down
+  for (unsigned i = row + 1; i < 4; i += 1) {
+    const unsigned new_blank = col + 4 * i;
+    if (gp == NULL || gp->get_state().get_blank() != new_blank) {
+      TileArray new_tiles = n.get_state().get_tiles();
+      for(unsigned idx = blank + 4; idx <= new_blank; idx += 4){
+        std::swap(new_tiles[idx], new_tiles[idx - 4]);
+      }
+
+      TilesNode15 *child_node = child(TilesState15(new_tiles), new_g, n, node_pool);
+      succs.push_back(child_node);
+    } /* end if */
+  } /* end for */
+
+  // move the blank left
+  for (unsigned j = 0; j < 4; j += 1) {
+    const unsigned new_blank = row * 4 + j;
+    if (gp == NULL || gp->get_state().get_blank() != new_blank) {
+      TileArray new_tiles = n.get_state().get_tiles();
+      for(unsigned idx = blank; idx > new_blank; idx -= 1){
+        std::swap(new_tiles[idx], new_tiles[idx - 1]);
+      }
+
+      TilesNode15 *child_node = child(TilesState15(new_tiles), new_g, n, node_pool);
+      succs.push_back(child_node);
+    } /* end if */
+  } /* end for */
+
+  // move the blank right
+  for (unsigned j = col + 1; j < 4; j += 1) {
+    const unsigned new_blank = row * 4 + j;
+    if (gp == NULL || gp->get_state().get_blank() != new_blank) {
+      TileArray new_tiles = n.get_state().get_tiles();
+      for(unsigned idx = blank; idx < new_blank; idx += 1){
+        std::swap(new_tiles[idx], new_tiles[idx + 1]);
+      }
+
+      TilesNode15 *child_node = child(TilesState15(new_tiles), new_g, n, node_pool);
+      succs.push_back(child_node);
+    } /* end if */
+  } /* end for */
+}
+
+
+void TilesInstance15::compute_macro_predecessors(const TilesNode15 &n,
+                                                 std::vector<TilesNode15 *> &succs,
+                                                 boost::pool<> &node_pool)
+{
+  compute_macro_successors(n, succs, node_pool);
+}
+
+
 
 const TilesState15 & TilesInstance15::get_start_state() const
 {

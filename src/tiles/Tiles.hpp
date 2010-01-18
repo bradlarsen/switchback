@@ -64,6 +64,17 @@ public:
                             std::vector<TilesNode15 *> &succs,
                             boost::pool<> &node_pool);
 
+
+
+  void compute_macro_successors(const TilesNode15 &n,
+                                std::vector<TilesNode15 *> &succs,
+                                boost::pool<> &node_pool);
+
+  void compute_macro_predecessors(const TilesNode15 &n,
+                                  std::vector<TilesNode15 *> &succs,
+                                  boost::pool<> &node_pool);
+
+
   /**
    * Computes and assigned the heuristic for the given child node.
    */

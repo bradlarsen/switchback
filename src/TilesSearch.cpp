@@ -9,6 +9,7 @@
 #include "search/hastar/HAStar.hpp"
 #include "search/switchback/Switchback.hpp"
 #include "tiles/Tiles.hpp"
+#include "tiles/MacroTiles.hpp"
 
 using namespace std;
 using namespace boost;
@@ -17,6 +18,10 @@ using namespace boost;
 typedef AStar<TilesInstance15, TilesNode15> TilesAStar;
 typedef HAStar<TilesInstance15, TilesNode15> TilesHAStar;
 typedef Switchback<TilesInstance15, TilesNode15> TilesSwitchback;
+
+typedef AStar<MacroTilesInstance15, TilesNode15> MacroTilesAStar;
+typedef HAStar<MacroTilesInstance15, TilesNode15> MacroTilesHAStar;
+typedef Switchback<MacroTilesInstance15, TilesNode15> MacroTilesSwitchback;
 
 
 void print_build_info(ostream &o)
@@ -98,9 +103,10 @@ void print_size_info(ostream &o)
 
 void print_usage(ostream &o, const char *prog_name)
 {
-  o << "usage: " << prog_name << " ALGORITHM [FILE]" << endl
+  o << "usage: " << prog_name << " DOMAIN ALGORITHM [FILE]" << endl
     << "where" << endl
-    << "  ALGORITHM is one of {astar, hastar, switchback}" << endl
+    << "  DOMAIN is one of {tiles, macro_tiles}" << endl
+    << "  ALGORITHM is one of {astar, hastar, switchback, hidastar}" << endl
     << "  FILE is the optional instance file to read from" << endl
     << endl
     << "If no file is specified, the instance is read from stdin." << endl;
@@ -115,9 +121,41 @@ void print_usage(ostream &o, const char *prog_name)
 }
 
 
+TilesInstance15 * get_tiles_instance(int argc, char *argv[])
+{
+  TilesInstance15 *instance;
+  if (argc == 4) {
+    ifstream infile(argv[3]);
+    instance = readTilesInstance15(infile);
+  }
+  else {
+    instance = readTilesInstance15(cin);
+  }
+
+  if (instance == NULL) {
+    cerr << "error reading instance!" << endl;
+    exit(1);
+  }
+
+  cout << "######## The Instance ########" << endl;
+  cout << *instance << endl;
+  cout << endl;
+
+  return instance;
+}
+
+
+MacroTilesInstance15 * get_macro_tiles_instance(int argc, char *argv[])
+{
+  return new MacroTilesInstance15(get_tiles_instance(argc, argv));
+}
+
+
 template <class Searcher>
 void search(Searcher &searcher)
 {
+  cout << "######## Search Results ########" << endl;
+
   timer search_timer;
   searcher.search();
 
@@ -145,45 +183,65 @@ void search(Searcher &searcher)
 
 int main(int argc, char * argv[])
 {
-  if (argc < 2 || argc > 3) {
+  if (argc < 3 || argc > 4) {
     print_usage(cerr, argv[0]);
     return 1;
   }
 
-  TilesInstance15 *instance;
-  if (argc == 3) {
-    ifstream infile(argv[2]);
-    instance = readTilesInstance15(infile);
-  }
-  else {
-    instance = readTilesInstance15(cin);
-  }
+  const string domain_string(argv[1]);
+  const string alg_string(argv[2]);
 
-  if (instance == NULL) {
-    cerr << "error reading instance!" << endl;
-    return 1;
-  }
+  const bool is_tiles = domain_string == "tiles";
+  const bool is_macro_tiles = domain_string == "macro_tiles";
 
-  cout << "######## The Instance ########" << endl;
-  cout << *instance << endl;
-  cout << endl;
-
-  cout << "######## Search Results ########" << endl;
-
-  const string alg_string(argv[1]);
-  if (alg_string == "astar") {
+  const bool is_astar = alg_string == "astar";
+  const bool is_hastar = alg_string == "hastar";
+  const bool is_hidastar = alg_string == "hidastar";
+  const bool is_switchback = alg_string == "switchback";
+  
+  if (is_tiles && is_astar) {
+    TilesInstance15 *instance = get_tiles_instance(argc, argv);
     TilesAStar &astar = *new TilesAStar(*instance);
     search(astar);
   }
-  else if (alg_string == "hastar") {
+  else if (is_tiles && is_hastar) {
+    TilesInstance15 *instance = get_tiles_instance(argc, argv);
     TilesHAStar &hastar = *new TilesHAStar(*instance);
     search(hastar);
   }
-  else if (alg_string == "switchback") {
+  else if (is_tiles && is_hidastar) {
+    cerr << "HIDA* unimplemented" << endl;
+    exit(1);
+  }
+  else if (is_tiles && is_switchback) {
+    TilesInstance15 *instance = get_tiles_instance(argc, argv);
     TilesSwitchback &switchback = *new TilesSwitchback(*instance);
     search(switchback);
   }
-  else {
+  else if (is_macro_tiles && is_astar) {
+    MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
+    MacroTilesAStar &astar = *new MacroTilesAStar(*instance);
+    search(astar);
+  }
+  else if (is_macro_tiles && is_hastar) {
+    MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
+    MacroTilesHAStar &hastar = *new MacroTilesHAStar(*instance);
+    search(hastar);
+  }
+  else if (is_macro_tiles && is_hidastar) {
+    cerr << "HIDA* unimplemented" << endl;
+  }
+  else if (is_macro_tiles && is_switchback) {
+    MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
+    MacroTilesSwitchback &switchback = *new MacroTilesSwitchback(*instance);
+    search(switchback);
+  }
+  else if (!is_tiles && !is_macro_tiles) {
+    cerr << "error: invalid domain specified" << endl;
+    print_usage(cerr, argv[0]);
+    return 1;
+  }
+  else if (!is_astar && !is_hastar && !is_hidastar && !is_switchback) {
     cerr << "error: invalid algorithm specified" << endl;
     print_usage(cerr, argv[0]);
     return 1;
