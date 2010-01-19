@@ -11,9 +11,9 @@ TIME_LIMIT=1200  # 20 minutes
 TILES_DIR="${HOME}/hg/switchback/testdata/korf100"
 SEARCH="${HOME}/hg/switchback/build/spacerelease/search"
 
-LOG_DIR="${HOME}/hg/switchback/big_run_log"
+LOG_DIR="${HOME}/hg/switchback/run_log_hastar_macro_tiles"
 
-ALGORITHMS="switchback hidastar hastar"
+ALGORITHMS="hastar"
 
 
 get_run_info ()
@@ -83,22 +83,22 @@ for algorithm in $ALGORITHMS; do
     done
 done
 
-for algorithm in $ALGORITHMS; do
-    for instance in `seq 1 100`; do
-        (
-            echo "########################################"
-            echo "# Running $algorithm on Korf #$instance"
-            echo "########################################"
-            
-            echo "attempting to set time limit to $TIME_LIMIT"
-            ulimit -t $TIME_LIMIT
-            echo "attempting to set memory limit to $MEM_LIMIT"
-            ulimit -v $MEM_LIMIT
-            echo "showtime!"
-
-            run_korf_instance $algorithm $instance
-        )
-    done
-done
+#for algorithm in $ALGORITHMS; do
+#    for instance in `seq 1 100`; do
+#        (
+#            echo "########################################"
+#            echo "# Running $algorithm on Korf #$instance"
+#            echo "########################################"
+#            
+#            echo "attempting to set time limit to $TIME_LIMIT"
+#            ulimit -t $TIME_LIMIT
+#            echo "attempting to set memory limit to $MEM_LIMIT"
+#            ulimit -v $MEM_LIMIT
+#            echo "showtime!"
+#
+#            run_korf_instance $algorithm $instance
+#        )
+#    done
+#done
 
 echo "stop time: `date`" >> "$LOG_DIR/run_info.log"
