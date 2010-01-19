@@ -302,6 +302,7 @@ private:
   {
     for (unsigned level = 0; level <= Domain::num_abstraction_levels; level += 1) {
       num_generated[level] += 1;
+      num_generated_on_first_search_at_level[level] += 1;
       State start = level % 2 == 0
                       ? domain.get_start_state()
                       : domain.get_goal_state();
