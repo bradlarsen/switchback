@@ -26,8 +26,7 @@ private:
     > AbstractionOrder;
 
 public:
-  TilesInstance15 (const TilesState15 &start, const TilesState15 &goal,
-		   const Tile glued = 0);
+  TilesInstance15 (const TilesState15 &start, const TilesState15 &goal);
 
   void print(std::ostream &o) const;
 
@@ -76,6 +75,10 @@ public:
                                   boost::pool<> &node_pool);
 
 
+  void compute_glued_successors(const TilesNode15 &n,
+				std::vector<TilesNode15 *> &succs,
+				Tile glued,
+				boost::pool<> &node_pool);
   /**
    * Computes and assigned the heuristic for the given child node.
    */
@@ -96,6 +99,8 @@ public:
 
 
 private:
+  void dump_abstraction(void);
+
   TilesNode15 * child(const TilesState15 &new_state,
                       TileCost new_g,
                       const TilesNode15 &parent,
@@ -118,12 +123,8 @@ private:
   const TilesState15 start;
   const TilesState15 goal;
 
-  // The tile number that is glued to the board (can't be moved), or
-  // zero if no tiles are glued.
-  const Tile glued;
-
   const ManhattanDist15 md_heur;
-  const AbstractionOrder abstraction_order;
+  AbstractionOrder abstraction_order;
 };
 
 
