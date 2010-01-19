@@ -245,6 +245,12 @@ public:
     dump_open_sizes(o);
     dump_closed_sizes(o);
 
+    o << "nodes expanded/generated per level:" << std::endl;
+    for (unsigned level = 0; level < hierarchy_height; level += 1) {
+      o << "  " << level << ": " << num_expanded[level]
+        << " / " << num_generated[level] << std::endl;
+    }
+
     dump_cache_size(o);
     dump_cache_information(o);
   }

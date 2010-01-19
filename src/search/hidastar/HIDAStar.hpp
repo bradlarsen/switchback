@@ -223,6 +223,12 @@ public:
       o << "  " << level << ": " << num_iterations[level] << std::endl;
     }
 
+    o << "nodes expanded/generated per level:" << std::endl;
+    for (unsigned level = 0; level < hierarchy_height; level += 1) {
+      o << "  " << level << ": " << num_expanded[level]
+        << " / " << num_generated[level] << std::endl;
+    }
+
     dump_cache_size(o);
     dump_cache_information(o);
   }
@@ -346,7 +352,7 @@ private:
         CacheConstIterator cache_it = cache.find(succ->get_state());
         bool is_exact_cost = cache_it != cache.end() && cache_it->second.second;
         if (succ->get_f() == bound && is_exact_cost) {
-          // std::cerr << "optimal path cache hit at level " << level << "!" << std::endl;
+          num_generated[level] += 1;
           assert(level > 0);
           Node *synthesized_goal = new (node_pool[level]->malloc())
             Node(abstract_goals[level],

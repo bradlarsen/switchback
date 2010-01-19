@@ -58,6 +58,10 @@ private:
   boost::array<unsigned, hierarchy_height> num_expanded;
   boost::array<unsigned, hierarchy_height> num_generated;
 
+  boost::array<unsigned, hierarchy_height> num_expanded_on_first_search_at_level;
+  boost::array<unsigned, hierarchy_height> num_generated_on_first_search_at_level;
+  boost::array<unsigned, hierarchy_height> num_searches;
+
   boost::array<unsigned, hierarchy_height> cache_lookups;
   boost::array<unsigned, hierarchy_height> cache_hits;
 
@@ -76,6 +80,9 @@ public:
     , domain(domain)
     , num_expanded()
     , num_generated()
+    , num_expanded_on_first_search_at_level()
+    , num_generated_on_first_search_at_level()
+    , num_searches()
     , cache_lookups()
     , cache_hits()
     , open()
@@ -85,6 +92,8 @@ public:
   {
     num_expanded.assign(0);
     num_generated.assign(0);
+    num_expanded_on_first_search_at_level.assign(0);
+    num_generated_on_first_search_at_level.assign(0);
     cache_lookups.assign(0);
     cache_hits.assign(0);
     initialize();
@@ -148,10 +157,17 @@ public:
 
     o << "final statistics:" << std::endl;
 
+    o << "nodes expanded/generated per level:" << std::endl;
+    for (unsigned level = 0; level < hierarchy_height; level += 1) {
+      o << "  " << level << ": " << num_expanded[level]
+        << " / " << num_generated[level] << std::endl;
+    }
+
     dump_open_sizes(o);
     dump_closed_sizes(o);
 
     dump_cache_information(o);
+    dump_first_searches_information(o);
   }
 
 
@@ -198,6 +214,8 @@ private:
   {
     assert(domain.is_valid_level(level));
 
+    num_searches[level] += 1;
+
     // Dummy goal node, for hash table lookup.
     Node goal_node(goal_state, 0, 0);
     ClosedIterator closed_it = closed.find(&goal_node);
@@ -233,6 +251,11 @@ private:
         domain.compute_predecessors(*n, children, node_pool);
       num_expanded[level] += 1;
       num_generated[level] += children.size();
+
+      if (num_searches[level] == 1) {
+        num_expanded_on_first_search_at_level[level] += 1;
+        num_generated_on_first_search_at_level[level] += children.size();
+      }
       
       for (unsigned child_idx = 0; child_idx < children.size(); child_idx += 1) {
         process_child(level, children[child_idx]);
@@ -317,6 +340,16 @@ private:
       o << "  " << level << ": "
         << cache_lookups[level] << " lookups, "
         << cache_hits[level] << " hits (" << hit_ratio << ")" << std::endl;
+    }
+  }
+
+
+  void dump_first_searches_information(std::ostream &o) const
+  {
+    o << "nodes expanded/generated during first search:" << std::endl;
+    for (unsigned level = 0; level < hierarchy_height; level += 1) {
+      o << "  " << level << ": " << num_expanded_on_first_search_at_level[level]
+        << " / " << num_generated_on_first_search_at_level[level] << std::endl;
     }
   }
 };
