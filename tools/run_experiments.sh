@@ -6,14 +6,14 @@ set -e # exit on simple errors (?)
 MEM_LIMIT=49283072  # 47 GB
 #MEM_LIMIT=6291456  # 6 GB
 
-TIME_LIMIT=900  # 15 minutes
+TIME_LIMIT=1200  # 20 minutes
 
 TILES_DIR="${HOME}/hg/switchback/testdata/korf100"
 SEARCH="${HOME}/hg/switchback/build/spacerelease/search"
 
-LOG_DIR="${HOME}/hg/switchback/run_log_switchback_astar_macro_tiles"
+LOG_DIR="${HOME}/hg/switchback/big_run_log"
 
-ALGORITHMS="switchback astar"
+ALGORITHMS="switchback hidastar hastar"
 
 
 get_run_info ()
