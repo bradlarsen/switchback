@@ -90,7 +90,7 @@ public:
       num_nodes += 1;
       parent_ptr = parent_ptr->get_parent();
     }
-    return num_nodes; 
+    return num_nodes;
   }
 
   /**
@@ -141,6 +141,11 @@ template <
   >
 std::ostream & operator <<(std::ostream &o, const Node<State, Cost> &n)
 {
+  /* This will print the solution path.
+  if (n.get_parent())
+    o << *n.get_parent();
+  */
+
   o << n.get_state() << std::endl
     << "f: " << n.get_f() << std::endl
     << "g: " << n.get_g() << std::endl
