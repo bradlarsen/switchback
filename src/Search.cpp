@@ -111,7 +111,13 @@ void print_size_info(ostream &o)
     << "sizeof(TilesNode15) is " << sizeof(TilesNode15) << endl
     << "sizeof(size_t) is " << sizeof(size_t) << endl
     << "sizeof(BucketPriorityQueue<TilesNode15>::ItemPointer) is "
-    << sizeof(BucketPriorityQueue<TilesNode15>::ItemPointer) << endl;
+    << sizeof(BucketPriorityQueue<TilesNode15>::ItemPointer) << endl
+    << "sizeof(Pancake) is " << sizeof(Pancake) << endl
+    << "sizeof(PancakeCost) is " << sizeof(PancakeCost) << endl
+    << "sizeof(PancakeState14) is " << sizeof(PancakeState14) << endl
+    << "sizeof(PancakeNode14) is " << sizeof(PancakeNode14) << endl
+    << "sizeof(BucketPriorityQueue<PancakeNode14>::ItemPointer) is "
+    << sizeof(BucketPriorityQueue<PancakeNode14>::ItemPointer) << endl;
 }
 
 
