@@ -6,9 +6,11 @@
 
 
 TilesInstance15::TilesInstance15 (const TilesState15 &start,
-                                  const TilesState15 &goal)
+                                  const TilesState15 &goal,
+				  const Tile glued)
     : start(start)
     , goal(goal)
+    , glued(glued)
     , md_heur(goal)
     , abstraction_order(compute_abstraction_order(start, md_heur))
 {
@@ -50,6 +52,7 @@ TilesNode15 * TilesInstance15::child(const TilesState15 &new_state,
   assert(new_state != parent.get_state());
   assert(parent.get_parent() == NULL ||
          new_state != parent.get_parent()->get_state());
+  assert(parent.get_state().get_tiles()[new_state.get_blank()] != glued);
   TilesNode15 *child_node =
     new (node_pool.malloc()) TilesNode15(new_state,
                                          new_g,
@@ -85,6 +88,7 @@ void TilesInstance15::compute_successors(const TilesNode15 &n,
   succs.clear();
   const TilesNode15 *gp = n.get_parent();
 
+  const TilesState15 p = n.get_state();
   const unsigned blank = n.get_state().get_blank();
   const unsigned col = blank % 4;
   const unsigned row = blank / 4;
@@ -92,22 +96,26 @@ void TilesInstance15::compute_successors(const TilesNode15 &n,
   const TileCost g = n.get_g();
   const TileCost new_g = g + 1;
 
-  if (col > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 1)) {
+  if (col > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 1)
+      && (p.get_left_tile() != glued)) {
     const TilesState15 new_state = n.get_state().move_blank_left();
     TilesNode15 *child_node = child(new_state, new_g, n, node_pool);
     succs.push_back(child_node);
   }
-  if (col < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 1)) {
+  if (col < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 1)
+      && (p.get_right_tile() != glued)) {
     const TilesState15 new_state = n.get_state().move_blank_right();
     TilesNode15 *child_node = child(new_state, new_g, n, node_pool);
     succs.push_back(child_node);
   }
-  if (row > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 4)) {
+  if (row > 0 && (gp == NULL || gp->get_state().get_blank() != blank - 4)
+      && (p.get_up_tile() != glued)) {
     const TilesState15 new_state = n.get_state().move_blank_up();
     TilesNode15 *child_node = child(new_state, new_g, n, node_pool);
     succs.push_back(child_node);
   }
-  if (row < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 4)) {
+  if (row < 3 && (gp == NULL || gp->get_state().get_blank() != blank + 4)
+      && (p.get_down_tile() != glued)) {
     const TilesState15 new_state = n.get_state().move_blank_down();
     TilesNode15 *child_node = child(new_state, new_g, n, node_pool);
     succs.push_back(child_node);

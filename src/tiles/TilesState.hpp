@@ -105,6 +105,34 @@ public:
 #endif
   }
 
+  // Get the tile above the blank.
+  Tile get_up_tile() const
+  {
+    assert(get_blank_row() > 0);
+    return get_tile_rel_blank(-4);
+  }
+
+  // Get the tile below the blank.
+  Tile get_down_tile() const
+  {
+    assert(get_blank_row() < 3);
+    return get_tile_rel_blank(4);
+  }
+
+  // Get the tile left of the blank.
+  Tile get_left_tile() const
+  {
+    assert(get_blank_col() > 0);
+    return get_tile_rel_blank(-1);
+  }
+
+  // Get the tile right of the blank.
+  Tile get_right_tile() const
+  {
+    assert(get_blank_col() < 3);
+    return get_tile_rel_blank(1);
+  }
+
 
   TilesState15 move_blank_up() const
   {
@@ -134,6 +162,14 @@ public:
 
 
 private:
+  // Get the tile with the relative position to the blank.
+  inline Tile get_tile_rel_blank(TileIndex offset) const
+  {
+    TileIndex blank_index = get_blank();
+    TileIndex tile_index = blank_index + offset;
+    return tiles[tile_index];
+  }
+
   inline TilesState15 move_blank(TileIndex new_blank_offset) const
   {
     TileIndex blank_index = get_blank();
