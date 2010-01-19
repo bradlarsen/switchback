@@ -36,6 +36,16 @@ private:
 	static AbstractionOrder
 	simple_abstraction_order(const PancakeState14 &);
 
+	// Wrap a child state in a new node.
+	PancakeNode14 *child(const PancakeState14 &new_state,
+			     PancakeCost new_g,
+			     const PancakeNode14 &parent,
+			     boost::pool<> &node_pool);
+
+
+	// Test if pancake number [i] should be abstracted away.
+	bool should_abstract(unsigned int level, unsigned int i) const;
+
 public:
 
 	// Create a new pancake puzzle instance
@@ -67,6 +77,23 @@ public:
 	void compute_predecessors(const PancakeNode14 &n,
 				  std::vector<PancakeNode14*> &succs,
 				  boost::pool<> &node_pool);
+
+
+	// Compute/fill-in the heuristic value for a child node.
+	void compute_heuristic(PancakeNode14 &child) const;
+
+
+	// Access the start state.
+	const PancakeState14 &get_start_state() const;
+
+
+	// Access the goal state.
+	const PancakeState14 &get_goal_state() const;
+
+
+	// Get the abstract representation of a state at the given level.
+	PancakeState14 abstract(unsigned int level,
+				const PancakeState14 &s) const;
 
 private:
 	const PancakeState14 start;

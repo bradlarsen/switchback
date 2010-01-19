@@ -10,8 +10,10 @@
 #include "pancake/PancakeTypes.hpp"
 #include "pancake/PancakeState.hpp"
 #include "pancake/PancakeInstance.hpp"
+#include "pancake/PancakeNode.hpp"
 
 #include <iostream>
+#include <vector>
 
 #include <stdlib.h>
 

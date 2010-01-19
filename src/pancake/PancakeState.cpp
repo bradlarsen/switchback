@@ -72,7 +72,7 @@ std::size_t PancakeState14::get_hash_value(void) const
 }
 
 
-PancakeState14 PancakeState14::flip(unsigned int n)
+PancakeState14 PancakeState14::flip(unsigned int n) const
 {
 	boost::array<Pancake, 14> result;
 	unsigned int nswaps = n / 2;

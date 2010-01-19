@@ -53,7 +53,7 @@ public:
 	std::size_t get_hash_value(void) const;
 
 	// Flips the top [n] pancakes.
-	PancakeState14 flip(unsigned int n);
+	PancakeState14 flip(unsigned int n) const;
 
 	// Equality
 	bool operator ==(const PancakeState14 &other) const;
