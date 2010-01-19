@@ -75,11 +75,3 @@ exe search
       pancake/PancakeState.cpp
       Search.cpp
     ;
-
-exe cake_test
-    :
-      pancake/PancakeInstance.cpp
-      pancake/PancakeState.cpp
-      pancake/PancakeTest.cpp
-    ;
-
