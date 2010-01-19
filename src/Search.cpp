@@ -113,6 +113,8 @@ void print_size_info(ostream &o)
     << "sizeof(BucketPriorityQueue<TilesNode15>::ItemPointer) is "
     << sizeof(BucketPriorityQueue<TilesNode15>::ItemPointer) << endl
     << "sizeof(Pancake) is " << sizeof(Pancake) << endl
+    << "sizeof(boost::array<Pancake, 14>) is "
+    << sizeof(boost::array<Pancake,14>) << endl
     << "sizeof(PancakeCost) is " << sizeof(PancakeCost) << endl
     << "sizeof(PancakeState14) is " << sizeof(PancakeState14) << endl
     << "sizeof(PancakeNode14) is " << sizeof(PancakeNode14) << endl

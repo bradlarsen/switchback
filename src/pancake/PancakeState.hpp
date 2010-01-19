@@ -18,18 +18,8 @@
 
 #include "pancake/PancakeTypes.hpp"
 
-class PancakeState
-{
-public:
-	// How many pancakes are there?
-	virtual unsigned int size(void) const = 0;
 
-	// Get an iterator over the pancakes.
-	virtual std::vector<Pancake> get_cakes(void) const = 0;
-};
-
-
-class PancakeState14 : public PancakeState
+class PancakeState14
 {
 public:
 	// Get the canonical goal state.
@@ -80,7 +70,7 @@ private:
 };
 
 // Output a pancake state in a human-readable format.
-std::ostream & operator<< (std::ostream &out, const PancakeState &cakes);
+std::ostream & operator<< (std::ostream &out, const PancakeState14 &cakes);
 
 inline std::size_t hash_value(PancakeState14 const &s)
 {

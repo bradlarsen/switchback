@@ -13,6 +13,6 @@
 #include <boost/integer.hpp>
 
 typedef char Pancake;
-typedef unsigned int PancakeCost;
+typedef char PancakeCost;
 
 #endif /* !_PANCAKE_TYPE_H_ */

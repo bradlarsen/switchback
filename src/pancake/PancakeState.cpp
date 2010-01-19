@@ -119,7 +119,7 @@ bool PancakeState14::operator !=(const PancakeState14 &other) const
 }
 
 
-std::ostream & operator<< (std::ostream &out, const PancakeState &s)
+std::ostream & operator<< (std::ostream &out, const PancakeState14 &s)
 {
 	std::vector<Pancake> cakes = s.get_cakes();
 
