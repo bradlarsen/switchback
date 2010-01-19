@@ -322,7 +322,7 @@ int main(int argc, char * argv[])
   else if (is_pancake) {
     PancakeInstance14 *instance = get_pancake_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
-    // cout << *instance << endl << endl;
+    cout << *instance << endl << endl;
 
     if (is_astar) {
       PancakeAStar &astar = *new PancakeAStar(*instance);

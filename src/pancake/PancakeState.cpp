@@ -24,19 +24,48 @@ PancakeState14 PancakeState14::canonical_goal(void)
 
 // Read the pancake numbers from a file.
 // Return true on success and false on failure.
+//
+// This handles pancake input with cakes numbered 0-13 and 1-14.
 static bool readCakes14(std::istream &in, boost::array<Pancake, 14> &cakes)
 {
+	int min_cake = 15;
+	int max_cake = -2;
+	boost::array<bool, 14> seen;
+
 	for (unsigned int i = 0; i < cakes.size(); i += 1) {
-		unsigned int c;
+		int c;
 
 		in >> c;
-		if (c <= 0 || c > 14) {
+		if (c < 0 || c > 14) {
 			std::cout << "Cake " << c << " is out of bounds"
 				  << std::endl;
 			return false;
 		}
+		if (c < min_cake)
+			min_cake = c;
+		if (c > max_cake)
+			max_cake = c;
 
 		cakes[i] = c;
+	}
+
+	if ((min_cake == 0 && max_cake != 13)
+	    || (min_cake == 1 && max_cake != 14)) {
+		std::cerr << "Min and max cake numbers don't match"
+			  << std::endl;
+		return false;
+	}
+	for (unsigned int i = 0; i < cakes.size(); i += 1) {
+		// If the min cake number is 0, re-number 1-14.
+		if (min_cake == 0)
+			cakes[i] += 1;
+		seen[cakes[i] - 1] = true;
+	}
+	for (unsigned int i = 0; i < seen.size(); i += 1) {
+		if (!seen[i]) {
+			std::cerr << "Missing pancake " << i + 1 << std::endl;
+			return false;
+		}
 	}
 
 	return true;

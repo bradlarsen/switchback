@@ -17,6 +17,8 @@
 #include "pancake/PancakeState.hpp"
 #include "pancake/PancakeNode.hpp"
 
+#include <iostream>
+
 class PancakeInstance14 : boost::noncopyable
 {
 public:
@@ -104,10 +106,13 @@ public:
 		return level <= num_abstraction_levels
 			&& level >= 0;
 	}
+
 private:
 	const PancakeState14 start;
 	const PancakeState14 goal;
 	const AbstractionOrder abstraction_order;
 };
+
+std::ostream &operator<< (std::ostream &, const PancakeInstance14 &);
 
 #endif	// !_PANCAKE_H_

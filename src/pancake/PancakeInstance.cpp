@@ -163,3 +163,11 @@ PancakeState14 PancakeInstance14::abstract(unsigned int level,
 	return PancakeState14(new_cakes);
 
 }
+
+
+std::ostream &operator<< (std::ostream &out, const PancakeInstance14 &inst)
+{
+	out << "Start: " << inst.get_start_state() << std::endl;
+	out << "Goal: " << inst.get_goal_state() << std::endl;
+	return out;
+}
