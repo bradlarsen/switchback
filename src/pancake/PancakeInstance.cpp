@@ -96,7 +96,8 @@ void PancakeInstance14::compute_successors(const PancakeNode14 &node,
 	succs.clear();
 	for (unsigned int n = 2; n <= 14; n += 1) {
 		const PancakeState14 child_state = node.get_state().flip(n);
-		if (!(gp && gp->get_state() == child_state)) {
+		if ((!gp || gp->get_state() != child_state)
+		    && child_state != node.get_state()) {
 			PancakeNode14 *child_node = child(child_state,
 							  node.get_g() + 1,
 							  node,
@@ -153,7 +154,7 @@ PancakeState14 PancakeInstance14::abstract(unsigned int level,
 	boost::array<Pancake, 14> new_cakes;
 
 	for (unsigned int i = 0; i < cakes.size(); i += 1) {
-		if (should_abstract(level, cakes[i]))
+		if (cakes[i] == -1 || should_abstract(level, cakes[i]))
 			new_cakes[i] = -1;
 		else
 			new_cakes[i] = cakes[i];
