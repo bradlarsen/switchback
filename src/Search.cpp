@@ -9,6 +9,7 @@
 #include "search/astar/AStar.hpp"
 #include "search/hastar/HAStar.hpp"
 #include "search/hidastar/HIDAStar.hpp"
+#include "search/idastar/IDAStar.hpp"
 #include "search/switchback/Switchback.hpp"
 #include "tiles/Tiles.hpp"
 #include "tiles/MacroTiles.hpp"
@@ -19,11 +20,13 @@ using namespace boost;
 
 
 typedef AStar<TilesInstance15, TilesNode15> TilesAStar;
+typedef IDAStar<TilesInstance15, TilesNode15> TilesIDAStar;
 typedef HAStar<TilesInstance15, TilesNode15> TilesHAStar;
 typedef HIDAStar<TilesInstance15, TilesNode15> TilesHIDAStar;
 typedef Switchback<TilesInstance15, TilesNode15> TilesSwitchback;
 
 typedef AStar<MacroTilesInstance15, TilesNode15> MacroTilesAStar;
+typedef IDAStar<MacroTilesInstance15, TilesNode15> MacroTilesIDAStar;
 typedef HAStar<MacroTilesInstance15, TilesNode15> MacroTilesHAStar;
 typedef HIDAStar<MacroTilesInstance15, TilesNode15> MacroTilesHIDAStar;
 typedef Switchback<MacroTilesInstance15, TilesNode15> MacroTilesSwitchback;
@@ -32,6 +35,7 @@ typedef AStar<PancakeInstance14, PancakeNode14> PancakeAStar;
 typedef HAStar<PancakeInstance14, PancakeNode14> PancakeHAStar;
 typedef HIDAStar<PancakeInstance14, PancakeNode14> PancakeHIDAStar;
 typedef Switchback<PancakeInstance14, PancakeNode14> PancakeSwitchback;
+
 
 void print_build_info(ostream &o)
 {
@@ -115,7 +119,7 @@ void print_usage(ostream &o, const char *prog_name)
   o << "usage: " << prog_name << " DOMAIN ALGORITHM [FILE]" << endl
     << "where" << endl
     << "  DOMAIN is one of {tiles, macro_tiles, pancake}" << endl
-    << "  ALGORITHM is one of {astar, hastar, switchback, hidastar}" << endl
+    << "  ALGORITHM is one of {astar, hastar, idastar, hidastar, switchback}" << endl
     << "  FILE is the optional instance file to read from" << endl
     << endl
     << "If no file is specified, the instance is read from stdin." << endl;
@@ -148,6 +152,7 @@ TilesInstance15 * get_tiles_instance(int argc, char *argv[])
 
   return instance;
 }
+
 
 MacroTilesInstance15 * get_macro_tiles_instance(int argc, char *argv[])
 {
@@ -224,8 +229,12 @@ int main(int argc, char * argv[])
   const bool is_astar = alg_string == "astar";
   const bool is_hastar = alg_string == "hastar";
   const bool is_hidastar = alg_string == "hidastar";
+  const bool is_idastar = alg_string == "idastar";
   const bool is_switchback = alg_string == "switchback";
 
+  // ############################################################
+  // tiles domain
+  // ############################################################
   if (is_tiles && is_astar) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
@@ -247,6 +256,13 @@ int main(int argc, char * argv[])
     cout << *instance << endl << endl;
     search(hidastar);
   }
+  else if (is_tiles && is_idastar) {
+    TilesInstance15 *instance = get_tiles_instance(argc, argv);
+    TilesIDAStar &idastar = *new TilesIDAStar(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
+    search(idastar);
+  }
   else if (is_tiles && is_switchback) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
     TilesSwitchback &switchback = *new TilesSwitchback(*instance);
@@ -254,6 +270,10 @@ int main(int argc, char * argv[])
     cout << *instance << endl << endl;
     search(switchback);
   }
+
+  // ############################################################
+  // macro tiles domain
+  // ############################################################
   else if (is_macro_tiles && is_astar) {
     MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
     MacroTilesAStar &astar = *new MacroTilesAStar(*instance);
@@ -275,6 +295,13 @@ int main(int argc, char * argv[])
     cout << *instance << endl << endl;
     search(hidastar);
   }
+  else if (is_macro_tiles && is_idastar) {
+    MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
+    MacroTilesIDAStar &idastar = *new MacroTilesIDAStar(*instance);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
+    search(idastar);
+  }
   else if (is_macro_tiles && is_switchback) {
     MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
     MacroTilesSwitchback &switchback = *new MacroTilesSwitchback(*instance);
@@ -282,7 +309,11 @@ int main(int argc, char * argv[])
     cout << *instance << endl << endl;
     search(switchback);
   }
-  if (is_pancake && is_astar) {
+
+  // ############################################################
+  // macro tiles domain
+  // ############################################################
+  else if (is_pancake && is_astar) {
     PancakeInstance14 *instance = get_pancake_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
     /*
@@ -291,7 +322,7 @@ int main(int argc, char * argv[])
     PancakeAStar &astar = *new PancakeAStar(*instance);
     search(astar);
   }
-  if (is_pancake && is_hidastar) {
+  else if (is_pancake && is_hidastar) {
     PancakeInstance14 *instance = get_pancake_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
     /*
@@ -300,7 +331,7 @@ int main(int argc, char * argv[])
     PancakeHIDAStar &astar = *new PancakeHIDAStar(*instance);
     search(astar);
   }
-  if (is_pancake && is_switchback) {
+  else if (is_pancake && is_switchback) {
     PancakeInstance14 *instance = get_pancake_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
     /*
@@ -314,7 +345,7 @@ int main(int argc, char * argv[])
     print_usage(cerr, argv[0]);
     return 1;
   }
-  else if (!is_astar && !is_hastar && !is_hidastar && !is_switchback) {
+  else if (!is_astar && !is_hastar && !is_hidastar && !is_idastar && !is_switchback) {
     cerr << "error: invalid algorithm specified" << endl;
     print_usage(cerr, argv[0]);
     return 1;

@@ -37,10 +37,71 @@ private:
   typedef typename Cache::const_iterator CacheConstIterator;
 
 
+  struct BoundedResult
+  {
+    union Result
+    {
+      Cost cutoff;
+      Node *goal;
+    } result;
+
+    typedef enum {Cutoff, Goal, Failure} ResultType;
+
+    ResultType result_type;
+
+
+    BoundedResult(Cost cutoff)
+    {
+      result.cutoff = cutoff;
+      result_type = Cutoff;
+    }
+
+    BoundedResult(Node *goal)
+    {
+      assert(goal != NULL);
+      result.goal = goal;
+      result_type = Goal;
+    }
+
+    BoundedResult()
+    {
+      result_type = Failure;
+    }
+
+
+    bool is_failure() const
+    {
+      return result_type == Failure;
+    }
+
+    bool is_goal() const
+    {
+      return result_type == Goal;
+    }
+
+    bool is_cutoff() const
+    {
+      return result_type == Cutoff;
+    }
+
+    Node * get_goal() const
+    {
+      assert(is_goal());
+      return result.goal;
+    }
+
+    Cost get_cutoff() const
+    {
+      assert(is_cutoff());
+      return result.cutoff;
+    }
+  };
+
+
 private:
   const static unsigned hierarchy_height = Domain::num_abstraction_levels + 1;
 
-  const Node *goal;
+  Node goal;
   bool searched;
 
   Domain &domain;
@@ -52,29 +113,38 @@ private:
 
   Cache cache;
 
-  boost::pool<> node_pool;
+  // One node pool for each level of the hierarchy.
+  boost::array<boost::pool<> *, hierarchy_height> node_pool;
 
 
 public:
   HIDAStar(Domain &domain)
-    : goal(NULL)
+    : goal(domain.get_goal_state(), 0, 0)
     , searched(false)
     , domain(domain)
     , num_expanded()
     , num_generated()
     , abstract_goals()
     , cache()
-    , node_pool(sizeof(Node))
+    , node_pool()
   {
     num_expanded.assign(0);
     num_generated.assign(0);
-    for (unsigned level = 0; level < hierarchy_height; level += 1)
-      abstract_goals[level] = domain.abstract(level, domain.get_start_state());
+    for (unsigned level = 0; level < hierarchy_height; level += 1) {
+      abstract_goals[level] = domain.abstract(level, domain.get_goal_state());
+      node_pool[level] = new boost::pool<>(sizeof(Node));
+    }
+  }
+
+  ~HIDAStar()
+  {
+    for (unsigned i = 0; i < hierarchy_height; i += 1)
+      delete node_pool[i];
   }
 
   const Node * get_goal() const
   {
-    return goal;
+    return &goal;
   }
 
   const Domain & get_domain() const
@@ -117,37 +187,66 @@ public:
       return;
     searched = true;
 
-    Node start_node(domain.get_start_state(), 0, 0);
-    hidastar_search(0, start_node);
+    Node *start_node = new (node_pool[0]->malloc())
+      Node(domain.get_start_state(),
+           0,
+           0);
+
+    Node goal_node(domain.get_goal_state(), 0, 0);
+    hidastar_search(0, start_node, &goal_node);
+
+    goal = goal_node;
   }
 
 
 private:
-  Node * hidastar_search(const unsigned level, const Node &start_node)
+  // start_node should be const, but that didn't work out.
+  // goal_node is modified, if a goal is found.
+  // returns true if a goal was found.
+  bool hidastar_search(const unsigned level, Node *start_node, Node *goal_node)
   {
-    boost::optional<Node> goal_node;
-    Cost bound = heuristic(level, start_node);
+    assert(start_node != NULL);
+    assert(goal_node != NULL);
+    assert(start_node->num_nodes_to_start() == 1);
+    Cost bound = start_node->get_h();
+    bool failed = false;
+    bool goal_found = false;
 
-    bool more_to_examine(true);
-
-    while ( !goal && more_to_examine ) {
-      boost::optional<Cost> newbound =
-        cost_bounded_search(level,
-                            start_node,
-                            bound,
-                            goal_node);
-
-      if (newbound && newbound > bound) {
-        more_to_examine = true;
-        bound = *newbound;
+    while ( !goal_found && !failed ) {
+#ifdef OUTPUT_SEARCH_PROGRESS
+      if (level == 0) {
+        std::cerr << "hidastar_search at level " << level << std::endl;
+        std::cerr << "doing cost-bounded search with cutoff " << bound << std::endl;
+        std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
+                  << get_num_generated() << " total nodes generated" << std::endl;
       }
-      else
-        more_to_examine = false;
+#endif
+      BoundedResult res = cost_bounded_search(level, start_node, bound);
+
+      if (res.is_failure()) {
+        assert(!res.is_goal());
+        assert(!res.is_cutoff());
+        failed = true;
+      }
+      else if (res.is_goal()) {
+        assert(!res.is_cutoff());
+        assert(!res.is_failure());
+        goal_found = true;
+        *goal_node = *res.get_goal();
+      }
+      else if (res.is_cutoff()) {
+        assert(!res.is_goal());
+        assert(!res.is_failure());
+        bound = res.get_cutoff();
+      }
+      else {
+        assert(false);
+      }
     }
 
-    if (goal_node) {
-      cache_optimal_path(level, *goal_node);
-      return new (node_pool.malloc()) Node(*goal_node);
+    if (goal_found) {
+      cache_optimal_path(level, goal_node);
+      return true;
     }
     else {
       std::cerr << "no solution found at level " << level << "!" << std::endl;
@@ -157,104 +256,205 @@ private:
   }
 
   
-  boost::optional<Cost>
+  BoundedResult
   cost_bounded_search(const unsigned level,
-                      const Node &start_node,
-                      const Cost bound,
-                      boost::optional<Node> &goal_node)
+                      Node *start_node,
+                      const Cost bound)
   {
-    if (start_node.get_state() == abstract_goals[level]) {
-      assert(start_node.get_h() == 0);
-      goal_node = start_node;
-      return boost::none;
+    if (start_node->get_state() == abstract_goals[level]) {
+      BoundedResult res(start_node);
+      assert(res.is_goal());
+      return res;
     }
 
-    bool is_exact_cost(false);
-    boost::optional<Cost> newbound;
     std::vector<Node *> succs;
-    domain.compute_successors(start_node, succs, node_pool);
-    for (unsigned i = 0; i < succs.size(); i += 1) {
-      Node &succ = *succs[i];
+    domain.compute_successors(*start_node, succs, *node_pool[level]);
 
-      const Cost hval = heuristic(level, *succs[i]);
-      const Cost bound_minus_g = bound - succ.get_g();
-      const Cost pre_new_hval = std::max(bound_minus_g, hval);
-      
+    num_expanded[level] += 1;
+    num_generated[level] += succs.size();
+
+
+#ifdef OUTPUT_SEARCH_PROGRESS
+      if (get_num_expanded() % 1000000 == 0) {
+        std::cerr << "progress update:" << std::endl;
+        std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
+                  << get_num_generated() << " total nodes generated" << std::endl;
+        dump_cache_size(std::cerr);
+      }
+#endif
+
+
+    boost::optional<Cost> new_cutoff;
+    
+    for (unsigned i = 0; i < succs.size(); i += 1) {
+      Node *succ = succs[i];
+
+      assert(succ->num_nodes_to_start() == start_node->num_nodes_to_start() + 1u);
+
+      Cost hval = heuristic(level, succ);
+
       // P-g caching
-      CacheIterator cache_it = cache.find(succ.get_state());
+      const Cost p_minus_g = bound >= succ->get_g() ? bound - succ->get_g() : 0;
+      hval = std::max(hval, p_minus_g);
+      CacheIterator cache_it = cache.find(succ->get_state());
       if (cache_it != cache.end()) {
-        const Cost new_hval = std::max(cache_it->second.first, pre_new_hval);
-        cache_it->second.first = new_hval;
-        succ.set_h(new_hval);
-        is_exact_cost = cache_it->second.second;
+        hval = std::max(hval, cache_it->second.first);
+        cache_it->second.first = hval;
       }
       else {
-        const Cost new_hval = pre_new_hval;
-        cache.insert(cache_it, std::make_pair(succ.get_state(),
-                                              std::make_pair(new_hval, false)));
+        cache[succ->get_state()] = std::make_pair(hval, false);
       }
+      // end P-g caching
+
+
+      succ->set_h(hval);
+
 
       // Optimal path caching
-      if (succ.get_f() == bound && is_exact_cost) {
-        Node synthesized_goal(abstract_goals[level],
-                              bound,
-                              0,
-                              &succ);
-        goal_node = synthesized_goal;
-        return boost::none;
+      {
+        CacheConstIterator cache_it = cache.find(succ->get_state());
+        bool is_exact_cost = cache_it != cache.end() && cache_it->second.second;
+        if (succ->get_f() == bound && is_exact_cost) {
+          // std::cerr << "optimal path cache hit at level " << level << "!" << std::endl;
+          assert(level > 0);
+          Node *synthesized_goal = new (node_pool[level]->malloc())
+            Node(abstract_goals[level],
+                 succ->get_g() + cache_it->second.first,
+                 0,
+                 succ);
+          BoundedResult res(synthesized_goal);
+          assert(res.is_goal());
+
+          // cleanup remaining successors
+          for (unsigned j = i + 1; j < succs.size(); j += 1)
+            node_pool[level]->free(succs[j]);
+
+          return res;
+        }
       }
+      // end Optimal path caching
+      
 
       // Normal IDA* stuff
-      if (succ.get_g() <= bound) {
-        boost::optional<Cost> maybe_new_bound =
-          cost_bounded_search(level,
-                              succ,
-                              bound,
-                              goal_node);
-        if (!newbound || (maybe_new_bound && *maybe_new_bound < *newbound))
-          newbound = maybe_new_bound;
+      if (succ->get_f() <= bound) {
+        BoundedResult res = cost_bounded_search(level, succ, bound);
+        if (res.is_goal()) {
+          assert(!res.is_cutoff());
+          assert(!res.is_failure());
+
+          // cleanup remaining successors
+          for (unsigned j = i + 1; j < succs.size(); j += 1)
+            node_pool[level]->free(succs[j]);
+
+          return res;
+        }
+        else if (res.is_cutoff()) {
+          assert(!res.is_goal());
+          assert(!res.is_failure());
+
+          if (new_cutoff)
+            new_cutoff = std::min(*new_cutoff, res.get_cutoff());
+          else
+            new_cutoff = res.get_cutoff();
+
+          node_pool[level]->free(succ);
+        }
       }
+      else {
+        if (new_cutoff)
+          new_cutoff = std::min(*new_cutoff, succ->get_f());
+        else
+          new_cutoff = succ->get_f();
+
+        node_pool[level]->free(succ);
+      }
+      // end Normal IDA* stuff
     } /* end for */
 
-    return newbound;
-  }
 
-
-  void cache_optimal_path(const unsigned level, const Node &goal_node)
-  {
-    assert(goal_node.get_state() == abstract_goals[level]);
-
-    const Node *parent = goal_node.get_parent();
-    while (parent != NULL) {
-      assert(goal_node.get_g() > parent->get_g());
-      const Cost distance = goal_node.get_g() - parent->get_g();
-
-      CacheIterator cache_it = cache.find(parent->get_state());
-      cache.insert(cache_it, std::make_pair(parent->get_state(),
-                                            std::make_pair(distance, true)));
+    if (new_cutoff) {
+      BoundedResult res(*new_cutoff);
+      assert(res.is_cutoff());
+      assert(!res.is_goal());
+      assert(!res.is_failure());
+      return res;
+    }
+    else {
+      BoundedResult res;
+      assert(res.is_failure());
+      assert(!res.is_cutoff());
+      assert(!res.is_failure());
+      return res;
     }
   }
 
 
-  Cost heuristic(const unsigned level, const Node &node)
+  void cache_optimal_path(const unsigned level, const Node *goal_node)
   {
-    if (node.get_state() == abstract_goals[level])
+    assert(goal_node != NULL);
+    assert(goal_node->get_state() == abstract_goals[level]);
+
+    const Node *parent = goal_node->get_parent();
+    while (parent != NULL) {
+      assert(goal_node->get_g() >= parent->get_g());
+      const Cost distance = goal_node->get_g() - parent->get_g();
+
+      cache[parent->get_state()].first = distance;
+      cache[parent->get_state()].second = distance;
+
+      parent = parent->get_parent();
+    }
+  }
+
+
+  Cost heuristic(const unsigned level, Node *node)
+  {
+    if (node->get_state() == abstract_goals[level])
       return 0;
 
     if (level == Domain::num_abstraction_levels)
-      return domain.get_epsilon(node.get_state());
+      return domain.get_epsilon(node->get_state());
 
     const unsigned next_level = level + 1;
-    Node node_abstraction = Node(domain.abstract(next_level, node.get_state()),
-                                 0,
-                                 0);
+    Node node_abstraction(domain.abstract(next_level, node->get_state()),
+                          0,
+                          0);
+
+    Cost hval;
     CacheConstIterator cache_it = cache.find(node_abstraction.get_state());
-    if (cache_it != cache.end() && cache_it->second.second) {
-      hidastar_search(next_level, node_abstraction);
+    if (cache_it == cache.end() || !cache_it->second.second) {
+      cache[node_abstraction.get_state()] = std::make_pair(0, true);
+      Node goal_abstraction(abstract_goals[next_level], 0, 0);
+      bool goal_found = hidastar_search(next_level, &node_abstraction, &goal_abstraction);
+      if (!goal_found) {
+        std::cerr << "infinite heuristic estimate!" << std::endl;
+        assert(false);
+      }
+      assert(cache.find(node_abstraction.get_state())->second.second);
+      assert(goal_abstraction.get_h() == 0);
+      assert(goal_abstraction.get_state() == abstract_goals[next_level]);
+      cache[node_abstraction.get_state()].first = goal_abstraction.get_g();
+      hval = goal_abstraction.get_g();
+
+      // TODO: I think this code leaks all the nodes along the goal
+      // path.  However, all attempts to put cleanup code for
+      // goal_abstraction's parents here has resulted in memory
+      // corruption...
+    }
+    else {
+      hval = cache_it->second.first;
     }
 
     assert(cache.find(node_abstraction.get_state()) != cache.end());
-    return cache.find(node_abstraction.get_state())->second.first;
+
+    node_pool[next_level]->purge_memory();
+    return hval;
+  }
+
+
+  void dump_cache_size(std::ostream &o) const
+  {
+    o << "cache size: " << cache.size() << std::endl;
   }
 };
 
