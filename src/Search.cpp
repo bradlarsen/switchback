@@ -34,6 +34,7 @@ typedef Switchback<MacroTilesInstance15, TilesNode15> MacroTilesSwitchback;
 typedef AStar<PancakeInstance14, PancakeNode14> PancakeAStar;
 typedef HAStar<PancakeInstance14, PancakeNode14> PancakeHAStar;
 typedef HIDAStar<PancakeInstance14, PancakeNode14> PancakeHIDAStar;
+typedef IDAStar<PancakeInstance14, PancakeNode14> PancakeIDAStar;
 typedef Switchback<PancakeInstance14, PancakeNode14> PancakeSwitchback;
 
 
@@ -188,16 +189,15 @@ void search(Searcher &searcher)
   timer search_timer;
   searcher.search();
 
-  const void *goal = searcher.get_goal();
+  const typename Searcher::Node *goal = searcher.get_goal();
   if (goal == NULL) {
     cout << "no solution found!" << endl;
   }
   else {
     cout << "found a solution:" << endl;
-/*
+
     cout << *goal << endl;
     assert(goal->num_nodes_to_start() == goal->get_g() + 1u);
-*/
   }
 
   const double seconds_elapsed = search_timer.elapsed();
@@ -311,35 +311,47 @@ int main(int argc, char * argv[])
   }
 
   // ############################################################
-  // macro tiles domain
+  // pancake puzzle domain
   // ############################################################
   else if (is_pancake && is_astar) {
     PancakeInstance14 *instance = get_pancake_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
-    /*
-    cout << *instance << endl << endl;
-    */
+    // cout << *instance << endl << endl;
     PancakeAStar &astar = *new PancakeAStar(*instance);
     search(astar);
+  }
+  else if (is_pancake && is_hastar) {
+    PancakeInstance14 *instance = get_pancake_instance(argc, argv);
+    cout << "######## The Instance ########" << endl;
+    // cout << *instance << endl << endl;
+    PancakeHAStar &hastar = *new PancakeHAStar(*instance);
+    search(hastar);
   }
   else if (is_pancake && is_hidastar) {
     PancakeInstance14 *instance = get_pancake_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
-    /*
-    cout << *instance << endl << endl;
-    */
-    PancakeHIDAStar &astar = *new PancakeHIDAStar(*instance);
-    search(astar);
+    // cout << *instance << endl << endl;
+    PancakeHIDAStar &hidastar = *new PancakeHIDAStar(*instance);
+    search(hidastar);
+  }
+  else if (is_pancake && is_idastar) {
+    PancakeInstance14 *instance = get_pancake_instance(argc, argv);
+    cout << "######## The Instance ########" << endl;
+    // cout << *instance << endl << endl;
+    PancakeIDAStar &idastar = *new PancakeIDAStar(*instance);
+    search(idastar);
   }
   else if (is_pancake && is_switchback) {
     PancakeInstance14 *instance = get_pancake_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
-    /*
-    cout << *instance << endl << endl;
-    */
-    PancakeSwitchback &astar = *new PancakeSwitchback(*instance);
-    search(astar);
+    // cout << *instance << endl << endl;
+    PancakeSwitchback &switchback = *new PancakeSwitchback(*instance);
+    search(switchback);
   }
+
+  // ############################################################
+  // Argument Error Checking
+  // ############################################################
   else if (!is_tiles && !is_macro_tiles && !is_pancake) {
     cerr << "error: invalid domain specified" << endl;
     print_usage(cerr, argv[0]);

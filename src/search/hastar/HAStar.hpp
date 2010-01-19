@@ -38,11 +38,16 @@
 
 
 template <
-  class Domain,
-  class Node
+  class DomainT,
+  class NodeT
   >
 class HAStar : boost::noncopyable
 {
+public:
+  typedef DomainT Domain;
+  typedef NodeT Node;
+
+
 private:
   typedef typename Node::Cost Cost;
   typedef typename Node::State State;

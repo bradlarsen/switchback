@@ -17,11 +17,16 @@
 
 
 template <
-  class Domain,
-  class Node
+  class DomainT,
+  class NodeT
   >
 class AStar : boost::noncopyable
 {
+public:
+  typedef DomainT Domain;
+  typedef NodeT Node;
+
+
 private:
   typedef BucketPriorityQueue<Node> Open;
   typedef boost::optional<typename Open::ItemPointer> MaybeItemPointer;
