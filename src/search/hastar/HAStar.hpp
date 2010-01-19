@@ -400,9 +400,18 @@ private:
       return;
     }
 
-    // FIXME: the following code is not right!?  The other
-    // hierarchical searches check the cache for the abstraction, not
-    // the given node.
+    // The following code checks the cache for the given node.  This
+    // is different from the other hierarchical heuristic search
+    // algorithms, which check the cache for an abstraction of the
+    // given node.
+    //
+    // I thought this was a bug when I first noticed it.  However,
+    // changing it to match the other algorithms breaks things
+    // horribly, causing HA* to not find solutions at all.  Hence, I
+    // leave things as they are.  This implementation seems to find
+    // correct solutions for 15-puzzles and Macro 15-puzzles.
+    //
+    // I don't understand my code.  :-(
     cache_lookups[level] += 1;
     CacheIterator cache_it = cache.find(start_state);
     if (cache_it != cache.end()) {
