@@ -114,6 +114,11 @@ private:
   boost::array<unsigned, hierarchy_height> num_expanded;
   boost::array<unsigned, hierarchy_height> num_generated;
 
+  boost::array<unsigned, hierarchy_height> num_iterations;
+
+  boost::array<unsigned, hierarchy_height> cache_lookups;
+  boost::array<unsigned, hierarchy_height> cache_hits;
+  
   boost::array<State, hierarchy_height> abstract_goals;
 
   Cache cache;
@@ -129,12 +134,18 @@ public:
     , domain(domain)
     , num_expanded()
     , num_generated()
+    , num_iterations()
+    , cache_lookups()
+    , cache_hits()
     , abstract_goals()
     , cache()
     , node_pool()
   {
     num_expanded.assign(0);
     num_generated.assign(0);
+    num_iterations.assign(0);
+    cache_lookups.assign(0);
+    cache_hits.assign(0);
     for (unsigned level = 0; level < hierarchy_height; level += 1) {
       abstract_goals[level] = domain.abstract(level, domain.get_goal_state());
       node_pool[level] = new boost::pool<>(sizeof(Node));
@@ -204,6 +215,19 @@ public:
   }
 
 
+  void output_statistics(std::ostream &o) const
+  {
+    assert(searched);
+    o << "iterations:" << std::endl;
+    for (unsigned level = 0; level < hierarchy_height; level += 1) {
+      o << "  " << level << ": " << num_iterations[level] << std::endl;
+    }
+
+    dump_cache_size(o);
+    dump_cache_information(o);
+  }
+
+
 private:
   // start_node should be const, but that didn't work out.
   // goal_node is modified, if a goal is found.
@@ -226,6 +250,8 @@ private:
                   << get_num_generated() << " total nodes generated" << std::endl;
       }
 #endif
+      num_iterations[level] += 1;
+
       BoundedResult res = cost_bounded_search(level, start_node, bound);
 
       if (res.is_failure()) {
@@ -425,9 +451,11 @@ private:
                           0,
                           0);
 
+    cache_lookups[level] += 1;
     Cost hval;
     CacheConstIterator cache_it = cache.find(node_abstraction.get_state());
     if (cache_it == cache.end() || !cache_it->second.second) {
+      cache_hits[level] += 1;
       cache[node_abstraction.get_state()] = std::make_pair(0, true);
       Node goal_abstraction(abstract_goals[next_level], 0, 0);
       bool goal_found = hidastar_search(next_level, &node_abstraction, &goal_abstraction);
@@ -460,6 +488,20 @@ private:
   void dump_cache_size(std::ostream &o) const
   {
     o << "cache size: " << cache.size() << std::endl;
+  }
+
+
+  void dump_cache_information(std::ostream &o) const
+  {
+    o << "cache information:" << std::endl;
+    for (unsigned level = 0; level < hierarchy_height; level += 1) {
+      const float hit_ratio =
+        static_cast<float>(cache_hits[level]) / cache_lookups[level];
+
+      o << "  " << level << ": "
+        << cache_lookups[level] << " lookups, "
+        << cache_hits[level] << " hits (" << hit_ratio << ")" << std::endl;
+    }
   }
 };
 

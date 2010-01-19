@@ -204,11 +204,13 @@ void search(Searcher &searcher)
   const unsigned exp_per_second = searcher.get_num_expanded() / seconds_elapsed;
   const unsigned gen_per_second = searcher.get_num_generated() / seconds_elapsed;
 
-  cout << searcher.get_num_expanded() << " expanded ("
+  cout << "expanded: " << searcher.get_num_expanded() << " ("
        << exp_per_second << "/s)" << endl
-       << searcher.get_num_generated() << " generated ("
+       << "generated: " << searcher.get_num_generated() << " ("
        << gen_per_second << "/s)" << endl
-       << search_timer.elapsed() << "s" << endl;
+       << "time: " << search_timer.elapsed() << " s" << endl;
+
+  searcher.output_statistics(cout);
 }
 
 

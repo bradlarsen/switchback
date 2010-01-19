@@ -2,6 +2,7 @@
 #define _A_STAR_HPP_
 
 
+#include <cassert>
 #include <vector>
 
 #include <boost/none.hpp>
@@ -136,10 +137,6 @@ public:
 
   const Node * get_goal() const
   {
-#ifndef NDEBUG
-    std::cerr << open.size() << " nodes in open at end of search" << std::endl
-              << closed.size() << " nodes in closed at end of search" << std::endl;
-#endif
     return goal;
   }
 
@@ -157,6 +154,14 @@ public:
   {
     return num_expanded;
   }
+
+
+  void output_statistics(std::ostream &o) const
+  {
+    o << open.size() << " nodes in open at end of search" << std::endl
+      << closed.size() << " nodes in closed at end of search" << std::endl;
+  }
+
 
 private:
   void process_child(Node *parent, Node *child)

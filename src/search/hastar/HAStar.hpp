@@ -21,6 +21,7 @@
 #endif
 
 
+#include <cassert>
 #include <functional>
 #include <iostream>
 #include <vector>
@@ -125,6 +126,9 @@ private:
   boost::array<unsigned, hierarchy_height> num_expanded;
   boost::array<unsigned, hierarchy_height> num_generated;
 
+  boost::array<unsigned, hierarchy_height> cache_lookups;
+  boost::array<unsigned, hierarchy_height> cache_hits;
+
   boost::array<Open, hierarchy_height> open;
   boost::array<Closed, hierarchy_height> closed;
 
@@ -155,6 +159,8 @@ public:
     , domain(domain)
     , num_expanded()
     , num_generated()
+    , cache_lookups()
+    , cache_hits()
     , open()
     , closed()
     , cache()
@@ -231,6 +237,19 @@ public:
   }
 
 
+  void output_statistics(std::ostream &o) const
+  {
+    assert(searched);
+
+    o << "final open/closed sizes:" << std::endl;
+    dump_open_sizes(o);
+    dump_closed_sizes(o);
+
+    dump_cache_size(o);
+    dump_cache_information(o);
+  }
+
+
 private:
   Node * search_at_level(const unsigned level, const State &start_state)
   {
@@ -283,8 +302,11 @@ private:
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
       {
+        // cache_lookups[level] += 1;
         CacheConstIterator cache_it = cache.find(n->get_state());
         if (cache_it != cache.end() && is_exact_cost(cache_it->second)) {
+          // cache_hits[level] += 1;
+          
           // Create a goal node to insert into the open list.
           // 
           // Note that the parent pointer for this goal node is
@@ -378,8 +400,13 @@ private:
       return;
     }
 
+    // FIXME: the following code is not right!?  The other
+    // hierarchical searches check the cache for the abstraction, not
+    // the given node.
+    cache_lookups[level] += 1;
     CacheIterator cache_it = cache.find(start_state);
     if (cache_it != cache.end()) {
+      cache_hits[level] += 1;
       start_node->set_h(get_cost(cache_it->second));
       return;
     }
@@ -537,6 +564,19 @@ private:
   void dump_cache_size(std::ostream &o) const
   {
     o << "cache size: " << cache.size() << std::endl;
+  }
+
+  void dump_cache_information(std::ostream &o) const
+  {
+    o << "cache information:" << std::endl;
+    for (unsigned level = 0; level < hierarchy_height; level += 1) {
+      const float hit_ratio =
+        static_cast<float>(cache_hits[level]) / cache_lookups[level];
+
+      o << "  " << level << ": "
+        << cache_lookups[level] << " lookups, "
+        << cache_hits[level] << " hits (" << hit_ratio << ")" << std::endl;
+    }
   }
 };
 

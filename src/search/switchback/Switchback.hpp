@@ -58,6 +58,9 @@ private:
   boost::array<unsigned, hierarchy_height> num_expanded;
   boost::array<unsigned, hierarchy_height> num_generated;
 
+  boost::array<unsigned, hierarchy_height> cache_lookups;
+  boost::array<unsigned, hierarchy_height> cache_hits;
+
   boost::array<Open, hierarchy_height> open;
   Closed closed;
 
@@ -73,6 +76,8 @@ public:
     , domain(domain)
     , num_expanded()
     , num_generated()
+    , cache_lookups()
+    , cache_hits()
     , open()
     , closed(INITIAL_CLOSED_SET_SIZE)
     , abstract_goals()
@@ -80,6 +85,8 @@ public:
   {
     num_expanded.assign(0);
     num_generated.assign(0);
+    cache_lookups.assign(0);
+    cache_hits.assign(0);
     initialize();
   }
 
@@ -98,10 +105,6 @@ public:
 
   const Node * get_goal() const
   {
-    std::cerr << "final open/closed sizes:" << std::endl;
-    dump_open_sizes(std::cerr);
-    dump_closed_sizes(std::cerr);
-
     return goal;
   }
 
@@ -139,6 +142,19 @@ public:
   }
 
 
+  void output_statistics(std::ostream &o) const
+  {
+    assert(searched);
+
+    o << "final statistics:" << std::endl;
+
+    dump_open_sizes(o);
+    dump_closed_sizes(o);
+
+    dump_cache_information(o);
+  }
+
+
 private:
   Cost heuristic(const unsigned level, const State &goal_state)
   {
@@ -158,8 +174,10 @@ private:
     const State abstract_goal_state = domain.abstract(next_level, goal_state);
     Node abstract_goal_node(abstract_goal_state, 0, 0);
 
+    cache_lookups[level] += 1;
     ClosedIterator closed_it = closed.find(&abstract_goal_node);
     if (closed_it != closed.end() && !closed_it->second) {
+      cache_hits[level] += 1;
       return std::max(closed_it->first->get_g(), epsilon);
     }
 
@@ -174,6 +192,7 @@ private:
 
     return std::max(result->get_g(), epsilon);
   }
+
   
   Node * resume_search(const unsigned level, const State &goal_state)
   {
@@ -183,8 +202,9 @@ private:
     Node goal_node(goal_state, 0, 0);
     ClosedIterator closed_it = closed.find(&goal_node);
 
-    if (closed_it != closed.end() &&!closed_it->second)
+    if (closed_it != closed.end() && !closed_it->second) {
       return closed_it->first;
+    }
 
     std::vector<Node *> children;
 
@@ -276,7 +296,7 @@ private:
 
   void dump_open_sizes(std::ostream &o) const
   {
-    o << "open sizes: " << std::endl;
+    o << "open sizes:" << std::endl;
     for (unsigned level = 0; level < hierarchy_height; level += 1)
       o << "  " << level << ": " << open[level].size() << std::endl;
   }
@@ -284,6 +304,20 @@ private:
   void dump_closed_sizes(std::ostream &o) const
   {
     o << "closed size: " << closed.size() << std::endl;
+  }
+
+
+  void dump_cache_information(std::ostream &o) const
+  {
+    o << "cache information:" << std::endl;
+    for (unsigned level = 0; level < hierarchy_height; level += 1) {
+      const float hit_ratio =
+        static_cast<float>(cache_hits[level]) / static_cast<float>(cache_lookups[level]);
+
+      o << "  " << level << ": "
+        << cache_lookups[level] << " lookups, "
+        << cache_hits[level] << " hits (" << hit_ratio << ")" << std::endl;
+    }
   }
 };
 

@@ -99,6 +99,7 @@ private:
 
   unsigned num_expanded;
   unsigned num_generated;
+  unsigned num_iterations;
 
   boost::pool<> node_pool;
 
@@ -110,6 +111,7 @@ public:
     , domain(domain)
     , num_expanded(0)
     , num_generated(0)
+    , num_iterations(0)
     , node_pool(sizeof(Node))
   {
   }
@@ -132,6 +134,13 @@ public:
   unsigned get_num_expanded() const
   {
     return num_expanded;
+  }
+
+
+  void output_statistics(std::ostream &o) const
+  {
+    assert(searched);
+    o << "iterations: " << num_iterations << std::endl;
   }
 
 
@@ -163,6 +172,7 @@ private:
     std::cerr << get_num_expanded() << " total nodes expanded" << std::endl
               << get_num_generated() << " total nodes generated" << std::endl;
 #endif
+      num_iterations += 1;
       BoundedResult res = cost_bounded_search(start_node, bound);
 
       if (res.is_failure()) {
