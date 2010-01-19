@@ -96,7 +96,7 @@ void PancakeInstance14::compute_successors(const PancakeNode14 &node,
 	succs.clear();
 	for (unsigned int n = 2; n <= 14; n += 1) {
 		const PancakeState14 child_state = node.get_state().flip(n);
-		if (!(gp->get_state() == child_state)) {
+		if (!(gp && gp->get_state() == child_state)) {
 			PancakeNode14 *child_node = child(child_state,
 							  node.get_g() + 1,
 							  node,
