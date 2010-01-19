@@ -113,7 +113,8 @@ private:
 
   Cache cache;
 
-  boost::pool<> node_pool;
+  // One node pool for each level of the hierarchy.
+  boost::array<boost::pool<> *, hierarchy_height> node_pool;
 
 
 public:
@@ -125,12 +126,20 @@ public:
     , num_generated()
     , abstract_goals()
     , cache()
-    , node_pool(sizeof(Node))
+    , node_pool()
   {
     num_expanded.assign(0);
     num_generated.assign(0);
-    for (unsigned level = 0; level < hierarchy_height; level += 1)
+    for (unsigned level = 0; level < hierarchy_height; level += 1) {
       abstract_goals[level] = domain.abstract(level, domain.get_goal_state());
+      node_pool[level] = new boost::pool<>(sizeof(Node));
+    }
+  }
+
+  ~HIDAStar()
+  {
+    for (unsigned i = 0; i < hierarchy_height; i += 1)
+      delete node_pool[i];
   }
 
   const Node * get_goal() const
@@ -178,7 +187,7 @@ public:
       return;
     searched = true;
 
-    Node *start_node = new (node_pool.malloc())
+    Node *start_node = new (node_pool[0]->malloc())
       Node(domain.get_start_state(),
            0,
            0);
@@ -259,7 +268,7 @@ private:
     }
 
     std::vector<Node *> succs;
-    domain.compute_successors(*start_node, succs, node_pool);
+    domain.compute_successors(*start_node, succs, *node_pool[level]);
 
     num_expanded[level] += 1;
     num_generated[level] += succs.size();
@@ -308,7 +317,7 @@ private:
         if (succ->get_f() == bound && is_exact_cost) {
           // std::cerr << "optimal path cache hit at level " << level << "!" << std::endl;
           assert(level > 0);
-          Node *synthesized_goal = new (node_pool.malloc())
+          Node *synthesized_goal = new (node_pool[level]->malloc())
             Node(abstract_goals[level],
                  succ->get_g() + cache_it->second.first,
                  0,
@@ -318,7 +327,7 @@ private:
 
           // cleanup remaining successors
           for (unsigned j = i + 1; j < succs.size(); j += 1)
-            node_pool.free(succs[j]);
+            node_pool[level]->free(succs[j]);
 
           return res;
         }
@@ -335,7 +344,7 @@ private:
 
           // cleanup remaining successors
           for (unsigned j = i + 1; j < succs.size(); j += 1)
-            node_pool.free(succs[j]);
+            node_pool[level]->free(succs[j]);
 
           return res;
         }
@@ -348,7 +357,7 @@ private:
           else
             new_cutoff = res.get_cutoff();
 
-          node_pool.free(succ);
+          node_pool[level]->free(succ);
         }
       }
       else {
@@ -357,7 +366,7 @@ private:
         else
           new_cutoff = succ->get_f();
 
-        node_pool.free(succ);
+        node_pool[level]->free(succ);
       }
       // end Normal IDA* stuff
     } /* end for */
@@ -438,6 +447,7 @@ private:
 
     assert(cache.find(node_abstraction.get_state()) != cache.end());
 
+    node_pool[next_level]->purge_memory();
     return hval;
   }
 
