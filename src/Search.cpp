@@ -233,134 +233,107 @@ int main(int argc, char * argv[])
   const bool is_switchback = alg_string == "switchback";
 
   // ############################################################
+  // Argument Error Checking
+  // ############################################################
+  if (!is_tiles && !is_macro_tiles && !is_pancake) {
+    cerr << "error: invalid domain specified" << endl;
+    print_usage(cerr, argv[0]);
+    exit (1);
+  }
+  if (!is_astar && !is_hastar && !is_hidastar && !is_idastar && !is_switchback) {
+    cerr << "error: invalid algorithm specified" << endl;
+    print_usage(cerr, argv[0]);
+    exit (1);
+  }
+
+  // ############################################################
   // tiles domain
   // ############################################################
-  if (is_tiles && is_astar) {
+  if (is_tiles) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
     cout << *instance << endl << endl;
-    TilesAStar &astar = *new TilesAStar(*instance);
-    search(astar);
-  }
-  else if (is_tiles && is_hastar) {
-    TilesInstance15 *instance = get_tiles_instance(argc, argv);
-    TilesHAStar &hastar = *new TilesHAStar(*instance);
-    cout << "######## The Instance ########" << endl;
-    cout << *instance << endl << endl;
-    search(hastar);
-  }
-  else if (is_tiles && is_hidastar) {
-    TilesInstance15 *instance = get_tiles_instance(argc, argv);
-    TilesHIDAStar &hidastar = *new TilesHIDAStar(*instance);
-    cout << "######## The Instance ########" << endl;
-    cout << *instance << endl << endl;
-    search(hidastar);
-  }
-  else if (is_tiles && is_idastar) {
-    TilesInstance15 *instance = get_tiles_instance(argc, argv);
-    TilesIDAStar &idastar = *new TilesIDAStar(*instance);
-    cout << "######## The Instance ########" << endl;
-    cout << *instance << endl << endl;
-    search(idastar);
-  }
-  else if (is_tiles && is_switchback) {
-    TilesInstance15 *instance = get_tiles_instance(argc, argv);
-    TilesSwitchback &switchback = *new TilesSwitchback(*instance);
-    cout << "######## The Instance ########" << endl;
-    cout << *instance << endl << endl;
-    search(switchback);
+
+    if (is_astar) {
+      TilesAStar &astar = *new TilesAStar(*instance);
+      search(astar);
+    }
+    else if (is_hastar) {
+      TilesHAStar &hastar = *new TilesHAStar(*instance);
+      search(hastar);
+    }
+    else if (is_hidastar) {
+      TilesHIDAStar &hidastar = *new TilesHIDAStar(*instance);
+      search(hidastar);
+    }
+    else if (is_idastar) {
+      TilesIDAStar &idastar = *new TilesIDAStar(*instance);
+      search(idastar);
+    }
+    else if (is_switchback) {
+      TilesSwitchback &switchback = *new TilesSwitchback(*instance);
+      search(switchback);
+    }
   }
 
   // ############################################################
   // macro tiles domain
   // ############################################################
-  else if (is_macro_tiles && is_astar) {
+  else if (is_macro_tiles) {
     MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
-    MacroTilesAStar &astar = *new MacroTilesAStar(*instance);
     cout << "######## The Instance ########" << endl;
     cout << *instance << endl << endl;
-    search(astar);
-  }
-  else if (is_macro_tiles && is_hastar) {
-    MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
-    MacroTilesHAStar &hastar = *new MacroTilesHAStar(*instance);
-    cout << "######## The Instance ########" << endl;
-    cout << *instance << endl << endl;
-    search(hastar);
-  }
-  else if (is_macro_tiles && is_hidastar) {
-    MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
-    MacroTilesHIDAStar &hidastar = *new MacroTilesHIDAStar(*instance);
-    cout << "######## The Instance ########" << endl;
-    cout << *instance << endl << endl;
-    search(hidastar);
-  }
-  else if (is_macro_tiles && is_idastar) {
-    MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
-    MacroTilesIDAStar &idastar = *new MacroTilesIDAStar(*instance);
-    cout << "######## The Instance ########" << endl;
-    cout << *instance << endl << endl;
-    search(idastar);
-  }
-  else if (is_macro_tiles && is_switchback) {
-    MacroTilesInstance15 *instance = get_macro_tiles_instance(argc, argv);
-    MacroTilesSwitchback &switchback = *new MacroTilesSwitchback(*instance);
-    cout << "######## The Instance ########" << endl;
-    cout << *instance << endl << endl;
-    search(switchback);
+
+    if (is_astar) {
+      MacroTilesAStar &astar = *new MacroTilesAStar(*instance);
+      search(astar);
+    }
+    else if (is_hastar) {
+      MacroTilesHAStar &hastar = *new MacroTilesHAStar(*instance);
+      search(hastar);
+    }
+    else if (is_hidastar) {
+      MacroTilesHIDAStar &hidastar = *new MacroTilesHIDAStar(*instance);
+      search(hidastar);
+    }
+    else if (is_idastar) {
+      MacroTilesIDAStar &idastar = *new MacroTilesIDAStar(*instance);
+      search(idastar);
+    }
+    else if (is_switchback) {
+      MacroTilesSwitchback &switchback = *new MacroTilesSwitchback(*instance);
+      search(switchback);
+    }
   }
 
   // ############################################################
   // pancake puzzle domain
   // ############################################################
-  else if (is_pancake && is_astar) {
+  else if (is_pancake) {
     PancakeInstance14 *instance = get_pancake_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
     // cout << *instance << endl << endl;
-    PancakeAStar &astar = *new PancakeAStar(*instance);
-    search(astar);
-  }
-  else if (is_pancake && is_hastar) {
-    PancakeInstance14 *instance = get_pancake_instance(argc, argv);
-    cout << "######## The Instance ########" << endl;
-    // cout << *instance << endl << endl;
-    PancakeHAStar &hastar = *new PancakeHAStar(*instance);
-    search(hastar);
-  }
-  else if (is_pancake && is_hidastar) {
-    PancakeInstance14 *instance = get_pancake_instance(argc, argv);
-    cout << "######## The Instance ########" << endl;
-    // cout << *instance << endl << endl;
-    PancakeHIDAStar &hidastar = *new PancakeHIDAStar(*instance);
-    search(hidastar);
-  }
-  else if (is_pancake && is_idastar) {
-    PancakeInstance14 *instance = get_pancake_instance(argc, argv);
-    cout << "######## The Instance ########" << endl;
-    // cout << *instance << endl << endl;
-    PancakeIDAStar &idastar = *new PancakeIDAStar(*instance);
-    search(idastar);
-  }
-  else if (is_pancake && is_switchback) {
-    PancakeInstance14 *instance = get_pancake_instance(argc, argv);
-    cout << "######## The Instance ########" << endl;
-    // cout << *instance << endl << endl;
-    PancakeSwitchback &switchback = *new PancakeSwitchback(*instance);
-    search(switchback);
-  }
 
-  // ############################################################
-  // Argument Error Checking
-  // ############################################################
-  else if (!is_tiles && !is_macro_tiles && !is_pancake) {
-    cerr << "error: invalid domain specified" << endl;
-    print_usage(cerr, argv[0]);
-    return 1;
-  }
-  else if (!is_astar && !is_hastar && !is_hidastar && !is_idastar && !is_switchback) {
-    cerr << "error: invalid algorithm specified" << endl;
-    print_usage(cerr, argv[0]);
-    return 1;
+    if (is_astar) {
+      PancakeAStar &astar = *new PancakeAStar(*instance);
+      search(astar);
+    }
+    else if (is_hastar) {
+      PancakeHAStar &hastar = *new PancakeHAStar(*instance);
+      search(hastar);
+    }
+    else if (is_hidastar) {
+      PancakeHIDAStar &hidastar = *new PancakeHIDAStar(*instance);
+      search(hidastar);
+    }
+    else if (is_idastar) {
+      PancakeIDAStar &idastar = *new PancakeIDAStar(*instance);
+      search(idastar);
+    }
+    else if (is_switchback) {
+      PancakeSwitchback &switchback = *new PancakeSwitchback(*instance);
+      search(switchback);
+    }
   }
 
   return 0;
