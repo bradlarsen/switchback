@@ -35,12 +35,16 @@ void TilesInstance15::print(std::ostream &o) const
   o << "Initial state:" << std::endl
     << start << std::endl;
 
+  if (glued != 0)
+    o << glued << " is glued" << std::endl;
+
   o << std::endl << "Goal state:" << std::endl
     << goal << std::endl;
 
   o << std::endl << "Initial Manhattan distance heuristic estimate: "
     << md_heur.compute_full(start)
     << std::endl;
+
 }
 
 
@@ -286,6 +290,7 @@ namespace
 TilesInstance15 * readTilesInstance15 (std::istream &in)
 {
   bool err = false;
+  unsigned int glued = 0;
 
   std::string inputWord;
 
@@ -348,11 +353,25 @@ TilesInstance15 * readTilesInstance15 (std::istream &in)
   }
 
   if (!err) {
+    in >> inputWord;
+    if (inputWord == "glued")
+      glued = 0;
+    else
+      in >> glued;
+
+    if (glued < 0 || glued > 15) {
+      std::cerr << glued << " is an invalid glued tile"
+		<< std::endl;
+      err = true;
+    }
+  }
+
+  if (!err) {
     TilesState15 start(startTiles);
     TilesState15 goal(goalTiles);
 
     if (start.valid() && goal.valid())
-      return new TilesInstance15(start, goal);
+      return new TilesInstance15(start, goal, glued);
   }
 
   return NULL;
