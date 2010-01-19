@@ -422,6 +422,10 @@ private:
     expanded_nodes[next_level].clear();
 #endif
 
+    // TODO: rather than calling purge_memory here, if closed at each
+    // level is itself allocated by a memory pool, the pool could be
+    // cleared, and the expensive closed[next_level].clear() operation
+    // could be avoided.  ~25% of the time is spent on that!
     node_pool[next_level]->purge_memory();
     closed[next_level].clear();
     assert(closed[next_level].empty());
