@@ -80,6 +80,9 @@ public:
 
 
 	// Compute/fill-in the heuristic value for a child node.
+	void compute_heuristic(const PancakeNode14 &parent,
+			       PancakeNode14 &child) const;
+
 	void compute_heuristic(PancakeNode14 &child) const;
 
 

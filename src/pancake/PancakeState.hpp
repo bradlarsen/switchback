@@ -76,4 +76,9 @@ private:
 // Output a pancake state in a human-readable format.
 std::ostream & operator<< (std::ostream &out, const PancakeState &cakes);
 
+inline std::size_t hash_value(PancakeState14 const &s)
+{
+  return s.get_hash_value();
+}
+
 #endif /* !_PANCAKE_STATE_H_ */

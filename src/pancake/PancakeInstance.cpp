@@ -115,6 +115,12 @@ PancakeInstance14::compute_predecessors(const PancakeNode14 &n,
 	compute_predecessors(n, succs, node_pool);
 }
 
+void PancakeInstance14::compute_heuristic(const PancakeNode14 &parent,
+					  PancakeNode14 &child) const
+{
+	compute_heuristic(child);
+}
+
 void PancakeInstance14::compute_heuristic(PancakeNode14 &child) const
 {
 	// Just use h(n) = 0 for now, I guess.

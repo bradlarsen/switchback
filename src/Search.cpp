@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 
+#include "search/Node.hpp"
 #include "search/BucketPriorityQueue.hpp"
 #include "search/Constants.hpp"
 #include "search/astar/AStar.hpp"
@@ -11,6 +12,7 @@
 #include "search/switchback/Switchback.hpp"
 #include "tiles/Tiles.hpp"
 #include "tiles/MacroTiles.hpp"
+#include "pancake/PancakeInstance.hpp"
 
 using namespace std;
 using namespace boost;
@@ -26,6 +28,10 @@ typedef HAStar<MacroTilesInstance15, TilesNode15> MacroTilesHAStar;
 typedef HIDAStar<MacroTilesInstance15, TilesNode15> MacroTilesHIDAStar;
 typedef Switchback<MacroTilesInstance15, TilesNode15> MacroTilesSwitchback;
 
+typedef AStar<PancakeInstance14, PancakeNode14> PancakeAStar;
+typedef HAStar<PancakeInstance14, PancakeNode14> PancakeHAStar;
+typedef HIDAStar<PancakeInstance14, PancakeNode14> PancakeHIDAStar;
+typedef Switchback<PancakeInstance14, PancakeNode14> PancakeSwitchback;
 
 void print_build_info(ostream &o)
 {
@@ -86,7 +92,7 @@ void print_build_info(ostream &o)
 #endif
 
   o << "INITIAL_CLOSED_SET_SIZE is " << INITIAL_CLOSED_SET_SIZE << endl;
-} 
+}
 
 
 void print_size_info(ostream &o)
@@ -108,7 +114,7 @@ void print_usage(ostream &o, const char *prog_name)
 {
   o << "usage: " << prog_name << " DOMAIN ALGORITHM [FILE]" << endl
     << "where" << endl
-    << "  DOMAIN is one of {tiles, macro_tiles}" << endl
+    << "  DOMAIN is one of {tiles, macro_tiles, pancake}" << endl
     << "  ALGORITHM is one of {astar, hastar, switchback, hidastar}" << endl
     << "  FILE is the optional instance file to read from" << endl
     << endl
@@ -143,10 +149,29 @@ TilesInstance15 * get_tiles_instance(int argc, char *argv[])
   return instance;
 }
 
-
 MacroTilesInstance15 * get_macro_tiles_instance(int argc, char *argv[])
 {
   return new MacroTilesInstance15(get_tiles_instance(argc, argv));
+}
+
+
+PancakeInstance14 * get_pancake_instance(int argc, char *argv[])
+{
+  PancakeInstance14 *instance;
+  if (argc == 4) {
+    ifstream infile(argv[3]);
+    instance = PancakeInstance14::read(infile);
+  }
+  else {
+    instance = PancakeInstance14::read(cin);
+  }
+
+  if (instance == NULL) {
+    cerr << "error reading instance!" << endl;
+    exit(1);
+  }
+
+  return instance;
 }
 
 
@@ -158,14 +183,16 @@ void search(Searcher &searcher)
   timer search_timer;
   searcher.search();
 
-  const TilesNode15 *goal = searcher.get_goal();
+  const void *goal = searcher.get_goal();
   if (goal == NULL) {
     cout << "no solution found!" << endl;
   }
   else {
     cout << "found a solution:" << endl;
+/*
     cout << *goal << endl;
     assert(goal->num_nodes_to_start() == goal->get_g() + 1u);
+*/
   }
 
   const double seconds_elapsed = search_timer.elapsed();
@@ -192,12 +219,13 @@ int main(int argc, char * argv[])
 
   const bool is_tiles = domain_string == "tiles";
   const bool is_macro_tiles = domain_string == "macro_tiles";
+  const bool is_pancake = domain_string == "pancake";
 
   const bool is_astar = alg_string == "astar";
   const bool is_hastar = alg_string == "hastar";
   const bool is_hidastar = alg_string == "hidastar";
   const bool is_switchback = alg_string == "switchback";
-  
+
   if (is_tiles && is_astar) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
     cout << "######## The Instance ########" << endl;
@@ -254,7 +282,16 @@ int main(int argc, char * argv[])
     cout << *instance << endl << endl;
     search(switchback);
   }
-  else if (!is_tiles && !is_macro_tiles) {
+  if (is_pancake && is_astar) {
+    PancakeInstance14 *instance = get_pancake_instance(argc, argv);
+    cout << "######## The Instance ########" << endl;
+    /*
+    cout << *instance << endl << endl;
+    */
+    PancakeAStar &astar = *new PancakeAStar(*instance);
+    search(astar);
+  }
+  else if (!is_tiles && !is_macro_tiles && !is_pancake) {
     cerr << "error: invalid domain specified" << endl;
     print_usage(cerr, argv[0]);
     return 1;
