@@ -26,7 +26,8 @@ private:
     > AbstractionOrder;
 
 public:
-  TilesInstance15 (const TilesState15 &start, const TilesState15 &goal);
+  TilesInstance15 (const TilesState15 &start, const TilesState15 &goal,
+		   const Tile glued = 0);
 
   void print(std::ostream &o) const;
 
@@ -93,7 +94,7 @@ public:
 
   static bool is_valid_level(const unsigned level);
 
-  
+
 private:
   TilesNode15 * child(const TilesState15 &new_state,
                       TileCost new_g,
@@ -116,6 +117,10 @@ private:
 private:
   const TilesState15 start;
   const TilesState15 goal;
+
+  // The tile number that is glued to the board (can't be moved), or
+  // zero if no tiles are glued.
+  const Tile glued;
 
   const ManhattanDist15 md_heur;
   const AbstractionOrder abstraction_order;
