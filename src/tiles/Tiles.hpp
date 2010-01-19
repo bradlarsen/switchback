@@ -18,7 +18,6 @@ class TilesInstance15 : boost::noncopyable
 public:
   static const unsigned num_abstraction_levels = 8;
 
-private:
   typedef std::pair<Tile, TileCost> TileCostPair;
   typedef boost::array<
     boost::array<bool, 17>,
@@ -98,6 +97,21 @@ public:
   static bool is_valid_level(const unsigned level);
 
 
+  // Set the abstraction order
+  void set_abstraction_order(const AbstractionOrder ord) {
+    abstraction_order = ord;
+  }
+
+  // Get the Manhattan distance heuristic.
+  const ManhattanDist15 get_md(void) {
+    return md_heur;
+  }
+
+  unsigned find_tile_index(const std::vector<TileCostPair> &pairs,
+                           Tile t) const;
+
+  bool should_abstract(unsigned level, Tile t) const;
+
 private:
   void dump_abstraction(void);
 
@@ -106,15 +120,10 @@ private:
                       const TilesNode15 &parent,
                       boost::pool<> &node_pool);
 
-  unsigned find_tile_index(const std::vector<TileCostPair> &pairs,
-                           Tile t) const;
-
   AbstractionOrder compute_abstraction_order(const TilesState15 &s,
                                              const ManhattanDist15 &md) const;
 
   void dump_abstraction_order(std::ostream &o) const;
-
-  bool should_abstract(unsigned level, Tile t) const;
 
   static bool valid_level(unsigned level);
 

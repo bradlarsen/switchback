@@ -30,19 +30,10 @@ public:
 private:
 	TilesInstance15 *tiles_instance;
 
-	// Computes the abstraction order
-/*
-  compute_abstraction_order(const TilesState15 &s,
-  const ManhattanDist15 &md,
-  Tile glued) const;
-*/
-
 public:
 	static const unsigned num_abstraction_levels = 7;
 
-	GluedTilesInstance15 (TilesInstance15 *tiles_instance,
-			      Tile glued)
-		: glued(glued), tiles_instance(tiles_instance) { }
+	GluedTilesInstance15 (TilesInstance15 *tiles_instance, Tile glued);
 
 	~GluedTilesInstance15 () {
 		delete tiles_instance;
@@ -101,6 +92,15 @@ public:
 	static bool is_valid_level(const unsigned level) {
 		return TilesInstance15::is_valid_level(level);
 	}
+
+private:
+	TilesInstance15::AbstractionOrder
+	compute_abstraction_order(const TilesState15 &s,
+				  const ManhattanDist15 &md,
+				  Tile glued);
+
+
+	void dump_abstraction_order(std::ostream &o) const;
 };
 
 inline std::ostream & operator << (std::ostream &o,
