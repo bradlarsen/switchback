@@ -59,6 +59,10 @@ PancakeState14 *PancakeState14::read(std::istream &in)
 // Members
 ////////////////////////////////////////////////////////////
 
+PancakeState14::PancakeState14(void)
+	: cakes(PancakeState14::canonical_goal().cakes) { }
+
+
 PancakeState14::PancakeState14(boost::array<Pancake, 14> cs) : cakes(cs) {}
 
 
@@ -98,13 +102,20 @@ PancakeState14 PancakeState14::flip(unsigned int n) const
 
 bool PancakeState14::operator ==(const PancakeState14 &other) const
 {
+/*
 	unsigned int n = cakes.size();
 
 	for (unsigned int i = 0; i <  n; i += 1)
 		if (cakes[i] != other.cakes[i])
 			return false;
+*/
 
-	return true;
+	return cakes == other.cakes;
+}
+
+bool PancakeState14::operator !=(const PancakeState14 &other) const
+{
+	return !(*this == other);
 }
 
 

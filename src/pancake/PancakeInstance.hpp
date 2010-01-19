@@ -98,6 +98,12 @@ public:
 	PancakeState14 abstract(unsigned int level,
 				const PancakeState14 &s) const;
 
+
+	// Is this level of abstraction valid?
+	static bool is_valid_level(const unsigned level) {
+		return level <= num_abstraction_levels
+			&& level >= 0;
+	}
 private:
 	const PancakeState14 start;
 	const PancakeState14 goal;

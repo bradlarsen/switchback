@@ -291,6 +291,24 @@ int main(int argc, char * argv[])
     PancakeAStar &astar = *new PancakeAStar(*instance);
     search(astar);
   }
+  if (is_pancake && is_hidastar) {
+    PancakeInstance14 *instance = get_pancake_instance(argc, argv);
+    cout << "######## The Instance ########" << endl;
+    /*
+    cout << *instance << endl << endl;
+    */
+    PancakeHIDAStar &astar = *new PancakeHIDAStar(*instance);
+    search(astar);
+  }
+  if (is_pancake && is_switchback) {
+    PancakeInstance14 *instance = get_pancake_instance(argc, argv);
+    cout << "######## The Instance ########" << endl;
+    /*
+    cout << *instance << endl << endl;
+    */
+    PancakeSwitchback &astar = *new PancakeSwitchback(*instance);
+    search(astar);
+  }
   else if (!is_tiles && !is_macro_tiles && !is_pancake) {
     cerr << "error: invalid domain specified" << endl;
     print_usage(cerr, argv[0]);

@@ -38,6 +38,9 @@ public:
 	// Read a pancake state from the given stream.
 	static PancakeState14 *read(std::istream &i);
 
+	// An empty state.
+	PancakeState14();
+
 	// Make a new 14-pancake state from the given array.
 	PancakeState14(boost::array<Pancake, 14>);
 
@@ -57,6 +60,9 @@ public:
 
 	// Equality
 	bool operator ==(const PancakeState14 &other) const;
+
+	// Inequality
+	bool operator !=(const PancakeState14 &other) const;
 
 	// How many pancakes are there?
 	inline unsigned int size(void) const {

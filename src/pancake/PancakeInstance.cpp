@@ -112,7 +112,7 @@ PancakeInstance14::compute_predecessors(const PancakeNode14 &n,
 					std::vector<PancakeNode14*> &succs,
 					boost::pool<> &node_pool)
 {
-	compute_predecessors(n, succs, node_pool);
+	compute_successors(n, succs, node_pool);
 }
 
 void PancakeInstance14::compute_heuristic(const PancakeNode14 &parent,
@@ -130,7 +130,7 @@ void PancakeInstance14::compute_heuristic(PancakeNode14 &child) const
 bool
 PancakeInstance14::should_abstract(unsigned int level, unsigned int i) const
 {
-	return abstraction_order[level][i];
+	return abstraction_order[level][i - 1];
 }
 
 
