@@ -68,6 +68,10 @@ void print_build_info(ostream &o)
     << "disabled" << endl;
 #endif
 
+
+  o << endl;
+
+
   o << "Hierarchical A*'s H* caching is "
 #ifdef HIERARCHICAL_A_STAR_CACHE_H_STAR
     << "enabled" << endl;
@@ -89,12 +93,31 @@ void print_build_info(ostream &o)
     << "disabled" << endl;
 #endif
 
-  o << "NDEBUG is "
-#ifdef NDEBUG
+
+  o << endl;
+
+
+  o << "HIDA* Cycle Checking is "
+#ifdef HIDA_STAR_CYCLE_CHECKING
     << "enabled" << endl;
 #else
     << "disabled" << endl;
 #endif
+
+
+  o << endl;
+
+
+  o << "IDA* Cycle Checking is "
+#ifdef IDA_STAR_CYCLE_CHECKING
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
+
+
+  o << endl;
+
 
   o << "OUTPUT_SEARCH_PROGRESS is "
 #ifdef OUTPUT_SEARCH_PROGRESS
@@ -104,6 +127,17 @@ void print_build_info(ostream &o)
 #endif
 
   o << "INITIAL_CLOSED_SET_SIZE is " << INITIAL_CLOSED_SET_SIZE << endl;
+
+
+  o << endl;
+
+
+  o << "NDEBUG is "
+#ifdef NDEBUG
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
 }
 
 

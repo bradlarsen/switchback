@@ -15,6 +15,9 @@
 #include "util/PointerOps.hpp"
 
 
+#define HIDA_STAR_CYCLE_CHECKING
+
+
 template <
   class DomainT,
   class NodeT
@@ -326,6 +329,13 @@ private:
     for (unsigned i = 0; i < succs.size(); i += 1) {
       Node *succ = succs[i];
 
+#ifdef HIDA_STAR_CYCLE_CHECKING
+      if (start_node->is_descendent_of(succ)) {
+        node_pool[level]->free(succ);
+        continue;
+      }
+#endif
+      
       assert(succ->num_nodes_to_start() == start_node->num_nodes_to_start() + 1u);
 
       Cost hval = heuristic(level, succ);

@@ -14,6 +14,9 @@
 #include "util/PointerOps.hpp"
 
 
+#define IDA_STAR_CYCLE_CHECKING
+
+
 template <
   class DomainT,
   class NodeT
@@ -230,6 +233,14 @@ private:
     
     for (unsigned i = 0; i < succs.size(); i += 1) {
       Node *succ = succs[i];
+
+#ifdef IDA_STAR_CYCLE_CHECKING
+      if (start_node->is_descendent_of(succ)) {
+        node_pool.free(succ);
+        continue;
+      }
+#endif      
+
       domain.compute_heuristic(*start_node, *succ);
 
       if (succ->get_f() <= bound) {
