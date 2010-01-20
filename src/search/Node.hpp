@@ -93,6 +93,22 @@ public:
     return num_nodes;
   }
 
+
+  bool is_descendent_of(const Node<State, Cost> *node) const
+  {
+    const Node *p = this;
+
+    while (p != NULL) {
+      if (p->get_state() == node->get_state())
+        return true;
+
+      p = p->get_parent();
+    }
+
+    return false;
+  }
+
+
   /**
    * Compare nodes by f-value, breaking ties in favor of high g-value.
    */
