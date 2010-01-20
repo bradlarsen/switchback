@@ -209,7 +209,7 @@ void TilesInstance15::compute_macro_successors(const TilesNode15 &n,
   } /* end for */
 
   // move the blank left
-  for (unsigned j = 0; j < 4; j += 1) {
+  for (unsigned j = 0; j < col; j += 1) {
     const unsigned new_blank = row * 4 + j;
     if (gp == NULL || gp->get_state().get_blank() != new_blank) {
       TileArray new_tiles = n.get_state().get_tiles();
@@ -235,6 +235,8 @@ void TilesInstance15::compute_macro_successors(const TilesNode15 &n,
       succs.push_back(child_node);
     } /* end if */
   } /* end for */
+
+  assert(succs.size() <= 6);
 }
 
 
