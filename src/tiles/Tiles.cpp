@@ -237,6 +237,13 @@ void TilesInstance15::compute_macro_successors(const TilesNode15 &n,
   } /* end for */
 
   assert(succs.size() <= 6);
+#ifndef NDEBUG
+  if (gp != NULL) {
+    for (unsigned i = 0; i < succs.size(); i += 1) {
+      assert(succs[i]->get_state() != gp->get_state());
+    }
+  }
+#endif
 }
 
 
