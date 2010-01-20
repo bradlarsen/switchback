@@ -18,7 +18,6 @@ class TilesInstance15 : boost::noncopyable
 public:
   static const unsigned num_abstraction_levels = 8;
 
-private:
   typedef std::pair<Tile, TileCost> TileCostPair;
   typedef boost::array<
     boost::array<bool, 17>,
@@ -26,8 +25,7 @@ private:
     > AbstractionOrder;
 
 public:
-  TilesInstance15 (const TilesState15 &start, const TilesState15 &goal,
-		   const Tile glued = 0);
+  TilesInstance15 (const TilesState15 &start, const TilesState15 &goal);
 
   void print(std::ostream &o) const;
 
@@ -76,6 +74,10 @@ public:
                                   boost::pool<> &node_pool);
 
 
+  void compute_glued_successors(const TilesNode15 &n,
+				std::vector<TilesNode15 *> &succs,
+				Tile glued,
+				boost::pool<> &node_pool);
   /**
    * Computes and assigned the heuristic for the given child node.
    */
@@ -95,21 +97,33 @@ public:
   static bool is_valid_level(const unsigned level);
 
 
+  // Set the abstraction order
+  void set_abstraction_order(const AbstractionOrder ord) {
+    abstraction_order = ord;
+  }
+
+  // Get the Manhattan distance heuristic.
+  const ManhattanDist15 get_md(void) {
+    return md_heur;
+  }
+
+  unsigned find_tile_index(const std::vector<TileCostPair> &pairs,
+                           Tile t) const;
+
+  bool should_abstract(unsigned level, Tile t) const;
+
 private:
+  void dump_abstraction(void);
+
   TilesNode15 * child(const TilesState15 &new_state,
                       TileCost new_g,
                       const TilesNode15 &parent,
                       boost::pool<> &node_pool);
 
-  unsigned find_tile_index(const std::vector<TileCostPair> &pairs,
-                           Tile t) const;
-
   AbstractionOrder compute_abstraction_order(const TilesState15 &s,
                                              const ManhattanDist15 &md) const;
 
   void dump_abstraction_order(std::ostream &o) const;
-
-  bool should_abstract(unsigned level, Tile t) const;
 
   static bool valid_level(unsigned level);
 
@@ -118,12 +132,8 @@ private:
   const TilesState15 start;
   const TilesState15 goal;
 
-  // The tile number that is glued to the board (can't be moved), or
-  // zero if no tiles are glued.
-  const Tile glued;
-
   const ManhattanDist15 md_heur;
-  const AbstractionOrder abstraction_order;
+  AbstractionOrder abstraction_order;
 };
 
 

@@ -13,6 +13,7 @@
 #include "search/switchback/Switchback.hpp"
 #include "tiles/Tiles.hpp"
 #include "tiles/MacroTiles.hpp"
+#include "tiles/GluedTiles.hpp"
 #include "pancake/PancakeInstance.hpp"
 
 using namespace std;
@@ -30,6 +31,12 @@ typedef IDAStar<MacroTilesInstance15, TilesNode15> MacroTilesIDAStar;
 typedef HAStar<MacroTilesInstance15, TilesNode15> MacroTilesHAStar;
 typedef HIDAStar<MacroTilesInstance15, TilesNode15> MacroTilesHIDAStar;
 typedef Switchback<MacroTilesInstance15, TilesNode15> MacroTilesSwitchback;
+
+typedef AStar<GluedTilesInstance15, TilesNode15> GluedTilesAStar;
+typedef IDAStar<GluedTilesInstance15, TilesNode15> GluedTilesIDAStar;
+typedef HAStar<GluedTilesInstance15, TilesNode15> GluedTilesHAStar;
+typedef HIDAStar<GluedTilesInstance15, TilesNode15> GluedTilesHIDAStar;
+typedef Switchback<GluedTilesInstance15, TilesNode15> GluedTilesSwitchback;
 
 typedef AStar<PancakeInstance14, PancakeNode14> PancakeAStar;
 typedef HAStar<PancakeInstance14, PancakeNode14> PancakeHAStar;
@@ -169,6 +176,25 @@ MacroTilesInstance15 * get_macro_tiles_instance(int argc, char *argv[])
 }
 
 
+GluedTilesInstance15 * get_glued_tiles_instance(int argc, char *argv[])
+{
+  GluedTilesInstance15 *instance;
+  if (argc == 4) {
+    ifstream infile(argv[3]);
+    instance = readGluedTilesInstance15(infile);
+  }
+  else {
+    instance = readGluedTilesInstance15(cin);
+  }
+
+  if (instance == NULL) {
+    cerr << "error reading instance!" << endl;
+    exit(1);
+  }
+
+  return instance;
+}
+
 PancakeInstance14 * get_pancake_instance(int argc, char *argv[])
 {
   PancakeInstance14 *instance;
@@ -234,6 +260,7 @@ int main(int argc, char * argv[])
 
   const bool is_tiles = domain_string == "tiles";
   const bool is_macro_tiles = domain_string == "macro_tiles";
+  const bool is_glued_tiles = domain_string == "glued_tiles";
   const bool is_pancake = domain_string == "pancake";
 
   const bool is_astar = alg_string == "astar";
@@ -245,7 +272,7 @@ int main(int argc, char * argv[])
   // ############################################################
   // Argument Error Checking
   // ############################################################
-  if (!is_tiles && !is_macro_tiles && !is_pancake) {
+  if (!is_tiles && !is_macro_tiles && !is_pancake && !is_glued_tiles) {
     cerr << "error: invalid domain specified" << endl;
     print_usage(cerr, argv[0]);
     exit (1);
@@ -312,6 +339,36 @@ int main(int argc, char * argv[])
     }
     else if (is_switchback) {
       MacroTilesSwitchback &switchback = *new MacroTilesSwitchback(*instance);
+      search(switchback);
+    }
+  }
+
+  // ############################################################
+  // glued tiles domain
+  // ############################################################
+  else if (is_glued_tiles) {
+    GluedTilesInstance15 *instance = get_glued_tiles_instance(argc, argv);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
+
+    if (is_astar) {
+      GluedTilesAStar &astar = *new GluedTilesAStar(*instance);
+      search(astar);
+    }
+    else if (is_hastar) {
+      GluedTilesHAStar &hastar = *new GluedTilesHAStar(*instance);
+      search(hastar);
+    }
+    else if (is_hidastar) {
+      GluedTilesHIDAStar &hidastar = *new GluedTilesHIDAStar(*instance);
+      search(hidastar);
+    }
+    else if (is_idastar) {
+      GluedTilesIDAStar &idastar = *new GluedTilesIDAStar(*instance);
+      search(idastar);
+    }
+    else if (is_switchback) {
+      GluedTilesSwitchback &switchback = *new GluedTilesSwitchback(*instance);
       search(switchback);
     }
   }
