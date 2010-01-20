@@ -71,6 +71,7 @@ exe search
       tiles/ManhattanDistance.cpp
       tiles/Tiles.cpp
       tiles/TilesState.cpp
+      tiles/GluedTiles.cpp
       pancake/PancakeInstance.cpp
       pancake/PancakeState.cpp
       Search.cpp
