@@ -130,7 +130,7 @@ private:
 
   boost::array<unsigned, hierarchy_height> cache_lookups;
   boost::array<unsigned, hierarchy_height> cache_hits;
-  
+
   boost::array<State, hierarchy_height> abstract_goals;
 
   Cache cache;
@@ -306,7 +306,7 @@ private:
     }
   }
 
-  
+
   BoundedResult
   cost_bounded_search(const unsigned level,
                       Node *start_node,
@@ -336,7 +336,7 @@ private:
 
 
     boost::optional<Cost> new_cutoff;
-    
+
     for (unsigned i = 0; i < succs.size(); i += 1) {
       Node *succ = succs[i];
 
@@ -354,19 +354,38 @@ private:
 
         if (gcache_it->second.second == num_iterations[level] &&
             succ->get_g() >= gcache_it->second.first) {
+		// We have seen this node at this iteration via either
+		// an equally as expensive or a cheaper path.
           node_pool[level].free(succ);
           continue;
         }
         else if (gcache_it->second.second != num_iterations[level] &&
-                 succ->get_g() < gcache_it->second.first) {
-          // update cache here?
+                 succ->get_g() > gcache_it->second.first) {
+		// There is a better way to get to this node (we know
+		// this from previous search iterations).  We will get
+		// to it thru another path on this iteration.
+          node_pool[level].free(succ);
+          continue;
         }
       }
-      else {
-        // what goes here?
-      }
+      // At this point, we have 3 cases:
+      //
+      // 1) We have never seen this node before and need to add it to
+      //    the cache
+      //
+      // 2) We have seen this node before with a worse g-value and we
+      //    need to update the g-value in the cache.
+      //
+      // 3) We have seen this node before with the same g-value, but
+      //    on a previous iteration and we need to update the
+      //    iteration number.
+      //
+      // In all three cases, we can just set the cache entry for this
+      // node to be the current g-value (which is either equal to or
+      // better than the cached value) and the current iteration
+      // number.
 
-      
+
       assert(succ->num_nodes_to_start() == start_node->num_nodes_to_start() + 1u);
 
       Cost hval = heuristic(level, succ);
@@ -411,7 +430,7 @@ private:
         }
       }
       // end Optimal path caching
-      
+
 
       // Normal IDA* stuff
       if (succ->get_f() <= bound) {
