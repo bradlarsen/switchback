@@ -15,6 +15,7 @@ FILE=$(basename $FPATH)
 ALG=$(echo $FILE | awk -F_ '{print $1}')
 DOMAIN=$(echo $FILE | awk -F_ '{print $2}')
 NUM=$(echo $FILE | awk -F_ '{print $3}' | sed 's/.log//')
+CREATION_TIME=$(ls -l $FPATH | awk '{ print $6 " " $7 }')
 
 DOMAIN_DIR="$ROOT_DIR/$DOMAIN"
 ALG_DIR="$DOMAIN_DIR/$ALG"
@@ -39,7 +40,6 @@ then
     GENERATED=$(grep generated: $FPATH | sed 's/.*: \(.*\) (.*/\1/')
     TIME=$(grep time: $FPATH | sed 's/.*: \(.*\) s.*/\1/')
     CLOSED_SIZE=$(grep "closed size:" $FPATH | sed 's/.*: \(.*\).*/\1/')
-    CREATION_TIME=$(ls -l $FPATH | awk '{ print $6 " " $7 }')
     LOOKUPS=$(grep lookup $FPATH \
 	| sed 's/:/\t/' \
 	| sed 's/lookups, /\t/' \
