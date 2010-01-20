@@ -45,6 +45,15 @@ private:
   typedef typename Cache::const_iterator CacheConstIterator;
 
 
+  typedef boost::unordered_map<
+    State,
+    std::pair<Cost, unsigned>
+    > GCache;
+
+  typedef typename GCache::iterator GCacheIterator;
+  typedef typename GCache::const_iterator GCacheConstIterator;
+
+
   struct BoundedResult
   {
     union Result
@@ -125,6 +134,7 @@ private:
   boost::array<State, hierarchy_height> abstract_goals;
 
   Cache cache;
+  GCache gcache;
 
   // One node pool for each level of the hierarchy.
   boost::array<boost::pool<> *, hierarchy_height> node_pool;
@@ -142,6 +152,7 @@ public:
     , cache_hits()
     , abstract_goals()
     , cache()
+    , gcache()
     , node_pool()
   {
     num_expanded.assign(0);
@@ -335,6 +346,26 @@ private:
         continue;
       }
 #endif
+
+      // GCACHE STUFF GOES HERE!
+      GCacheIterator gcache_it = gcache.find(succ->get_state());
+      if (gcache_it != gcache.end()) {
+        assert(gcache_it->second.second <= num_iterations[level]);
+
+        if (gcache_it->second.second == num_iterations[level] &&
+            succ->get_g() >= gcache_it->second.first) {
+          node_pool[level].free(succ);
+          continue;
+        }
+        else if (gcache_it->second.second != num_iterations[level] &&
+                 succ->get_g() < gcache_it->second.first) {
+          // update cache here?
+        }
+      }
+      else {
+        // what goes here?
+      }
+
       
       assert(succ->num_nodes_to_start() == start_node->num_nodes_to_start() + 1u);
 
