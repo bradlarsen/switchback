@@ -56,14 +56,6 @@ public:
 				boost::pool<> &node_pool) {
 		tiles_instance->compute_glued_successors(n, succs, glued,
 							 node_pool);
-#if !defined(NDEBUG)
-		std::vector<TilesNode15*>::iterator it;
-		std::cerr << n.get_state() << " expands to: " << std::endl;
-		for (it = succs.begin(); it != succs.end(); it++) {
-			std::cerr << "    " << *(*it) << std::endl;
-		}
-		std::cerr << "--------------------" << std::endl;
-#endif	// !NDEBUG
 	}
 
 	void compute_predecessors(const TilesNode15 &n,
@@ -75,12 +67,10 @@ public:
 	void compute_heuristic(const TilesNode15 &parent,
 			       TilesNode15 &child) const {
 		tiles_instance->compute_heuristic(parent, child);
-		child.set_h(child.get_h());
 	}
 
 	void compute_heuristic(TilesNode15 &child) const {
 		tiles_instance->compute_heuristic(child);
-		child.set_h(child.get_h());
 	}
 
 	const TilesState15 & get_start_state() const {
