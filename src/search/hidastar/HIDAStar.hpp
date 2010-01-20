@@ -482,7 +482,6 @@ private:
       BoundedResult res;
       assert(res.is_failure());
       assert(!res.is_cutoff());
-      assert(!res.is_failure());
       return res;
     }
   }
