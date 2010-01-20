@@ -356,7 +356,7 @@ private:
             succ->get_g() >= gcache_it->second.first) {
 		// We have seen this node at this iteration via either
 		// an equally as expensive or a cheaper path.
-          node_pool[level].free(succ);
+          node_pool[level]->free(succ);
           continue;
         }
         else if (gcache_it->second.second != num_iterations[level] &&
@@ -364,7 +364,7 @@ private:
 		// There is a better way to get to this node (we know
 		// this from previous search iterations).  We will get
 		// to it thru another path on this iteration.
-          node_pool[level].free(succ);
+          node_pool[level]->free(succ);
           continue;
         }
       }
@@ -384,6 +384,8 @@ private:
       // node to be the current g-value (which is either equal to or
       // better than the cached value) and the current iteration
       // number.
+
+      gcache[succ->get_state()] = std::make_pair(succ->get_g(), num_iterations[level]);
 
 
       assert(succ->num_nodes_to_start() == start_node->num_nodes_to_start() + 1u);
