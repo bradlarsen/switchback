@@ -15,7 +15,8 @@
 #include "util/PointerOps.hpp"
 
 
-#define HIDA_STAR_CYCLE_CHECKING
+// #define HIDA_STAR_CYCLE_CHECKING
+#define HIDA_STAR_DUPLICATE_DETECTION
 
 
 template <
@@ -45,6 +46,7 @@ private:
   typedef typename Cache::const_iterator CacheConstIterator;
 
 
+#ifdef HIDA_STAR_DUPLICATE_DETECTION
   typedef boost::unordered_map<
     State,
     std::pair<Cost, unsigned>
@@ -52,6 +54,7 @@ private:
 
   typedef typename GCache::iterator GCacheIterator;
   typedef typename GCache::const_iterator GCacheConstIterator;
+#endif
 
 
   struct BoundedResult
@@ -134,7 +137,6 @@ private:
   boost::array<State, hierarchy_height> abstract_goals;
 
   Cache cache;
-  GCache gcache;
 
   // One node pool for each level of the hierarchy.
   boost::array<boost::pool<> *, hierarchy_height> node_pool;
@@ -152,7 +154,6 @@ public:
     , cache_hits()
     , abstract_goals()
     , cache()
-    , gcache()
     , node_pool()
   {
     num_expanded.assign(0);
@@ -261,7 +262,9 @@ private:
     bool failed = false;
     bool goal_found = false;
 
-    gcache.clear();
+#ifdef HIDA_STAR_DUPLICATE_DETECTION
+    GCache gcache;
+#endif
 
     while ( !goal_found && !failed ) {
 #ifdef OUTPUT_SEARCH_PROGRESS
@@ -274,7 +277,11 @@ private:
 #endif
       num_iterations[level] += 1;
 
+#ifdef HIDA_STAR_DUPLICATE_DETECTION
+      BoundedResult res = cost_bounded_search(level, start_node, bound, gcache);
+#else
       BoundedResult res = cost_bounded_search(level, start_node, bound);
+#endif
 
       if (res.is_failure()) {
         assert(!res.is_goal());
@@ -312,7 +319,11 @@ private:
   BoundedResult
   cost_bounded_search(const unsigned level,
                       Node *start_node,
-                      const Cost bound)
+                      const Cost bound
+#ifdef HIDA_STAR_DUPLICATE_DETECTION
+                      , GCache &gcache
+#endif
+                      )
   {
     if (start_node->get_state() == abstract_goals[level]) {
       BoundedResult res(start_node);
@@ -349,6 +360,8 @@ private:
       }
 #endif
 
+
+#ifdef HIDA_STAR_DUPLICATE_DETECTION
       // GCACHE STUFF GOES HERE!
       GCacheIterator gcache_it = gcache.find(succ->get_state());
       if (gcache_it != gcache.end()) {
@@ -388,11 +401,14 @@ private:
       // number.
 
       gcache[succ->get_state()] = std::make_pair(succ->get_g(), num_iterations[level]);
+#endif
 
 
       assert(succ->num_nodes_to_start() == start_node->num_nodes_to_start() + 1u);
 
       Cost hval = heuristic(level, succ);
+
+
 
       // P-g caching
       const Cost p_minus_g = bound >= succ->get_g() ? bound - succ->get_g() : 0;
@@ -438,7 +454,11 @@ private:
 
       // Normal IDA* stuff
       if (succ->get_f() <= bound) {
+#ifdef HIDA_STAR_DUPLICATE_DETECTION
+        BoundedResult res = cost_bounded_search(level, succ, bound, gcache);
+#else
         BoundedResult res = cost_bounded_search(level, succ, bound);
+#endif
         if (res.is_goal()) {
           assert(!res.is_cutoff());
           assert(!res.is_failure());

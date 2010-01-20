@@ -104,6 +104,13 @@ void print_build_info(ostream &o)
     << "disabled" << endl;
 #endif
 
+  o << "HIDA* Duplicate Detection is "
+#ifdef HIDA_STAR_DUPLICATE_DETECTION
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
+
 
   o << endl;
 
