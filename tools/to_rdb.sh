@@ -26,7 +26,7 @@ LOOKUPS=$(grep lookup $FPATH \
     | sed 's/lookups, /\t/' \
     | sed 's/hits (/\t/' \
     | sed 's/)//' \
-    | sed 's/^[[:space:]]*/#altrow\t\"lookups\"\t/')
+    | sed 's/^[[:space:]]*/#altrow \"lookups\"\t/')
 
 DOMAIN_DIR="$ROOT_DIR/$DOMAIN"
 ALG_DIR="$DOMAIN_DIR/$ALG"
@@ -45,16 +45,17 @@ test -d $ALG_DIR || {
 
 (
 echo -e "#start data file format 4"
-echo -e "#altcols\t\"lookups\"\t\"lookup lvl\"\t\"lookup count\"\t\"hit count\"\t\"hit percentage\""
+echo -e "#altcols \"lookups\"\t\"lookup lvl\"\t\"lookup count\"\t\"hit count\"\t\"hit percentage\""
 echo -e "$LOOKUPS"
-echo -e "#pair\t\"alg\"\t\"$ALG\""
-echo -e "#pair\t\"domain\"\t\"$DOMAIN\""
-echo -e "#pair\t\"num\"\t\"$NUM\""
-echo -e "#pair\t\"final sol cost\"\t\"$COST\""
-echo -e "#pair\t\"total nodes expanded\"\t\"$EXPANDED\""
-echo -e "#pair\t\"total nodes generated\"\t\"$GENERATED\""
-echo -e "#pair\t\"total raw cpu time\"\t\"$TIME\""
-echo -e "#pair\t\"closed size\"\t\"$CLOSED_SIZE\""
-echo -e "#pair\t\"creation time\"\t\"$CREATION_TIME\""
+echo -e "#pair \"alg\"\t\"$ALG\""
+echo -e "#pair \"domain\"\t\"$DOMAIN\""
+echo -e "#pair \"num\"\t\"$NUM\""
+echo -e "#pair \"found solution\"\t\"yes\""
+echo -e "#pair \"final sol cost\"\t\"$COST\""
+echo -e "#pair \"total nodes expanded\"\t\"$EXPANDED\""
+echo -e "#pair \"total nodes generated\"\t\"$GENERATED\""
+echo -e "#pair \"total raw cpu time\"\t\"$TIME\""
+echo -e "#pair \"closed size\"\t\"$CLOSED_SIZE\""
+echo -e "#pair \"wall finish time\"\t\"$CREATION_TIME\""
 echo -e "#end data file format 4"
 ) > $ALG_DIR/$NUM
