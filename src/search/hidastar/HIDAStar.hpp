@@ -261,6 +261,8 @@ private:
     bool failed = false;
     bool goal_found = false;
 
+    gcache.clear();
+
     while ( !goal_found && !failed ) {
 #ifdef OUTPUT_SEARCH_PROGRESS
       if (level == 0) {
@@ -359,7 +361,7 @@ private:
           node_pool[level]->free(succ);
           continue;
         }
-        else if (gcache_it->second.second != num_iterations[level] &&
+        else if (gcache_it->second.second < num_iterations[level] &&
                  succ->get_g() > gcache_it->second.first) {
 		// There is a better way to get to this node (we know
 		// this from previous search iterations).  We will get
