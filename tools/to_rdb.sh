@@ -17,7 +17,11 @@ ROOT_DIR=$1
 FILE=$(basename $FPATH)
 ALG=$(echo $FILE | awk -F_ '{print $1}')
 DOMAIN=$(echo $FILE | awk -F_ '{print $2}')
+
+# If the domain name has an '_' in it then use $4, else use $3
 NUM=$(echo $FILE | awk -F_ '{print $4}' | sed 's/.log//')
+#NUM=$(echo $FILE | awk -F_ '{print $3}' | sed 's/.log//')
+
 CREATION_TIME=$(ls -l $FPATH | awk '{ print $6 " " $7 }')
 
 DOMAIN_DIR="$ROOT_DIR/$DOMAIN"
@@ -51,8 +55,11 @@ then
 	| sed 's/^[[:space:]]*/#altrow \"lookups\"\t/')
 
     (echo -e "#start data file format 4"
-	echo -e "#altcols \"lookups\"\t\"lookup lvl\"\t\"lookup count\"\t\"hit count\"\t\"hit percentage\""
-	echo -e "$LOOKUPS"
+	if [[ "X$LOOKUPS" != "X" ]]
+	then
+	    echo -e "#altcols \"lookups\"\t\"lookup lvl\"\t\"lookup count\"\t\"hit count\"\t\"hit percentage\""
+	    echo -e "$LOOKUPS"
+	fi
 	echo -e "#pair \"alg\"\t\"$ALG\""
 	echo -e "#pair \"domain\"\t\"$DOMAIN\""
 	echo -e "#pair \"num\"\t\"$NUM\""
