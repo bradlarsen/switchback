@@ -12,10 +12,19 @@
 FPATH=$2
 ROOT_DIR=$1
 FILE=$(basename $FPATH)
+
+if [[ "$FILE" == "driver_log.log" ]]; then exit 0; fi
+if [[ "$FILE" == "run_info.log" ]]; then exit 0; fi
+
 ALG=$(echo $FILE | awk -F_ '{print $1}')
-DOMAIN=$(echo $FILE | sed 's/[^_]*_\([^0123456789]*\)_.*\.log/\1/')
-NUM=$(echo $FILE | sed 's/[^0123456789]*_\(.*\)\.log/\1/')
+DOMAIN=$(echo $FILE | sed 's/[^_]*_\(.*\)_[0123456789]*\.log/\1/')
+NUM=$(echo $FILE | sed 's/[^_]*_.*_\([0123456789]*\)\.log/\1/')
 CREATION_TIME=$(ls -l $FPATH | awk '{ print $6 " " $7 }')
+
+echo "alg:    $ALG"
+echo "domain: $DOMAIN"
+echo "num:    $NUM"
+exit 0
 
 DOMAIN_DIR="$ROOT_DIR/$DOMAIN"
 ALG_DIR="$DOMAIN_DIR/$ALG"
