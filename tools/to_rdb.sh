@@ -9,8 +9,8 @@
 # <rdb root dir>
 #
 
-echo "Ensure the file names are setup right"
-exit
+#echo "Ensure the file names are setup right"
+#exit
 
 FPATH=$2
 ROOT_DIR=$1
@@ -39,14 +39,23 @@ test -d $ALG_DIR || {
     touch $ALG_DIR/KEY=num
 }
 
+test -e $ALG_DIR/$NUM && {
+    echo "Skipping $ALG_DIR/$NUM"
+    exit 0
+}
+
 if grep -q "found a solution:" $FPATH;
 then
-    echo "$ALG, $NUM: Solution found"
+    echo "$ALG_DIR/$NUM: Solution found"
     COST=$(grep g: $FPATH | sed 's/.*: \(.*\).*/\1/')
     EXPANDED=$(grep expanded: $FPATH | sed 's/.*: \(.*\) (.*/\1/')
     GENERATED=$(grep generated: $FPATH | sed 's/.*: \(.*\) (.*/\1/')
     TIME=$(grep time: $FPATH | sed 's/.*: \(.*\) s.*/\1/')
-    CLOSED_SIZE=$(grep "closed size:" $FPATH | sed 's/.*: \(.*\).*/\1/')
+    CLOSED_SIZE=$(grep -e "closed size:\|cache size:" $FPATH | sed 's/.*: \(.*\).*/\1/')
+    if [[ "X$CLOSED_SIZE" == "X" ]];
+    then
+	CLOSED_SIZE=$(grep -e "nodes in closed" $FPATH | awk '{ print $1 }')
+    fi
     LOOKUPS=$(grep lookup $FPATH \
 	| sed 's/:/\t/' \
 	| sed 's/lookups, /\t/' \
@@ -72,7 +81,7 @@ then
 	echo -e "#pair \"wall finish time\"\t\"$CREATION_TIME\""
 	echo -e "#end data file format 4") > $ALG_DIR/$NUM
 else				# no solution
-    echo "$ALG, $NUM: No solution found"
+    echo "$ALG_DIR/$NUM: No solution found"
     (echo -e "#start data file format 4"
 	echo -e "#pair \"alg\"\t\"$ALG\""
 	echo -e "#pair \"domain\"\t\"$DOMAIN\""
