@@ -9,19 +9,12 @@
 # <rdb root dir>
 #
 
-#echo "Ensure the file names are setup right"
-#exit
-
 FPATH=$2
 ROOT_DIR=$1
 FILE=$(basename $FPATH)
 ALG=$(echo $FILE | awk -F_ '{print $1}')
-DOMAIN=$(echo $FILE | awk -F_ '{print $2}')
-
-# If the domain name has an '_' in it then use $4, else use $3
-NUM=$(echo $FILE | awk -F_ '{print $4}' | sed 's/.log//')
-#NUM=$(echo $FILE | awk -F_ '{print $3}' | sed 's/.log//')
-
+DOMAIN=$(echo $FILE | sed 's/[^_]*_\([^0123456789]*\)_.*\.log/\1/')
+NUM=$(echo $FILE | sed 's/[^0123456789]*_\(.*\)\.log/\1/')
 CREATION_TIME=$(ls -l $FPATH | awk '{ print $6 " " $7 }')
 
 DOMAIN_DIR="$ROOT_DIR/$DOMAIN"
