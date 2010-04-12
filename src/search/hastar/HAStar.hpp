@@ -5,6 +5,8 @@
 //#define HIERARCHICAL_A_STAR_CACHE_H_STAR
 #define HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
 #define HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
+#define HIERARCHICAL_A_STAR_REEXPANSION_COUNTING
+
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
 #ifndef HIERARCHICAL_A_STAR_CACHE_H_STAR
@@ -65,6 +67,12 @@ private:
     > Closed;
   typedef typename Closed::iterator ClosedIterator;
   typedef typename Closed::const_iterator ClosedConstIterator;
+
+
+#ifdef HIERARCHICAL_A_STAR_REEXPANSION_COUNTING
+  typedef boost::unordered_map<State, unsigned> ExpansionCount;
+#endif
+
 
 #ifdef HIERARCHICAL_A_STAR_CACHE_OPTIMAL_PATHS
   typedef boost::unordered_map<
@@ -152,6 +160,11 @@ private:
 #endif
 
 
+#ifdef HIERARCHICAL_A_STAR_REEXPANSION_COUNTING
+  ExpansionCount expansion_count;
+#endif
+
+
 public:
   HAStar(Domain &domain)
     : goal(NULL)
@@ -168,6 +181,9 @@ public:
     , node_pool()
 #ifdef HIERARCHICAL_A_STAR_CACHE_P_MINUS_G
     , expanded_nodes()
+#endif
+#ifdef HIERARCHICAL_A_STAR_REEXPANSION_COUNTING
+    , expansion_count()
 #endif
   {
     num_expanded.assign(0);
@@ -253,6 +269,10 @@ public:
 
     dump_cache_size(o);
     dump_cache_information(o);
+
+#ifdef HIERARCHICAL_A_STAR_REEXPANSION_COUNTING
+    dump_reexpansion_information(o);
+#endif
   }
 
 
@@ -342,6 +362,9 @@ private:
       domain.compute_successors(*n, succs, *node_pool[level]);
       num_expanded[level] += 1;
       num_generated[level] += succs.size();
+#ifdef HIERARCHICAL_A_STAR_REEXPANSION_COUNTING
+      expansion_count[n->get_state()] += 1;
+#endif
 
       for (unsigned succ_i = 0; succ_i < succs.size(); succ_i += 1)
         process_child(level, succs[succ_i]);
@@ -593,6 +616,27 @@ private:
         << cache_hits[level] << " hits (" << hit_ratio << ")" << std::endl;
     }
   }
+
+#ifdef HIERARCHICAL_A_STAR_REEXPANSION_COUNTING
+  void dump_reexpansion_information(std::ostream &o) const
+  {
+    unsigned total_num_expanded = 0;
+    unsigned num_reexpanded = 0;
+
+    for (typename ExpansionCount::const_iterator it = expansion_count.begin();
+         it != expansion_count.end();
+         it++)
+    {
+      assert(it->second > 0);
+      total_num_expanded += it->second;
+      if (it->second > 1)
+        num_reexpanded += it->second - 1;
+    }
+
+    o << total_num_expanded << " total expansions" << std::endl
+      << num_reexpanded << " total reexpansions" << std::endl;
+  }
+#endif
 };
 
 

@@ -93,6 +93,13 @@ void print_build_info(ostream &o)
     << "disabled" << endl;
 #endif
 
+  o << "Hierarchical A*'s reexpansion counting is "
+#ifdef HIERARCHICAL_A_STAR_REEXPANSION_COUNTING
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
+
 
   o << endl;
 
