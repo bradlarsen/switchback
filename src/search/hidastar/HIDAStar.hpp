@@ -17,7 +17,7 @@
 
 // #define HIDA_STAR_CYCLE_CHECKING
 #define HIDA_STAR_DUPLICATE_DETECTION
-
+#define HIDA_STAR_REEXPANSION_COUNTING
 
 template <
   class DomainT,
@@ -54,6 +54,11 @@ private:
 
   typedef typename GCache::iterator GCacheIterator;
   typedef typename GCache::const_iterator GCacheConstIterator;
+#endif
+
+
+#ifdef HIDA_STAR_REEXPANSION_COUNTING
+  typedef boost::unordered_map<State, unsigned> ExpansionCount;
 #endif
 
 
@@ -141,6 +146,10 @@ private:
   // One node pool for each level of the hierarchy.
   boost::array<boost::pool<> *, hierarchy_height> node_pool;
 
+#ifdef HIDA_STAR_REEXPANSION_COUNTING
+  ExpansionCount expansion_count;
+#endif
+
 
 public:
   HIDAStar(Domain &domain)
@@ -155,6 +164,9 @@ public:
     , abstract_goals()
     , cache()
     , node_pool()
+#ifdef HIDA_STAR_REEXPANSION_COUNTING
+    , expansion_count()
+#endif
   {
     num_expanded.assign(0);
     num_generated.assign(0);
@@ -246,6 +258,10 @@ public:
 
     dump_cache_size(o);
     dump_cache_information(o);
+
+#ifdef HIDA_STAR_REEXPANSION_COUNTING
+    dump_reexpansion_information(o);
+#endif
   }
 
 
@@ -333,6 +349,10 @@ private:
 
     std::vector<Node *> succs;
     domain.compute_successors(*start_node, succs, *node_pool[level]);
+
+#ifdef HIDA_STAR_REEXPANSION_COUNTING
+    expansion_count[start_node->get_state()] += 1;
+#endif
 
     num_expanded[level] += 1;
     num_generated[level] += succs.size();
@@ -592,6 +612,28 @@ private:
         << cache_hits[level] << " hits (" << hit_ratio << ")" << std::endl;
     }
   }
+
+
+#ifdef HIDA_STAR_REEXPANSION_COUNTING
+  void dump_reexpansion_information(std::ostream &o) const
+  {
+    unsigned total_num_expanded = 0;
+    unsigned num_reexpanded = 0;
+
+    for (typename ExpansionCount::const_iterator it = expansion_count.begin();
+         it != expansion_count.end();
+         it++)
+    {
+      assert(it->second > 0);
+      total_num_expanded += it->second;
+      if (it->second > 1)
+        num_reexpanded += it->second - 1;
+    }
+
+    o << total_num_expanded << " total expansions" << std::endl
+      << num_reexpanded << " total reexpansions" << std::endl;
+  }
+#endif
 };
 
 

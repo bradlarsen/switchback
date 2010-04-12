@@ -111,6 +111,13 @@ void print_build_info(ostream &o)
     << "disabled" << endl;
 #endif
 
+  o << "HIDA* Reexpansion Counting is "
+#ifdef HIDA_STAR_REEXPANSION_COUNTING
+    << "enabled" << endl;
+#else
+    << "disabled" << endl;
+#endif
+
 
   o << endl;
 
