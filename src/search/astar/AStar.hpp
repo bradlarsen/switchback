@@ -24,14 +24,22 @@ template <
 class AStar : boost::noncopyable
 {
 public:
+  // The problem domain type.  A domain is responsible for computing
+  // successors, computing heuristic estimates, goal testing, and
+  // giving the start state for the problem.
   typedef DomainT Domain;
   typedef NodeT Node;
 
 
 private:
+  // The priority queue type for the open list.
   typedef BucketPriorityQueue<Node> Open;
   typedef boost::optional<typename Open::ItemPointer> MaybeItemPointer;
 
+  // The `closed set' type.  This is a misnomer, as this
+  // implementation of A* does pruning at node generation rather than
+  // at node expansion, causing the `closed set' to contain nodes
+  // whose states have been generated before, but not expanded.
   typedef boost::unordered_map<
     Node *,
     MaybeItemPointer,
@@ -45,17 +53,31 @@ private:
 
 
 private:
+  // An f-ordered priority queue of nodes to expand.  Invariant: for
+  // any given state, at most one node with that state will be on the
+  // open list.
   Open open;
+  // The `closed set', containing all the nodes whose states have been
+  // generated but not yet expanded.  `closed' maps nodes to possible
+  // pointers into the open list, used to maintain the at-most-one
+  // invariant of the open list.
   Closed closed;
 
+  // The goal node.  NULL if no solution found or if the search has
+  // not yet been performed.
   const Node * goal;
+  // Has the search been performed yet?
   bool searched;
 
+  // The problem domain.
   Domain &domain;
 
+  // Search statistic for number of nodes expanded.
   unsigned num_expanded;
+  // Search statistic for number of nodes generated.
   unsigned num_generated;
 
+  // A memory pool to allow fast node allocation and deallocation.
   boost::pool<> node_pool;
 
 
@@ -115,7 +137,7 @@ public:
       Node *n = open.top();
       open.pop();
       assert(closed.find(n) != closed.end());
-      closed[n] = boost::none;
+      closed[n] = boost::none;     // eliminate the pointer into the open list
       assert(all_closed_item_ptrs_valid());
 
       if (domain.is_goal(n->get_state())) {
@@ -160,6 +182,24 @@ public:
   {
     o << open.size() << " nodes in open at end of search" << std::endl
       << closed.size() << " nodes in closed at end of search" << std::endl;
+
+    if (get_goal() != NULL) {
+      const typename Node::Cost goal_f = get_goal()->get_f();
+      unsigned num_expanded_less_than_goal_f = 0;
+      for (ClosedConstIterator closed_it = closed.begin();
+           closed_it != closed.end();
+           closed_it++)
+      {
+        if (closed_it->first->get_f() < goal_f) {
+          assert(!closed_it->second);
+          num_expanded_less_than_goal_f += 1;
+        }
+      }
+
+      o << "goal f-value is " << goal_f << std::endl;
+      o << num_expanded_less_than_goal_f
+        << " nodes expanded with f-value less than goal's" << std::endl;
+    }
   }
 
 
