@@ -177,9 +177,8 @@ private:
     }
     else if (closed_it->second && child->get_f() < closed_it->first->get_f()) {
       // A worse version of the child is in the open list.
-      open.erase(*closed_it->second);  // knock out the old one from
-                                       // the open list
-     // free the old, worse copy
+      open.erase(*closed_it->second);  // remove old one from the open list
+      // free the old, worse copy
       node_pool.free(closed_it->first);
       closed.erase(closed_it);
 
