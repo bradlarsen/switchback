@@ -3,20 +3,20 @@ OVERVIEW
 
 This is the source code of several heuristic search algorithms and test
 domains used for the experiments described in the AAAI-10 paper ``Searching
-Without a Heuristic: Efficient Use of Abstraction'' by Bradford Larsen,
-Ethan Burns, Wheeler Ruml, and Robert Holte.
+Without a Heuristic: Efficient Use of Abstraction'' by Bradford Larsen, Ethan
+Burns, Wheeler Ruml, and Robert Holte.
 
 The test domains include the fifteen puzzle, the macro fifteen puzzle, the
-glued fifteen puzzle, and the fourteen pancake puzzle.  The algorithms
-include A*, Hierarchical A*, IDA*, Hierarchical IDA*, and Switchback.
-Instances for these domains are found in the `testdata` subdirectory.
+glued fifteen puzzle, and the fourteen pancake puzzle.  The algorithms include
+A*, Hierarchical A*, IDA*, Hierarchical IDA*, and Switchback.  Instances for
+these domains are found in the `testdata` subdirectory.
 
 
 BUILDING INSTRUCTIONS
 =====================
 
-The code is written in C++ and has been built succcessfully on several
-flavors of Linux, as well as Mac OS X 10.6.
+The code is written in C++ and has been built succcessfully on several flavors
+of Linux, as well as Mac OS X 10.6.
 
 Run the following in the top-level directory of the extracted
 switchback.tar.gz tarball:
@@ -37,8 +37,8 @@ been some version of gcc.
 USAGE
 =====
 
-To run the code one must specify the search domain, algorithm, and input.
-For example, to solve instance number 55 of the fifteen puzzle:
+To run the code one must specify the search domain, algorithm, and input.  For
+example, to solve instance number 55 of the fifteen puzzle:
 
    $ ./build/spacerelease/search tiles astar testdata/korf100/55
    ######## The Instance ########
