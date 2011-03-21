@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "ManhattanDistance.hpp"
+#include "tiles/ManhattanDistance.hpp"
 
 
 ManhattanDist15::ManhattanDist15(const TilesState15 &goal)
