@@ -23,6 +23,7 @@ Run the following in the top-level directory of the extracted tarball:
     tar xfj boost_1_41_0.tar.bz2    # extract and build Boost; takes a while
     cd boost_1_41_0
     sh bootstrap.sh
+    ./bjam
 
     ./bjam ../                      # build the search code
 
