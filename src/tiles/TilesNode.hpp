@@ -7,7 +7,6 @@
 #include "tiles/TilesState.hpp"
 
 
-template class Node<TilesState15, TileCost>;
 typedef Node<TilesState15, TileCost> TilesNode15;
 
 
