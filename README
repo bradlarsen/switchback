@@ -18,8 +18,7 @@ BUILDING INSTRUCTIONS
 The code is written in C++ and has been built succcessfully on several flavors
 of Linux, as well as Mac OS X 10.6.
 
-Run the following in the top-level directory of the extracted
-switchback.tar.gz tarball:
+Run the following in the top-level directory of the extracted tarball:
 
     tar xfj boost_1_41_0.tar.bz2    # extract and build Boost; takes a while
     cd boost_1_41_0
