@@ -189,7 +189,7 @@ void print_usage(ostream &o, const char *prog_name)
 {
   o << "usage: " << prog_name << " DOMAIN ALGORITHM [FILE]" << endl
     << "where" << endl
-    << "  DOMAIN is one of {tiles, macro_tiles, pancake}" << endl
+    << "  DOMAIN is one of {tiles, macro_tiles, glued_tiles, pancake}" << endl
     << "  ALGORITHM is one of {astar, hastar, idastar, hidastar, switchback}" << endl
     << "  FILE is the optional instance file to read from" << endl
     << endl
