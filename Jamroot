@@ -47,7 +47,6 @@ variant spacerelease
 
 project switchback
     : requirements
-        <include>boost_1_41_0
         <include>src
     : source-location src
     : build-dir build

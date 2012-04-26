@@ -16,22 +16,19 @@ BUILDING INSTRUCTIONS
 =====================
 
 The code is written in C++ and has been built succcessfully on several flavors
-of Linux, as well as Mac OS X 10.6.
+of Linux, as well as Mac OS X 10.6 and 10.7.
 
-Run the following in the top-level directory of the extracted tarball:
+You will at least version 1.41 of the Boost libraries to build this code.
 
-    tar xfj boost_1_41_0.tar.bz2    # extract and build Boost; takes a while
-    cd boost_1_41_0
-    sh bootstrap.sh
-    ./bjam
+This project is built using Boost Jam.  If you have Boost Jam version
+3-something, simply run 'bjam' in the top-level directory:
 
-    ./bjam ../                      # build the search code
+    bjam      # build the search code
 
-If this all worked, there should be a binary at
+If everything worked, there should be a binary at
 build/TOOLSET-NAME/spacerelease/search under the top-level directory, where
-TOOLSET-NAME is platform-specific; for example, on Mac OS X 10.6.6, we have
-seen TOOLSET-NAME be `darwin-4.2.1`, and on various flavors of Linux it has
-been some version of gcc.
+TOOLSET-NAME is platform-specific.  (For example, on Mac OS X 10.6.6, we have
+seen TOOLSET-NAME be `darwin-4.2.1`.)
 
 
 USAGE
