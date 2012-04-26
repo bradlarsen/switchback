@@ -52,7 +52,7 @@ project switchback
     : build-dir build
     : default-build
         <variant>mydebug
-#        <variant>speedrelease
+        <variant>speedrelease
         <variant>spacerelease
         <warnings>on
     ;
