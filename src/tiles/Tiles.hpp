@@ -79,7 +79,7 @@ public:
 				Tile glued,
 				boost::pool<> &node_pool);
   /**
-   * Computes and assigned the heuristic for the given child node.
+   * Computes and assigns the heuristic for the given child node.
    */
   void compute_heuristic(const TilesNode15 &parent,
                          TilesNode15 &child) const;
