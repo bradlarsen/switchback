@@ -45,7 +45,7 @@ typedef IDAStar<PancakeInstance14, PancakeNode14> PancakeIDAStar;
 typedef Switchback<PancakeInstance14, PancakeNode14> PancakeSwitchback;
 
 
-void print_build_info(ostream &o)
+static void print_build_info(ostream &o)
 {
   o << "tiles state hash caching is "
 #ifdef CACHE_TILES_HASH_VALUE
@@ -162,7 +162,7 @@ void print_build_info(ostream &o)
 }
 
 
-void print_size_info(ostream &o)
+static void print_size_info(ostream &o)
 {
   o << "sizeof(unsigned) is " << sizeof(unsigned) << endl
     << "sizeof(Tile) is " << sizeof(Tile) << endl
@@ -185,7 +185,7 @@ void print_size_info(ostream &o)
 }
 
 
-void print_usage(ostream &o, const char *prog_name)
+static void print_usage(ostream &o, const char *prog_name)
 {
   o << "usage: " << prog_name << " DOMAIN ALGORITHM [FILE]" << endl
     << "where" << endl
@@ -205,7 +205,7 @@ void print_usage(ostream &o, const char *prog_name)
 }
 
 
-TilesInstance15 * get_tiles_instance(int argc, char *argv[])
+static TilesInstance15 * get_tiles_instance(int argc, char *argv[])
 {
   TilesInstance15 *instance;
   if (argc == 4) {
@@ -225,13 +225,13 @@ TilesInstance15 * get_tiles_instance(int argc, char *argv[])
 }
 
 
-MacroTilesInstance15 * get_macro_tiles_instance(int argc, char *argv[])
+static MacroTilesInstance15 * get_macro_tiles_instance(int argc, char *argv[])
 {
   return new MacroTilesInstance15(get_tiles_instance(argc, argv));
 }
 
 
-GluedTilesInstance15 * get_glued_tiles_instance(int argc, char *argv[])
+static GluedTilesInstance15 * get_glued_tiles_instance(int argc, char *argv[])
 {
   GluedTilesInstance15 *instance;
   if (argc == 4) {
@@ -250,7 +250,7 @@ GluedTilesInstance15 * get_glued_tiles_instance(int argc, char *argv[])
   return instance;
 }
 
-PancakeInstance14 * get_pancake_instance(int argc, char *argv[])
+static PancakeInstance14 * get_pancake_instance(int argc, char *argv[])
 {
   PancakeInstance14 *instance;
   if (argc == 4) {
@@ -271,7 +271,7 @@ PancakeInstance14 * get_pancake_instance(int argc, char *argv[])
 
 
 template <class Searcher>
-void search(Searcher &searcher)
+static void search(Searcher &searcher)
 {
   cout << "######## Search Results ########" << endl;
 
