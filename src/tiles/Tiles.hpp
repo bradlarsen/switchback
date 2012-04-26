@@ -113,8 +113,6 @@ public:
   bool should_abstract(unsigned level, Tile t) const;
 
 private:
-  void dump_abstraction(void);
-
   TilesNode15 * child(const TilesState15 &new_state,
                       TileCost new_g,
                       const TilesNode15 &parent,
