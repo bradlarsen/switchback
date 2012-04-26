@@ -3,6 +3,9 @@
 #include <iostream>
 #include <fstream>
 
+#include <sys/resource.h>
+#include <cstring>
+
 #include "search/Node.hpp"
 #include "search/BucketPriorityQueue.hpp"
 #include "search/Constants.hpp"
@@ -269,6 +272,20 @@ static PancakeInstance14 * get_pancake_instance(int argc, char *argv[])
   return instance;
 }
 
+static long get_max_mem_used_in_mb ()
+{
+  struct rusage usage;
+  int ret = getrusage (RUSAGE_SELF, &usage);
+  if (ret == -1)
+    return 0;
+  else
+#ifdef __APPLE__
+    // ru_maxrss represents *bytes*, not kilobytes, on Mac OS X
+    return usage.ru_maxrss / (1024L * 1024L);
+#else
+    return usage.ru_maxrss / 1024L;
+#endif
+}
 
 template <class Searcher>
 static void search(Searcher &searcher)
@@ -297,7 +314,8 @@ static void search(Searcher &searcher)
        << exp_per_second << "/s)" << endl
        << "generated: " << searcher.get_num_generated() << " ("
        << gen_per_second << "/s)" << endl
-       << "time: " << search_timer.elapsed() << " s" << endl;
+       << "time: " << search_timer.elapsed() << " s" << endl
+       << "max memory: " << get_max_mem_used_in_mb () << " MB" << endl;
 
   searcher.output_statistics(cout);
 }
