@@ -4,3 +4,4 @@ boost_1_41_0/*
 bin/*
 build/*
 data/*
+doc/*
