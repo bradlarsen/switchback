@@ -12,6 +12,7 @@
 #include <boost/utility.hpp>
 
 #include "search/Constants.hpp"
+#include "search/BoundedSearchResult.hpp"
 #include "util/PointerOps.hpp"
 
 
@@ -44,6 +45,8 @@ private:
   typedef typename Node::Cost Cost;
   typedef typename Node::State State;
 
+  typedef BoundedSearchResult<Cost, Node> BoundedResult;
+
   typedef boost::unordered_map<
     State,
     std::pair<Cost, bool>
@@ -70,70 +73,6 @@ private:
 #ifdef HIDA_STAR_REEXPANSION_COUNTING
   typedef boost::unordered_map<State, unsigned> ExpansionCount;
 #endif
-
-
-  /*!
-  \brief A discriminated union:  Cutoff Cost + Goal (Node *) + Failure
-  */
-  struct BoundedResult
-  {
-    union Result
-    {
-      Cost cutoff;
-      Node *goal;
-    } result;
-
-    typedef enum {Cutoff, Goal, Failure} ResultType;
-
-    ResultType result_type;
-
-
-    BoundedResult(Cost cutoff)
-    {
-      result.cutoff = cutoff;
-      result_type = Cutoff;
-    }
-
-    BoundedResult(Node *goal)
-    {
-      assert(goal != NULL);
-      result.goal = goal;
-      result_type = Goal;
-    }
-
-    BoundedResult()
-    {
-      result_type = Failure;
-    }
-
-
-    bool is_failure() const
-    {
-      return result_type == Failure;
-    }
-
-    bool is_goal() const
-    {
-      return result_type == Goal;
-    }
-
-    bool is_cutoff() const
-    {
-      return result_type == Cutoff;
-    }
-
-    Node * get_goal() const
-    {
-      assert(is_goal());
-      return result.goal;
-    }
-
-    Cost get_cutoff() const
-    {
-      assert(is_cutoff());
-      return result.cutoff;
-    }
-  };
 
 
 private:
