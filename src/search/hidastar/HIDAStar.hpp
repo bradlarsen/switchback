@@ -15,10 +15,20 @@
 #include "util/PointerOps.hpp"
 
 
+// //! Should HIDA* check for cycles by tracing each node's parent pointer?
 // #define HIDA_STAR_CYCLE_CHECKING
+
+//! Should HIDA* perform "full duplicate detection" a la A*?
 #define HIDA_STAR_DUPLICATE_DETECTION
+
+//! Should HIDA* count how many nodes are expanded more than once?
 #define HIDA_STAR_REEXPANSION_COUNTING
 
+/*! \brief Hierarchical, iterative-deepening A*.
+
+\tparam DomainT       The type of the search domain
+\tparam NodeT         The type of the search node
+*/
 template <
   class DomainT,
   class NodeT
@@ -62,6 +72,9 @@ private:
 #endif
 
 
+  /*!
+  \brief A discriminated union:  Cutoff Cost + Goal (Node *) + Failure
+  */
   struct BoundedResult
   {
     union Result
@@ -124,10 +137,11 @@ private:
 
 
 private:
+  /*! The number of levels in the abstraction hierarchy. */
   const static unsigned hierarchy_height = Domain::num_abstraction_levels + 1;
 
   Node goal;
-  bool searched;
+  bool searched;      //!< has the search() method been called?
 
   Domain &domain;
 
@@ -389,16 +403,16 @@ private:
 
         if (gcache_it->second.second == num_iterations[level] &&
             succ->get_g() >= gcache_it->second.first) {
-		// We have seen this node at this iteration via either
-		// an equally as expensive or a cheaper path.
+          // We have seen this node at this iteration via either
+          // an equally as expensive or a cheaper path.
           node_pool[level]->free(succ);
           continue;
         }
         else if (gcache_it->second.second < num_iterations[level] &&
                  succ->get_g() > gcache_it->second.first) {
-		// There is a better way to get to this node (we know
-		// this from previous search iterations).  We will get
-		// to it thru another path on this iteration.
+          // There is a better way to get to this node (we know
+          // this from previous search iterations).  We will get
+          // to it thru another path on this iteration.
           node_pool[level]->free(succ);
           continue;
         }
