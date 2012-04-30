@@ -49,8 +49,10 @@ public:
     Tile tile = p.get_tiles()[new_b];
     TileCost ret = 0;
   
-    ret = parent.get_h() + (lookup_dist(tile, par_b) - lookup_dist(tile, new_b));
-    assert(ret >= 0);
+    const unsigned par_dist = lookup_dist (tile, par_b);
+    const unsigned new_dist = lookup_dist (tile, new_b);
+    assert (par_dist >= new_dist);
+    ret = parent.get_h() + (par_dist - new_dist);
     return ret;
   }
   
