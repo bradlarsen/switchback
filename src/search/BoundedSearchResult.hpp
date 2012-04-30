@@ -5,6 +5,9 @@
 
 /*!
 \brief A discriminated union:  Cutoff Cost + Goal (Node *) + Failure
+
+\tparam Cost   The type of the cost of a move
+\tparam Node   The type of the search node
 */
 template <typename Cost, typename Node>
 class BoundedSearchResult
