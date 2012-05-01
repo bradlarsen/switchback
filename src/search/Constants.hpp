@@ -2,7 +2,7 @@
 #define _SEARCH_CONSTANTS_HPP_
 
 
-const unsigned INITIAL_CLOSED_SET_SIZE = 64000000;
+const unsigned INITIAL_CLOSED_SET_SIZE = 1024;
 
 
 #endif /* !_SEARCH_CONSTANTS_HPP_ */
