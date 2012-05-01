@@ -1,7 +1,8 @@
 syntax: glob
 
-boost_1_41_0/*
+boost_1_49_0/*
+boost_1_49_0.tar.bz2
+search
 bin/*
-build/*
 data/*
 doc/*

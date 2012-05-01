@@ -18,17 +18,9 @@ BUILDING INSTRUCTIONS
 The code is written in C++ and has been built succcessfully on several flavors
 of Linux, as well as Mac OS X 10.6 and 10.7.
 
-You will at least version 1.41 of the Boost libraries to build this code.
-
-This project is built using Boost Jam.  If you have Boost Jam version
-3-something, simply run 'bjam' in the top-level directory:
-
-    bjam      # build the search code
-
-If everything worked, there should be a binary at
-build/TOOLSET-NAME/spacerelease/search under the top-level directory, where
-TOOLSET-NAME is platform-specific.  (For example, on Mac OS X 10.6.6, we have
-seen TOOLSET-NAME be `darwin-4.2.1`.)
+On a UNIX-like system with the GCC toolchain and an internet connection, you
+will hopefully have good luck simply typing `make` in the top-level directory.
+This will produce a binary named `search` in the top-level directory.
 
 
 USAGE
@@ -37,7 +29,7 @@ USAGE
 To run the code one must specify the search domain, algorithm, and input.  For
 example, to solve instance number 55 of the fifteen puzzle:
 
-   $ ./build/spacerelease/search tiles astar testdata/korf100/55
+   $ ./search tiles astar testdata/korf100/55
    ######## The Instance ########
    Initial state:
    13  8       14      3
