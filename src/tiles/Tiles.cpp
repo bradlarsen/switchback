@@ -309,7 +309,7 @@ namespace
 
     for (i = 0; i < tiles.size(); ++i) {
       in >> pos;
-      if (pos < 0 || pos > 15) {
+      if (pos > 15) {
         return true;
       }
 
