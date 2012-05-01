@@ -12,7 +12,7 @@
 
 #include <boost/integer.hpp>
 
-typedef boost::uint_t<8>::least Pancake;
+typedef boost::int_t<8>::least Pancake;
 typedef boost::uint_t<8>::least PancakeCost;
 
 #endif /* !_PANCAKE_TYPE_H_ */
