@@ -103,8 +103,7 @@ public:
 
 	// Is this level of abstraction valid?
 	static bool is_valid_level(const unsigned level) {
-		return level <= num_abstraction_levels
-			&& level >= 0;
+		return level <= num_abstraction_levels;
 	}
 
 private:
