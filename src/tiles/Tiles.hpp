@@ -19,6 +19,14 @@ public:
   static const unsigned num_abstraction_levels = 8;
 
   typedef std::pair<Tile, TileCost> TileCostPair;
+  /*! \brief An AbstractionOrder indicates which tiles should be obscured
+      at each level in an abstraction hierarchy.
+
+      Given an AbstractionOrder `order`, A tile `t` should be abstracted at
+      level `i` if and only if `order[i][t + 1]` is true.  Why `t + 1`?
+      Because the value -1 is used to represent an obscured tile, and
+      boost::array is indexed from 0.
+   */
   typedef boost::array<
     boost::array<bool, 17>,
     num_abstraction_levels + 1
