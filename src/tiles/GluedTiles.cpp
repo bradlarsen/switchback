@@ -114,7 +114,7 @@ GluedTilesInstance15 * readGluedTilesInstance15 (std::istream &in)
 	}
 
 	in >> glued;
-	if (glued < 0 || glued > 15) {
+	if (glued > 15) {
 		std::cerr << glued
 			  << " is an invalid glued tile"
 			  << std::endl;
