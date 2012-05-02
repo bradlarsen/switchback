@@ -1,10 +1,10 @@
-SOURCES :=												\
-	src/pancake/PancakeInstance.cpp						\
-	src/pancake/PancakeState.cpp						\
-	src/Search.cpp										\
-	src/tiles/GluedTiles.cpp							\
-	src/tiles/ManhattanDistance.cpp						\
-	src/tiles/Tiles.cpp									\
+SOURCES :=                              \
+	src/pancake/PancakeInstance.cpp     \
+	src/pancake/PancakeState.cpp        \
+	src/Search.cpp                      \
+	src/tiles/GluedTiles.cpp            \
+	src/tiles/ManhattanDistance.cpp     \
+	src/tiles/Tiles.cpp                 \
 	src/tiles/TilesState.cpp
 
 CXX := g++
