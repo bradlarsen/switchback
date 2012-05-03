@@ -18,12 +18,8 @@ search: boost_1_49_0
 	$(CXX) $(CXXFLAGS) $(SOURCES) $(CXXINCLUDE) -o search
 
 boost_1_49_0:
-	if [ ! -f boost_1_49_0.tar.bz2 ]; then
-		wget http://sourceforge.net/projects/boost/files/boost/1.49.0/boost_1_49_0.tar.bz2
-	fi
+	./fetch-boost
 	tar xjf boost_1_49_0.tar.bz2
-
-boost_1_49_0.tar.bz2:
 
 all: search doc
 
