@@ -32,7 +32,21 @@ public:
     num_abstraction_levels + 1
     > AbstractionOrder;
 
-public:
+  /*! \brief Builds a static, domain-specific abstraction for the given board.
+
+      This static abstraction covers the following tiles at each level:
+
+          Level 1: 1 2 3 4 5 6 7
+          Level 2: 1 2 3 4 5 6 7 8
+          Level 3: 1 2 3 4 5 6 7 8 9
+          Level 4: 1 2 3 4 5 6 7 8 9 10
+          Level 5: 1 2 3 4 5 6 7 8 9 10 11
+          Level 6: 1 2 3 4 5 6 7 8 9 10 11 12
+          Level 7: 1 2 3 4 5 6 7 8 9 10 11 12 13
+          Level 8: 1 2 3 4 5 6 7 8 9 10 11 12 13 14
+   */
+  static const AbstractionOrder static_abstraction_order;
+
   TilesInstance15 (const TilesState15 &start, const TilesState15 &goal);
 
   void print(std::ostream &o) const;
@@ -120,16 +134,16 @@ public:
 
   bool should_abstract(unsigned level, Tile t) const;
 
+  void dump_abstraction_order(std::ostream &o) const;
+
 private:
   TilesNode15 * child(const TilesState15 &new_state,
                       TileCost new_g,
                       const TilesNode15 &parent,
                       boost::pool<> &node_pool);
 
-  AbstractionOrder compute_abstraction_order(const TilesState15 &s,
-                                             const ManhattanDist15 &md) const;
-
-  void dump_abstraction_order(std::ostream &o) const;
+  AbstractionOrder get_custom_abstraction(const TilesState15 &s,
+                                          const ManhattanDist15 &md) const;
 
   static bool valid_level(unsigned level);
 

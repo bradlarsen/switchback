@@ -9,20 +9,8 @@ TilesInstance15::TilesInstance15 (const TilesState15 &start,
     : start(start)
     , goal(goal)
     , md_heur(goal)
-    , abstraction_order(compute_abstraction_order(start, md_heur))
+    , abstraction_order(get_custom_abstraction(start, md_heur))
 {
-#ifndef NDEBUG
-  dump_abstraction_order(std::cerr);
-
-  std::cerr << "the abstractions of the start node:" << std::endl
-            << "base level:" <<std::endl
-            << start << std::endl;
-  for (unsigned level = 1; level <= num_abstraction_levels; level += 1) {
-    TilesState15 abs_start = abstract(level, start);
-    std::cerr << "abstraction " << level << ":" << std::endl
-              << abs_start << std::endl;
-  }
-#endif
   assert(is_goal(goal));
 }
 
@@ -38,7 +26,6 @@ void TilesInstance15::print(std::ostream &o) const
   o << std::endl << "Initial Manhattan distance heuristic estimate: "
     << md_heur.compute_full(start)
     << std::endl;
-
 }
 
 
@@ -295,6 +282,7 @@ bool TilesInstance15::is_valid_level(const unsigned level)
 std::ostream & operator <<(std::ostream &o, const TilesInstance15 &t)
 {
   t.print(o);
+  t.dump_abstraction_order(o);
   return o;
 }
 
@@ -430,8 +418,8 @@ TilesInstance15::find_tile_index(const std::vector<TileCostPair> &pairs,
 
 
 TilesInstance15::AbstractionOrder
-TilesInstance15::compute_abstraction_order(const TilesState15 &s,
-                                           const ManhattanDist15 &md) const
+TilesInstance15::get_custom_abstraction(const TilesState15 &s,
+                                        const ManhattanDist15 &md) const
 {
   std::vector<TileCostPair> pairs;
 
@@ -459,10 +447,26 @@ TilesInstance15::compute_abstraction_order(const TilesState15 &s,
   return order;
 }
 
+const TilesInstance15::AbstractionOrder
+TilesInstance15::static_abstraction_order =
+  {{
+    //A  B  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+    {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+    {{0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}},
+    {{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}},
+    {{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0}},
+    {{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0}},
+    {{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0}},
+    {{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0}},
+    {{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0}},
+    {{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}},
+  }};
 
 void TilesInstance15::dump_abstraction_order(std::ostream &o) const
 {
   o << "The following abstraction schedule will be used:" << std::endl;
+
+  o << std::endl << "level:  tiles to be obscured" << std::endl;
   for (unsigned level = 0; level <= num_abstraction_levels; level += 1) {
     o << "  " << level << ": ";
     for (Tile t = -1; t <= 15; t += 1)

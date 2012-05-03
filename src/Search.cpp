@@ -192,7 +192,7 @@ static void print_usage(ostream &o, const char *prog_name)
 {
   o << "usage: " << prog_name << " DOMAIN ALGORITHM [FILE]" << endl
     << "where" << endl
-    << "  DOMAIN is one of {tiles, macro_tiles, glued_tiles, pancake}" << endl
+    << "  DOMAIN is one of {tiles, tiles_static_abstraction, macro_tiles, glued_tiles, pancake}" << endl
     << "  ALGORITHM is one of {astar, hastar, idastar, hidastar, switchback}" << endl
     << "  FILE is the optional instance file to read from" << endl
     << endl
@@ -332,6 +332,7 @@ int main(int argc, char * argv[])
   const string alg_string(argv[2]);
 
   const bool is_tiles = domain_string == "tiles";
+  const bool is_tiles_static = domain_string == "tiles_static_abstraction";
   const bool is_macro_tiles = domain_string == "macro_tiles";
   const bool is_glued_tiles = domain_string == "glued_tiles";
   const bool is_pancake = domain_string == "pancake";
@@ -345,7 +346,7 @@ int main(int argc, char * argv[])
   // ############################################################
   // Argument Error Checking
   // ############################################################
-  if (!is_tiles && !is_macro_tiles && !is_pancake && !is_glued_tiles) {
+  if (!is_tiles && !is_tiles_static && !is_macro_tiles && !is_pancake && !is_glued_tiles) {
     cerr << "error: invalid domain specified" << endl;
     print_usage(cerr, argv[0]);
     exit (1);
@@ -357,10 +358,41 @@ int main(int argc, char * argv[])
   }
 
   // ############################################################
-  // tiles domain
+  // tiles domain with custom abstraction
   // ############################################################
   if (is_tiles) {
     TilesInstance15 *instance = get_tiles_instance(argc, argv);
+    cout << "######## The Instance ########" << endl;
+    cout << *instance << endl << endl;
+
+    if (is_astar) {
+      TilesAStar &astar = *new TilesAStar(*instance);
+      search(astar);
+    }
+    else if (is_hastar) {
+      TilesHAStar &hastar = *new TilesHAStar(*instance);
+      search(hastar);
+    }
+    else if (is_hidastar) {
+      TilesHIDAStar &hidastar = *new TilesHIDAStar(*instance);
+      search(hidastar);
+    }
+    else if (is_idastar) {
+      TilesIDAStar &idastar = *new TilesIDAStar(*instance);
+      search(idastar);
+    }
+    else if (is_switchback) {
+      TilesSwitchback &switchback = *new TilesSwitchback(*instance);
+      search(switchback);
+    }
+  }
+
+  // ############################################################
+  // tiles domain with static abstraction
+  // ############################################################
+  if (is_tiles_static) {
+    TilesInstance15 *instance = get_tiles_instance(argc, argv);
+    instance->set_abstraction_order (TilesInstance15::static_abstraction_order);
     cout << "######## The Instance ########" << endl;
     cout << *instance << endl << endl;
 
