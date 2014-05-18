@@ -71,4 +71,4 @@ Run the program without arguments for usage instructions.
 CONTACT INFORMATION
 ===================
 
-Contact Bradford Larsen at blarsen@cs.tufts.edu with questions or comments.
+Contact Bradford Larsen at brad.larsen@gmail.com with questions or comments.
